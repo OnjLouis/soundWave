@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>soundWave Readme</title>
+  <style>
+    body { font-family: system-ui, -apple-system, Segoe UI, Arial, sans-serif; line-height: 1.5; margin: 1.5rem; }
+    h1,h2,h3 { line-height: 1.2; }
+    code, pre { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace; }
+    pre { padding: 0.75rem; border: 1px solid #ddd; overflow: auto; }
+    .note { border-left: 4px solid #999; padding: 0.5rem 0.75rem; background: #fafafa; }
+    .warn { border-left: 4px solid #c60; padding: 0.5rem 0.75rem; background: #fff7ea; }
+    ul { margin-top: 0.25rem; }
+    .kbd { padding: 0.1rem 0.35rem; border: 1px solid #ccc; border-bottom-width: 2px; border-radius: 4px; background: #f7f7f7; }
+    table { border-collapse: collapse; width: 100%; margin: 0.75rem 0; }
+    th, td { border: 1px solid #ddd; padding: 0.5rem; vertical-align: top; }
+    th { background: #f4f4f4; text-align: left; }
+  </style>
+</head>
+<body>
+
+<h1>soundWave</h1>
+
+<p>
+soundWave is an NVDA add-on that renders text to an audio file using installed speech engines.
+It can export audio from the clipboard, a text file, or text entered directly in the add-on.
+</p>
+
+<h2>Quick start</h2>
+
+<ol>
+  <li>Press <span class="kbd">NVDA</span>+<span class="kbd">Ctrl</span>+<span class="kbd">=</span> to open soundWave.</li>
+  <li>Choose a synthesizer.</li>
+  <li>Choose the input source: clipboard, text file, or typed/pasted text.</li>
+  <li>Configure the synthesizer. Use <strong>Test</strong> to preview the selected settings.</li>
+  <li>Choose an output filename and format.</li>
+  <li>Wait for the render to complete, then review the summary.</li>
+</ol>
+
+<h2>Input and output</h2>
+
+<ul>
+  <li><strong>Input:</strong> clipboard text, a text file, or typed/pasted text.</li>
+  <li><strong>Output:</strong> WAV is always supported. MP3 is available when ffmpeg is installed and available on the system PATH.</li>
+  <li><strong>Large inputs:</strong> long text is rendered in chunks. If a single WAV would become too large, soundWave writes numbered part files.</li>
+  <li><strong>Filenames:</strong> suggested filenames include the selected synthesizer name, and the save dialog remembers the last folder used.</li>
+</ul>
+
+<h2>Synthesizer Options</h2>
+
+<p>
+Synthesizers expose settings such as voice, language, variant, speed, or rate where those options are available.
+Most settings dialogs include:
+</p>
+<ul>
+  <li><strong>Auto-speak when changing settings</strong> to preview changes automatically.</li>
+  <li><strong>Test</strong> to play a short sample using the current settings.</li>
+  <li>Persistent settings saved in NVDA configuration.</li>
+</ul>
+
+<h2>Supported Synthesizers</h2>
+
+<table>
+  <thead>
+    <tr><th>Synthesizer</th><th>Notes</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>SAPI5</strong></td>
+      <td>Uses installed Microsoft SAPI5 voices. 32-bit SAPI5 voices are supported through a separate 32-bit helper path when available.</td>
+    </tr>
+    <tr>
+      <td><strong>Sonata</strong></td>
+      <td>Requires the Sonata Neural Voices add-on and available voice configuration files.</td>
+    </tr>
+    <tr>
+      <td><strong>IBM ECI / IBM TTS</strong></td>
+      <td>Automatically searches for ECI.DLL inside the installed IBMTTS add-on folder. A manual DLL path can be set if needed.</td>
+    </tr>
+    <tr>
+      <td><strong>Orpheus</strong></td>
+      <td>Requires Orpheus to be the current NVDA synthesizer before rendering starts. During rendering, soundWave temporarily switches NVDA to an available fallback synthesizer.</td>
+    </tr>
+    <tr>
+      <td><strong>DECtalk and Keynote Gold</strong></td>
+      <td>Available when the required add-on or DLL is installed and discoverable.</td>
+    </tr>
+    <tr>
+      <td><strong>Other NVDA synthesizers</strong></td>
+      <td>soundWave can render many other installed NVDA synthesizers when they use NVDA's normal audio output path.</td>
+    </tr>
+  </tbody>
+</table>
+
+<h2>Render Summary</h2>
+
+<p>
+After rendering, soundWave reports the synthesizer, saved path, backend, elapsed time, audio length, and realtime speed factor when available.
+</p>
+
+<div class="note">
+  <p><strong>Backend</strong> is a diagnostic label for the internal render method used. Most users do not need to choose or understand it.</p>
+</div>
+
+<h2>Updates</h2>
+
+<p>
+soundWave can check GitHub releases for updates. The updater downloads the latest .nvda-addon release asset when a newer version is available.
+</p>
+
+<h2>Troubleshooting</h2>
+
+<ul>
+  <li><strong>No audio is produced:</strong> the selected synthesizer may not expose an audio path soundWave can render. Try another synthesizer and check the NVDA log.</li>
+  <li><strong>IBM ECI cannot find the DLL:</strong> open IBM ECI options and set the correct ECI.DLL path manually.</li>
+  <li><strong>Orpheus will not start:</strong> switch NVDA's current synthesizer to Orpheus, then open soundWave again.</li>
+  <li><strong>WorldVoice does not initialize:</strong> check the NVDA log for missing files under WorldVoice-workspace. soundWave cannot render WorldVoice until WorldVoice itself loads cleanly.</li>
+  <li><strong>MP3 export fails:</strong> install ffmpeg and ensure the ffmpeg command works from a Command Prompt.</li>
+  <li><strong>Rendering appears stuck:</strong> use Cancel. If the issue repeats, include the synthesizer name, settings, input type, and relevant NVDA log entries in the report.</li>
+</ul>
+
+</body>
+</html>
