@@ -118,12 +118,6 @@ try:
     from gettext import gettext as _
 except Exception:
     _ = lambda s: s
-try:
-    from ._onjGithubUpdater import GitHubReleaseUpdater
-except Exception:
-    GitHubReleaseUpdater = None
-
-
 def _normalize_synth_list_item(item):
     """Return (synthId, label) from NVDA synth list items across NVDA versions.
 
@@ -5391,31 +5385,18 @@ def _do_render_impl():
     # Kick off UI polling
     wx.CallLater(50, poll)
 class GlobalPlugin(globalPluginHandler.GlobalPlugin):
-    scriptCategory = "soundWave"
+    scriptCategory = _("soundWave")
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self._updater = None
-        if GitHubReleaseUpdater:
-            self._updater = GitHubReleaseUpdater("soundWave", "soundWave", "OnjLouis", "soundWave")
-            self._updater.start()
 
     def terminate(self):
-        if self._updater:
-            self._updater.stop()
         return super().terminate()
 
+    @script(
+        description=_("Open the soundWave text-to-audio render dialog."),
+        gesture="kb:NVDA+control+=",
+    )
     def script_renderFTR(self, gesture):
         # Never show dialogs in the script callback: schedule onto wx loop.
         wx.CallAfter(_do_render_impl)
-
-    @script(description=_("Check for soundWave updates"))
-    def script_checkForSoundWaveUpdate(self, gesture):
-        if self._updater:
-            wx.CallAfter(self._updater.checkNow, True)
-        else:
-            ui.message(_("Updater is not available"))
-
-    __gestures = {
-        "kb:NVDA+control+=": "renderFTR",
-    }

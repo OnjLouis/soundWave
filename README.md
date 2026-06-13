@@ -16,11 +16,16 @@ soundWave is an NVDA add-on that renders text to an audio file using installed s
 - Export WAV files, with MP3 export available when ffmpeg is installed.
 - Render large inputs in chunks.
 - Use synthesizer-specific settings where available.
-- Check GitHub releases for updates.
+- Use NVDA's add-on update channel for store-compatible updates.
 
 ## Documentation
 
 - Full help: [`source/doc/en/readme.html`](source/doc/en/readme.html)
+
+## Changes
+
+- 1.0.1: Aligned update handling with NVDA Add-on Store distribution.
+- 1.0.0: Initial release.
 
 ## Source Code
 
