@@ -37,6 +37,11 @@ It can export audio from the clipboard, a text file, or text entered directly in
   <li>Wait for the render to complete, then review the summary.</li>
 </ol>
 
+<p>
+Press <span class="kbd">F1</span>, or tab to the Help button from any soundWave dialog, to open this manual.
+Dialog controls include keyboard accelerators where practical, such as <span class="kbd">Alt</span>+<span class="kbd">T</span> for Test.
+</p>
+
 <h2>Input and output</h2>
 
 <ul>
@@ -44,12 +49,13 @@ It can export audio from the clipboard, a text file, or text entered directly in
   <li><strong>Output:</strong> WAV is always supported. MP3 is available when ffmpeg is installed and available on the system PATH.</li>
   <li><strong>Large inputs:</strong> long text is rendered in chunks. If a single WAV would become too large, soundWave writes numbered part files.</li>
   <li><strong>Filenames:</strong> suggested filenames include the selected synthesizer name, and the save dialog remembers the last folder used.</li>
+  <li><strong>Voice names:</strong> when soundWave can identify the selected voice, the suggested filename includes it so multiple renders with the same input and synthesizer are easier to distinguish.</li>
 </ul>
 
 <h2>Synthesizer Options</h2>
 
 <p>
-Synthesizers expose settings such as voice, language, variant, speed, or rate where those options are available.
+Synthesizers expose settings such as voice, language, variant, speed, rate, pitch, or volume where those options are available.
 Most settings dialogs include:
 </p>
 <ul>
@@ -67,7 +73,7 @@ Most settings dialogs include:
   <tbody>
     <tr>
       <td><strong>SAPI5</strong></td>
-      <td>Uses installed Microsoft SAPI5 voices. 32-bit SAPI5 voices are supported through a separate 32-bit helper path when available.</td>
+      <td>Uses installed Microsoft SAPI5 voices. 32-bit SAPI5 voices are supported through a separate 32-bit helper path when available. SAPI5 rate and volume can be adjusted in the render dialog.</td>
     </tr>
     <tr>
       <td><strong>Sonata</strong></td>
@@ -79,15 +85,15 @@ Most settings dialogs include:
     </tr>
     <tr>
       <td><strong>Orpheus</strong></td>
-      <td>Requires Orpheus to be the current NVDA synthesizer before rendering starts. During rendering, soundWave temporarily switches NVDA to an available fallback synthesizer.</td>
+      <td>Requires Orpheus to be the current NVDA synthesizer before rendering starts. Language, voice, speed, pitch, and volume can be adjusted before rendering. During rendering, soundWave temporarily switches NVDA to an available fallback synthesizer.</td>
     </tr>
     <tr>
       <td><strong>DECtalk and Keynote Gold</strong></td>
-      <td>Available when the required add-on or DLL is installed and discoverable.</td>
+      <td>Available when the required add-on or DLL is installed and discoverable. Keynote Gold exposes voice, speed, pitch, volume, and rate boost in its render dialog.</td>
     </tr>
     <tr>
       <td><strong>Other NVDA synthesizers</strong></td>
-      <td>soundWave can render many other installed NVDA synthesizers when they use NVDA's normal audio output path.</td>
+      <td>soundWave can render many other installed NVDA synthesizers when they use NVDA's normal audio output path. The generic dialog applies voice, variant, rate, pitch, and volume where the selected synthesizer exposes those settings.</td>
     </tr>
   </tbody>
 </table>
@@ -110,9 +116,26 @@ soundWave uses NVDA's add-on update channel for store-compatible updates.
 
 <h2>Changes</h2>
 
+<h3>1.0.2</h3>
 <ul>
-  <li><strong>1.0.1:</strong> Aligned update handling with NVDA Add-on Store distribution.</li>
-  <li><strong>1.0.0:</strong> Initial release.</li>
+  <li>Added pitch and volume controls for Orpheus, Keynote Gold, and generic NVDA synth rendering.</li>
+  <li>Added volume support for SAPI5 rendering.</li>
+  <li>Improved keyboard adjustment for numeric options. Page Up and Page Down now make larger changes, and Home and End jump to minimum and maximum values.</li>
+  <li>Changed render details to a line-by-line list so progress information is easier to review with a screen reader.</li>
+  <li>Remembered whether render details are shown or hidden between renders.</li>
+  <li>Added selected voice names to suggested output filenames when SoundWave can identify the voice.</li>
+  <li>Added F1 manual access with tabbable Help buttons.</li>
+  <li>Improved dialog keyboard accelerators, including Test buttons and synthesizer option controls.</li>
+</ul>
+
+<h3>1.0.1</h3>
+<ul>
+  <li>Aligned update handling with NVDA Add-on Store distribution.</li>
+</ul>
+
+<h3>1.0.0</h3>
+<ul>
+  <li>Initial release.</li>
 </ul>
 
 <h2>Troubleshooting</h2>

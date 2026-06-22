@@ -54,26 +54,6 @@ import ctypes
 from ctypes import cdll, windll  # needed for DECtalk loader
 
 
-def _normalize_renderer(sel):
-    """Map UI selection / synth ids to internal renderer ids."""
-    if sel is None:
-        return None
-    s = str(sel).strip().lower()
-    aliases = {
-        "sapi": "sapi5",
-        "sapi5": "sapi5",
-        "microsoft sapi 5": "sapi5",
-        "sonata": "sonata",
-        "orpheus": "orpheus",
-        "ibmtts": "ibmeci",
-        "ibm tts": "ibmeci",
-        "ibm eci": "ibmeci",
-        "eloquence": "ibmeci",
-        "dectalk": "dectalk",
-        "bestspeech": "sapi5",
-    }
-    return aliases.get(s, str(sel))
-
 def _ensure_dir(path: str) -> None:
     """Create directory if it doesn't exist (idempotent)."""
     if not path:
@@ -239,7 +219,7 @@ def _cfg_get_bool(key: str, default: bool = False) -> bool:
     return s in ("1", "true", "yes", "on")
 
 def _add_autospeak_checkbox(parent, sizer, key: str, default: bool = True):
-    cb = wx.CheckBox(parent, label="Auto speak when changing settings")
+    cb = wx.CheckBox(parent, label="&Auto speak when changing settings")
     cb.SetValue(_cfg_get_bool(key, default))
     def _on_toggle(evt):
         _cfg_set(key, bool(cb.GetValue()))
@@ -263,6 +243,38 @@ def _debounced_call(fn, delay_ms: int = 250):
                 pass
         state["timer"] = wx.CallLater(delay_ms, _run)
     return _call
+
+
+def _bind_numeric_page_keys(ctrl, minimum: int, maximum: int, page_step: int = 10, callback=None):
+    """Give wx.SpinCtrl predictable PageUp/PageDown/Home/End keyboard behavior."""
+    def _on_char(evt):
+        try:
+            key = evt.GetKeyCode()
+            if key not in (wx.WXK_PAGEUP, wx.WXK_PAGEDOWN, wx.WXK_HOME, wx.WXK_END):
+                evt.Skip()
+                return
+            cur = int(ctrl.GetValue())
+            if key == wx.WXK_PAGEUP:
+                value = cur + int(page_step)
+            elif key == wx.WXK_PAGEDOWN:
+                value = cur - int(page_step)
+            elif key == wx.WXK_HOME:
+                value = int(minimum)
+            else:
+                value = int(maximum)
+            value = max(int(minimum), min(int(maximum), int(value)))
+            ctrl.SetValue(value)
+            if callback is not None:
+                wx.CallAfter(callback, None)
+        except Exception:
+            try:
+                evt.Skip()
+            except Exception:
+                pass
+    try:
+        ctrl.Bind(wx.EVT_CHAR_HOOK, _on_char)
+    except Exception:
+        pass
 
 
 
@@ -422,6 +434,9 @@ def _install_enter_to_ok(dlg: wx.Dialog):
 
     def _on_char_hook(evt):
         key = evt.GetKeyCode()
+        if key == wx.WXK_F1:
+            _open_manual()
+            return
         if key not in (wx.WXK_RETURN, wx.WXK_NUMPAD_ENTER):
             evt.Skip()
             return
@@ -448,6 +463,71 @@ def _install_enter_to_ok(dlg: wx.Dialog):
         dlg.Bind(wx.EVT_CHAR_HOOK, _on_char_hook)
     except Exception:
         pass
+
+
+def _manual_path() -> str:
+    try:
+        addon_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        candidates = [
+            os.path.join(addon_root, "doc", "en", "readme.html"),
+            os.path.join(addon_root, "doc", "readme.html"),
+        ]
+        for path in candidates:
+            if os.path.isfile(path):
+                return path
+    except Exception:
+        pass
+    return ""
+
+
+def _open_manual():
+    path = _manual_path()
+    if not path:
+        _error("The soundWave manual could not be found.")
+        return
+    try:
+        os.startfile(path)  # type: ignore[attr-defined]
+    except Exception as e:
+        _error("The soundWave manual could not be opened:\n%s" % e)
+
+
+class _HelpButtonAccessible(getattr(wx, "Accessible", object)):
+    def __init__(self, window):
+        try:
+            super().__init__(window)
+        except TypeError:
+            try:
+                super().__init__()
+            except Exception:
+                pass
+        self.window = window
+
+    def GetName(self, childId):
+        return (getattr(wx, "ACC_OK", 0), "Help")
+
+    def GetRole(self, childId):
+        return (getattr(wx, "ACC_OK", 0), getattr(wx, "ROLE_SYSTEM_PUSHBUTTON", 0x2B))
+
+    def GetKeyboardShortcut(self, childId):
+        return (getattr(wx, "ACC_OK", 0), "F1")
+
+
+def _create_help_button(parent) -> wx.Button:
+    btn = wx.Button(parent, label="Help")
+    btn.Bind(wx.EVT_BUTTON, lambda evt: _open_manual())
+    try:
+        btn.SetName("Help")
+        btn.SetToolTip("Open the soundWave manual. Shortcut: F1.")
+    except Exception:
+        pass
+    try:
+        if hasattr(wx, "Accessible") and hasattr(btn, "SetAccessible"):
+            acc = _HelpButtonAccessible(btn)
+            btn.SetAccessible(acc)
+            btn._soundWaveAccessible = acc
+    except Exception:
+        pass
+    return btn
 
 
 def _info(msg: str, title: str = ADDON_NAME):
@@ -599,12 +679,12 @@ def _pick_input_text(parent) -> tuple[str, str]:
 class _RenderProgressDialog(wx.Dialog):
     """Common render progress dialog used for all synths.
 
-    Provides a pulsing gauge plus an optional Details view that updates once per second.
+    Provides a pulsing gauge plus an optional Details list that updates once per second.
     """
     def __init__(self, parent, title: str = "soundWave"):
         super().__init__(parent, title=title, style=wx.DEFAULT_DIALOG_STYLE | wx.RESIZE_BORDER)
         self._cancelled = False
-        self._detailsShown = False
+        self._detailsShown = bool(_get_cfg_bool("renderDetailsShown", False))
 
         sizer = wx.BoxSizer(wx.VERTICAL)
 
@@ -627,27 +707,28 @@ class _RenderProgressDialog(wx.Dialog):
         self.gauge.Pulse()
         sizer.Add(self.gauge, 0, wx.LEFT | wx.RIGHT | wx.BOTTOM | wx.EXPAND, 10)
 
-        # Details (hidden by default)
-        self.details = wx.TextCtrl(
+        # Details (hidden by default). A list lets screen reader users move line by line.
+        self.details = wx.ListBox(
             self,
-            value="",
-            style=wx.TE_MULTILINE | wx.TE_READONLY | wx.HSCROLL,
+            choices=["Rendering…"],
             size=(-1, 120),
         )
         self.details.Hide()
         self.details.Disable()
-        self.details.SetValue("Rendering…")
         sizer.Add(self.details, 1, wx.LEFT | wx.RIGHT | wx.BOTTOM | wx.EXPAND, 10)
 
         btnSizer = wx.BoxSizer(wx.HORIZONTAL)
 
-        self.detailsBtn = wx.Button(self, label="Show details")
+        self.detailsBtn = wx.Button(self, label="Show &details")
         self.detailsBtn.Bind(wx.EVT_BUTTON, self._on_toggle_details)
         btnSizer.Add(self.detailsBtn, 0, wx.ALL, 10)
 
+        self.helpBtn = _create_help_button(self)
+        btnSizer.Add(self.helpBtn, 0, wx.ALL, 10)
+
         btnSizer.AddStretchSpacer(1)
 
-        self.cancelBtn = wx.Button(self, label="Cancel")
+        self.cancelBtn = wx.Button(self, label="&Cancel")
         self.cancelBtn.Bind(wx.EVT_BUTTON, self._on_cancel)
         btnSizer.Add(self.cancelBtn, 0, wx.ALL, 10)
 
@@ -655,6 +736,8 @@ class _RenderProgressDialog(wx.Dialog):
 
         self.SetSizer(sizer)
         self.SetMinSize((520, 200))
+        if self._detailsShown:
+            self._apply_details_visibility(set_focus=False)
         self.Fit()
 
         # Allow ESC to cancel
@@ -664,7 +747,9 @@ class _RenderProgressDialog(wx.Dialog):
             pass
 
         # Tab order: Show/Hide details -> Cancel (and when details are shown: Details -> Show/Hide details -> Cancel)
-        try:            self.cancelBtn.MoveAfterInTabOrder(self.detailsBtn)
+        try:
+            self.helpBtn.MoveAfterInTabOrder(self.detailsBtn)
+            self.cancelBtn.MoveAfterInTabOrder(self.helpBtn)
         except Exception:
             pass
 
@@ -674,7 +759,11 @@ class _RenderProgressDialog(wx.Dialog):
 
     def _on_char_hook(self, evt):
         try:
-            if evt.GetKeyCode() == wx.WXK_ESCAPE:
+            key = evt.GetKeyCode()
+            if key == wx.WXK_F1:
+                _open_manual()
+                return
+            if key == wx.WXK_ESCAPE:
                 # Mirror Cancel button behavior
                 self._on_cancel(None)
                 return
@@ -710,31 +799,35 @@ class _RenderProgressDialog(wx.Dialog):
 
     def _on_toggle_details(self, evt):
         self._detailsShown = not self._detailsShown
+        _set_cfg_bool("renderDetailsShown", self._detailsShown)
+        self._apply_details_visibility(set_focus=True)
+
+    def _apply_details_visibility(self, set_focus: bool = False):
         if self._detailsShown:
             self.details.Enable()
-            # Populate immediately so the first focus landing isn't an empty field.
-            if not self.details.GetValue().strip():
-                try:
-                    self.details.SetValue(str(self.summary.GetLabel() or "Rendering…"))
-                except Exception:
-                    self.details.SetValue("Rendering…")
+            # Populate immediately so the first focus landing isn't an empty list.
+            if self.details.GetCount() <= 0:
+                self.set_details_lines([str(self.summary.GetLabel() or "Rendering…")])
             self.details.Show()
-            self.detailsBtn.SetLabel("Hide details")
+            self.detailsBtn.SetLabel("Hide &details")
             try:
                 self.detailsBtn.MoveAfterInTabOrder(self.details)
-                self.cancelBtn.MoveAfterInTabOrder(self.detailsBtn)
+                self.helpBtn.MoveAfterInTabOrder(self.detailsBtn)
+                self.cancelBtn.MoveAfterInTabOrder(self.helpBtn)
             except Exception:
                 pass
-            try:
-                self.details.SetFocus()
-            except Exception:
-                pass
+            if set_focus:
+                try:
+                    self.details.SetFocus()
+                except Exception:
+                    pass
         else:
             self.details.Hide()
             self.details.Disable()
-            self.detailsBtn.SetLabel("Show details")
+            self.detailsBtn.SetLabel("Show &details")
             try:
-                self.cancelBtn.MoveAfterInTabOrder(self.detailsBtn)
+                self.helpBtn.MoveAfterInTabOrder(self.detailsBtn)
+                self.cancelBtn.MoveAfterInTabOrder(self.helpBtn)
             except Exception:
                 pass
         self.Layout()
@@ -755,7 +848,16 @@ class _RenderProgressDialog(wx.Dialog):
 
     def set_details_lines(self, lines: List[str]):
         try:
-            self.details.SetValue("\n".join([str(x) for x in (lines or [])]))
+            cleaned = [str(x) for x in (lines or []) if str(x).strip()]
+            if not cleaned:
+                cleaned = ["Rendering…"]
+            selection = self.details.GetSelection()
+            self.details.Set(cleaned)
+            if cleaned:
+                if 0 <= selection < len(cleaned):
+                    self.details.SetSelection(selection)
+                else:
+                    self.details.SetSelection(0)
         except Exception:
             pass
 
@@ -843,34 +945,6 @@ def _pick_fallback_synth_name() -> Optional[str]:
     return None
 
 
-def _with_temporary_nvda_synth(temp_synth_name: str, fn):
-    """
-    Temporarily switch NVDA's live synth (global) while running fn(), then restore.
-    This is used when a synth can't be instantiated for offline capture while it's active.
-    """
-    old = None
-    try:
-        old = synthDriverHandler.getSynth().name
-    except Exception:
-        old = None
-
-    switched = False
-    try:
-        if temp_synth_name and old and old != temp_synth_name:
-            try:
-                synthDriverHandler.setSynth(temp_synth_name)
-                switched = True
-            except Exception:
-                switched = False
-        return fn()
-    finally:
-        if switched and old:
-            try:
-                synthDriverHandler.setSynth(old)
-            except Exception:
-                pass
-
-
 def _get_record_base_dir() -> str:
     base = _cfg_get("recordBaseDir", "") or ""
     return os.path.expandvars(os.path.expanduser(base))
@@ -909,6 +983,27 @@ def _build_suggested_output_base(input_base: str, synth_label: str) -> str:
     if input_part.lower() == synth_part.lower():
         return input_part
     return f"{input_part} - {synth_part}"
+
+
+def _choice_label(ctrl) -> str:
+    try:
+        idx = ctrl.GetSelection()
+        if idx == wx.NOT_FOUND or idx < 0:
+            return ""
+        return str(ctrl.GetString(idx) or "")
+    except Exception:
+        return ""
+
+
+def _build_voice_aware_output_base(input_base: str, synth_label: str, voice_label: str = "") -> str:
+    base = _build_suggested_output_base(input_base, synth_label)
+    voice_part = _safe_filename_piece(voice_label, "")
+    if not voice_part:
+        return base
+    existing = [p.strip().lower() for p in str(base).split(" - ") if p.strip()]
+    if voice_part.lower() in existing:
+        return base
+    return f"{base} - {voice_part}"
 
 
 def _pick_output_path(parent, suggestion_base: str, synth_label: str):
@@ -988,7 +1083,7 @@ def _list_sapi5_voices() -> List[str]:
             pass
 
 
-def _render_with_sapi5(text: str, out_wav: str, voice_name: Optional[str] = None, rate: int = 0):
+def _render_with_sapi5(text: str, out_wav: str, voice_name: Optional[str] = None, rate: int = 0, volume: int = 100):
     if comtypes is None:
         raise RuntimeError("comtypes not available; cannot use SAPI5 renderer.")
     if not out_wav.lower().endswith(".wav"):
@@ -999,6 +1094,10 @@ def _render_with_sapi5(text: str, out_wav: str, voice_name: Optional[str] = None
         voice = comtypes.client.CreateObject("SAPI.SpVoice")
         try:
             voice.Rate = int(rate)
+        except Exception:
+            pass
+        try:
+            voice.Volume = max(0, min(100, int(volume)))
         except Exception:
             pass
 
@@ -1104,7 +1203,7 @@ def _has_sapi5_32() -> bool:
     return False
 
 
-def _render_with_sapi5_32(text: str, out_wav: str, voice_name: Optional[str] = None, rate: int = 0):
+def _render_with_sapi5_32(text: str, out_wav: str, voice_name: Optional[str] = None, rate: int = 0, volume: int = 100):
     ps = _get_32bit_powershell()
     if not ps:
         raise RuntimeError("32-bit PowerShell was not found; cannot render 32-bit SAPI voices.")
@@ -1122,7 +1221,8 @@ param(
     [string]$TextPath,
     [string]$OutPath,
     [string]$VoiceName,
-    [int]$Rate
+    [int]$Rate,
+    [int]$Volume
 )
 $ErrorActionPreference = "Stop"
 $text = [System.IO.File]::ReadAllText($TextPath, [System.Text.Encoding]::UTF8)
@@ -1137,6 +1237,7 @@ if ($VoiceName) {
     }
 }
 $voice.Rate = $Rate
+$voice.Volume = [Math]::Max(0, [Math]::Min(100, $Volume))
 $stream = New-Object -ComObject SAPI.SpFileStream
 $stream.Format.Type = 22
 if (Test-Path -LiteralPath $OutPath) {
@@ -1161,6 +1262,7 @@ $stream.Close()
                 out_wav,
                 str(voice_name or ""),
                 str(int(rate or 0)),
+                str(max(0, min(100, int(volume or 100)))),
             ],
             timeout=TIMEOUT_SECONDS,
         )
@@ -1177,19 +1279,6 @@ $stream.Close()
         except Exception:
             pass
     return "SAPI5 32-bit file render"
-
-
-
-    def _maybe_auto_test(self, evt=None):
-        try:
-            if hasattr(self, 'autoTestChk') and self.autoTestChk.GetValue():
-                _set_cfg_bool('autoTestOnChange', True)
-                if hasattr(self, '_on_test'):
-                    self._on_test(None)
-            else:
-                _set_cfg_bool('autoTestOnChange', False)
-        except Exception:
-            pass
 
 class Sapi5OptionsDialog(wx.Dialog):
     SAMPLE_TEXT = "This is a soundWave test."
@@ -1211,24 +1300,32 @@ class Sapi5OptionsDialog(wx.Dialog):
         sizer = wx.BoxSizer(wx.VERTICAL)
 
         row1 = wx.BoxSizer(wx.HORIZONTAL)
-        row1.Add(wx.StaticText(self, label="Voice:"), 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 8)
+        row1.Add(wx.StaticText(self, label="&Voice:"), 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 8)
         self.voiceChoice = wx.Choice(self, choices=(self.voices if self.voices else ["(no voices found)"]))
         row1.Add(self.voiceChoice, 1, wx.EXPAND)
         sizer.Add(row1, 0, wx.EXPAND | wx.ALL, 10)
 
         row2 = wx.BoxSizer(wx.HORIZONTAL)
-        row2.Add(wx.StaticText(self, label="Rate:"), 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 8)
+        row2.Add(wx.StaticText(self, label="&Rate:"), 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 8)
         self.rateSpin = wx.SpinCtrl(self, min=-10, max=10, initial=0)
         row2.Add(self.rateSpin, 0)
         sizer.Add(row2, 0, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.BOTTOM, 10)
 
-        self.autoTest = wx.CheckBox(self, label="Auto-speak when changing voice or rate")
+        row3 = wx.BoxSizer(wx.HORIZONTAL)
+        row3.Add(wx.StaticText(self, label="Vol&ume:"), 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 8)
+        self.volumeSpin = wx.SpinCtrl(self, min=0, max=100, initial=100)
+        row3.Add(self.volumeSpin, 0)
+        sizer.Add(row3, 0, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.BOTTOM, 10)
+
+        self.autoTest = wx.CheckBox(self, label="&Auto-speak when changing voice, rate, or volume")
         self.autoTest.SetValue(bool(_get_cfg_bool(f"autoTestOnChange{cfg_prefix}", True)))
         sizer.Add(self.autoTest, 0, wx.LEFT | wx.RIGHT | wx.BOTTOM, 10)
 
         btnRow = wx.BoxSizer(wx.HORIZONTAL)
-        self.testBtn = wx.Button(self, label="Test (&T)")
+        self.testBtn = wx.Button(self, label="&Test")
         btnRow.Add(self.testBtn, 0, wx.RIGHT, 8)
+        self.helpBtn = _create_help_button(self)
+        btnRow.Add(self.helpBtn, 0, wx.RIGHT, 8)
         btnRow.AddStretchSpacer(1)
 
         self.okBtn = wx.Button(self, wx.ID_OK)
@@ -1246,6 +1343,7 @@ class Sapi5OptionsDialog(wx.Dialog):
         # Load persisted selections
         voice_name = str(_cfg_get(f"{cfg_prefix}VoiceName", "") or "")
         rate = int(_cfg_get(f"{cfg_prefix}Rate", 0) or 0)
+        volume = int(_cfg_get(f"{cfg_prefix}Volume", 100) or 100)
 
         if self.voices:
             if voice_name and voice_name in self.voices:
@@ -1259,11 +1357,18 @@ class Sapi5OptionsDialog(wx.Dialog):
             self.rateSpin.SetValue(rate)
         except Exception:
             pass
+        try:
+            self.volumeSpin.SetValue(max(0, min(100, volume)))
+        except Exception:
+            pass
 
         # Events
         self.testBtn.Bind(wx.EVT_BUTTON, self._on_test)
         self.voiceChoice.Bind(wx.EVT_CHOICE, self._on_change)
         self.rateSpin.Bind(wx.EVT_SPINCTRL, self._on_change)
+        self.volumeSpin.Bind(wx.EVT_SPINCTRL, self._on_change)
+        _bind_numeric_page_keys(self.rateSpin, -10, 10, page_step=5, callback=self._on_change)
+        _bind_numeric_page_keys(self.volumeSpin, 0, 100, page_step=10, callback=self._on_change)
 
     def _on_change(self, evt):
         if self.autoTest.IsChecked():
@@ -1273,9 +1378,10 @@ class Sapi5OptionsDialog(wx.Dialog):
         try:
             voice = self.get_voice_name()
             rate = self.get_rate()
+            volume = self.get_volume()
             # quick temp file
             tmp = os.path.join(tempfile.gettempdir(), "soundWave_sapi_test.wav")
-            self._render_fn(self.SAMPLE_TEXT, tmp, voice_name=voice, rate=rate)
+            self._render_fn(self.SAMPLE_TEXT, tmp, voice_name=voice, rate=rate, volume=volume)
             _play_wav(tmp)
         except Exception as e:
             _error("Test failed:\n" + str(e))
@@ -1294,312 +1400,26 @@ class Sapi5OptionsDialog(wx.Dialog):
         except Exception:
             return 0
 
+    def get_volume(self) -> int:
+        try:
+            return max(0, min(100, int(self.volumeSpin.GetValue())))
+        except Exception:
+            return 100
+
     def get_options(self, persist: bool = True) -> dict:
         opts = {
             "voiceName": self.get_voice_name(),
             "rate": self.get_rate(),
+            "volume": self.get_volume(),
             "autoTest": bool(self.autoTest.IsChecked()),
         }
         if persist:
             _cfg_set(f"{self._cfg_prefix}VoiceName", opts["voiceName"])
             _cfg_set(f"{self._cfg_prefix}Rate", int(opts["rate"]))
+            _cfg_set(f"{self._cfg_prefix}Volume", int(opts["volume"]))
             _set_cfg_bool(f"autoTestOnChange{self._cfg_prefix}", bool(opts["autoTest"]))
         return opts
 
-
-class OrpheusOptionsDialog(wx.Dialog):
-    SAMPLE_TEXT = "This is a soundWave test."
-
-    def __init__(self, parent, synth, initial: Optional[dict] = None):
-        super().__init__(parent, title="soundWave - Orpheus options")
-        self.synth = synth
-        self.initial = initial or {}
-
-        # --- Safety: keep Orpheus instance alive, but switch NVDA's live synth to eSpeak while this dialog is open.
-        self._prevSynthName = ""
-        self._patchedOrpheus = False
-        self._origTerminate = None
-        self._origCancel = None
-        try:
-            cur = synthDriverHandler.getSynth()
-            self._prevSynthName = str(getattr(cur, "name", "") or "")
-        except Exception:
-            self._prevSynthName = ""
-
-        # Patch terminate/cancel so NVDA won't unload Orpheus when we switch away.
-        try:
-            self._origTerminate = getattr(self.synth, "terminate", None)
-            self._origCancel = getattr(self.synth, "cancel", None)
-            def _noop(*a, **k):
-                return None
-            if callable(self._origTerminate):
-                setattr(self.synth, "terminate", _noop)
-            if callable(self._origCancel):
-                setattr(self.synth, "cancel", _noop)
-            self._patchedOrpheus = True
-        except Exception:
-            self._patchedOrpheus = False
-
-        # Switch live synth to eSpeak for watchdog safety while navigating Orpheus options.
-        try:
-            _safe_set_synth("espeak")
-        except Exception:
-            pass
-
-
-        pnl = wx.Panel(self)
-        root = wx.BoxSizer(wx.VERTICAL)
-
-        grid = wx.FlexGridSizer(rows=4, cols=2, vgap=8, hgap=10)
-        grid.AddGrowableCol(1, 1)
-
-        grid.Add(wx.StaticText(pnl, label="Language:"), 0, wx.ALIGN_CENTER_VERTICAL)
-        self.langChoice = wx.Choice(pnl, choices=[])
-        grid.Add(self.langChoice, 1, wx.EXPAND)
-
-        grid.Add(wx.StaticText(pnl, label="Voice:"), 0, wx.ALIGN_CENTER_VERTICAL)
-        self.voiceChoice = wx.Choice(pnl, choices=[])
-        grid.Add(self.voiceChoice, 1, wx.EXPAND)
-
-        grid.Add(wx.StaticText(pnl, label="Speed (%):"), 0, wx.ALIGN_CENTER_VERTICAL)
-        self.speedSpin = wx.SpinCtrl(pnl, min=20, max=400, initial=int(self.initial.get("speed", 100) or 100))
-        grid.Add(self.speedSpin, 0, wx.ALIGN_LEFT)
-
-        self.autoTestChk = wx.CheckBox(pnl, label="Auto-speak when changing options")
-        self.autoTestChk.SetValue(bool(self.initial.get("autoTest", False)))
-        grid.Add(self.autoTestChk, 0, wx.TOP, 6)
-        grid.AddSpacer(0)
-
-        root.Add(grid, 0, wx.EXPAND | wx.ALL, 12)
-
-        self.autoSpeakCB = _add_autospeak_checkbox(pnl, root, "orpheusAutoSpeak", default=True)
-
-        btnRow = wx.BoxSizer(wx.HORIZONTAL)
-        self.testBtn = wx.Button(pnl, label="Test")
-        btnRow.Add(self.testBtn, 0, wx.RIGHT, 8)
-        btnRow.AddStretchSpacer(1)
-        self.okBtn = wx.Button(pnl, wx.ID_OK)
-        self.cancelBtn = wx.Button(pnl, wx.ID_CANCEL)
-        try:
-            self.okBtn.SetDefault()
-        except Exception:
-            pass
-        btnRow.Add(self.okBtn, 0, wx.RIGHT, 8)
-        btnRow.Add(self.cancelBtn, 0)
-        root.Add(btnRow, 0, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.BOTTOM, 12)
-
-        pnl.SetSizer(root)
-        s = wx.BoxSizer(wx.VERTICAL)
-        s.Add(pnl, 1, wx.EXPAND)
-        self.SetSizerAndFit(s)
-
-        self._langs: List[object] = []
-        self._variants: List[object] = []
-
-        self._populate_languages()
-        self._apply_initial()
-        self._populate_voices_for_selected_language()
-
-        self.testBtn.Bind(wx.EVT_BUTTON, self._on_test)
-
-
-        self._auto_test = _debounced_call(lambda: self._on_test(None), delay_ms=250)
-
-        def _maybe_auto(evt):
-            try:
-                if self.autoSpeakCB.GetValue():
-                    self._auto_test()
-            except Exception:
-                pass
-            try:
-                evt.Skip()
-            except Exception:
-                pass
-
-        self.langChoice.Bind(wx.EVT_CHOICE, _maybe_auto)
-        self.voiceChoice.Bind(wx.EVT_CHOICE, _maybe_auto)
-        self.speedSpin.Bind(wx.EVT_SPINCTRL, _maybe_auto)
-
-        self.Bind(wx.EVT_CHOICE, self._on_lang_change, self.langChoice)
-        self.Bind(wx.EVT_CHOICE, self._on_voice_change, self.voiceChoice)
-        self.Bind(wx.EVT_SPINCTRL, self._on_speed_change, self.speedSpin)
-        self.Bind(wx.EVT_WINDOW_DESTROY, self._on_destroy)
-
-    def _on_destroy(self, evt):
-        # Restore live synth and Orpheus methods when closing.
-        try:
-            if self._patchedOrpheus:
-                if callable(self._origTerminate):
-                    setattr(self.synth, "terminate", self._origTerminate)
-                if callable(self._origCancel):
-                    setattr(self.synth, "cancel", self._origCancel)
-        except Exception:
-            pass
-        try:
-            # Restore previous synth if it was Orpheus; otherwise just try to return to Orpheus.
-            if (self._prevSynthName or "").lower() == "orpheus":
-                _safe_set_synth("orpheus")
-            elif self._prevSynthName:
-                _safe_set_synth(self._prevSynthName)
-            else:
-                _safe_set_synth("orpheus")
-        except Exception:
-            pass
-        try:
-            evt.Skip()
-        except Exception:
-            pass
-
-
-    def _maybe_auto_test(self):
-        try:
-            if self.autoTestChk.GetValue():
-                self._on_test(None)
-        except Exception:
-            pass
-
-    def _on_test(self, evt):
-        # Run Orpheus preview off the GUI thread to reduce watchdog hangs.
-        def _run():
-            try:
-                self.apply_to_synth()
-                if hasattr(self.synth, "speak"):
-                    self.synth.speak([self.SAMPLE_TEXT])
-            except Exception:
-                pass
-        try:
-            threading.Thread(target=_run, daemon=True).start()
-        except Exception:
-            _run()
-
-    def _on_lang_change(self, evt):
-        self._populate_voices_for_selected_language()
-        self._maybe_auto_test()
-
-    def _on_voice_change(self, evt):
-        self._maybe_auto_test()
-
-    def _on_speed_change(self, evt):
-        self._maybe_auto_test()
-
-    def _populate_languages(self):
-        self.langChoice.Clear()
-        self._langs = []
-        voices = []
-        try:
-            voices = _normalise_voice_infos(getattr(self.synth, "availableVoices", None))
-        except Exception:
-            voices = []
-        if not voices:
-            self.langChoice.Append("Default", clientData="")
-            self.langChoice.SetSelection(0)
-            return
-        for i, vi in enumerate(voices):
-            label = _orpheus_friendly_label(vi, fallback=f"Language {i+1}")
-            vid = str(getattr(vi, "id", "") or str(i))
-            self.langChoice.Append(label, clientData=vid)
-            self._langs.append(vi)
-        self.langChoice.SetSelection(0)
-
-    def _apply_initial(self):
-        # language
-        lang_id = self.initial.get("languageId", None)
-        if lang_id is not None:
-            for i in range(self.langChoice.GetCount()):
-                if str(self.langChoice.GetClientData(i)) == str(lang_id):
-                    self.langChoice.SetSelection(i)
-                    break
-        # speed
-        try:
-            sp = self.initial.get("speed", None)
-            if sp is not None:
-                self.speedSpin.SetValue(int(sp))
-        except Exception:
-            pass
-
-    def _populate_voices_for_selected_language(self):
-        self.voiceChoice.Clear()
-        lang_id = self.get_language_id()
-        try:
-            if hasattr(self.synth, "voice"):
-                self.synth.voice = lang_id
-        except Exception:
-            pass
-
-        variants = []
-        try:
-            variants = _normalise_voice_infos(getattr(self.synth, "availableVariants", None))
-        except Exception:
-            variants = []
-        self._variants = variants or []
-
-        if not variants:
-            self.voiceChoice.Append("Default", clientData="")
-            self.voiceChoice.SetSelection(0)
-            return
-
-        for i, vi in enumerate(variants):
-            label = _orpheus_friendly_label(vi, fallback=f"Voice {i+1}")
-            vid = str(getattr(vi, "id", "") or str(i))
-            self.voiceChoice.Append(label, clientData=vid)
-        self.voiceChoice.SetSelection(0)
-
-        # apply initial variant
-        var_id = self.initial.get("variantId", None)
-        if var_id is not None:
-            for i in range(self.voiceChoice.GetCount()):
-                if str(self.voiceChoice.GetClientData(i)) == str(var_id):
-                    self.voiceChoice.SetSelection(i)
-                    break
-
-    def get_language_id(self) -> str:
-        i = self.langChoice.GetSelection()
-        if i == wx.NOT_FOUND:
-            return ""
-        return str(self.langChoice.GetClientData(i) or "")
-
-    def get_variant_id(self) -> str:
-        i = self.voiceChoice.GetSelection()
-        if i == wx.NOT_FOUND:
-            return ""
-        return str(self.voiceChoice.GetClientData(i) or "")
-
-    def get_speed(self) -> int:
-        try:
-            return int(self.speedSpin.GetValue())
-        except Exception:
-            return 100
-
-    def apply_to_synth(self):
-        try:
-            if hasattr(self.synth, "voice"):
-                self.synth.voice = self.get_language_id()
-        except Exception:
-            pass
-        try:
-            if hasattr(self.synth, "variant"):
-                self.synth.variant = self.get_variant_id()
-        except Exception:
-            pass
-        try:
-            if hasattr(self.synth, "rate"):
-                self.synth.rate = int(self.get_speed())
-        except Exception:
-            pass
-
-    def get_options(self, persist: bool = True) -> Dict[str, object]:
-        opts = {
-            "languageId": self.get_language_id(),
-            "variantId": self.get_variant_id(),
-            "speed": self.get_speed(),
-            "autoTest": bool(self.autoTestChk.GetValue()),
-        }
-        if persist:
-            _cfg_set("orpheusLanguageId", opts["languageId"])
-            _cfg_set("orpheusVariantId", opts["variantId"])
-            _cfg_set("orpheusSpeed", int(opts["speed"]))
-            _set_cfg_bool("autoTestOnChangeOrpheus", bool(opts["autoTest"]))
-        return opts
 
 # ----------------------------
 # DECtalk offline rendering + options
@@ -1635,7 +1455,7 @@ class DectalkOptionsDialog(wx.Dialog):
 
         # Voice (primary)
         rowV = wx.BoxSizer(wx.HORIZONTAL)
-        rowV.Add(wx.StaticText(self, label="Voice:"), 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 8)
+        rowV.Add(wx.StaticText(self, label="&Voice:"), 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 8)
         self.voiceChoice = wx.Choice(self, choices=[name for _, name in _DECTALK_VOICES])
         init_voice = str(initial.get("voice", "") or _cfg_get("dectalkVoice", "Paul") or "Paul")
         codes = [c for c, _ in _DECTALK_VOICES]
@@ -1648,21 +1468,23 @@ class DectalkOptionsDialog(wx.Dialog):
 
         # Rate (primary)
         rowR = wx.BoxSizer(wx.HORIZONTAL)
-        rowR.Add(wx.StaticText(self, label="Rate:"), 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 8)
+        rowR.Add(wx.StaticText(self, label="&Rate:"), 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 8)
         init_rate = int(initial.get("rate", _cfg_get("dectalkRate", 180) or 180) or 180)
         self.rateSpin = wx.SpinCtrl(self, min=75, max=650, initial=init_rate)
         rowR.Add(self.rateSpin, 0)
         sizer.Add(rowR, 0, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.BOTTOM, 10)
 
         # Auto test
-        self.autoTest = wx.CheckBox(self, label="Auto speak when changing settings")
+        self.autoTest = wx.CheckBox(self, label="&Auto speak when changing settings")
         self.autoTest.SetValue(bool(initial.get("autoTest", _get_cfg_bool("autoTestOnChangeDectalk", True))))
         sizer.Add(self.autoTest, 0, wx.LEFT | wx.RIGHT | wx.BOTTOM, 10)
 
         # Buttons row: Test + OK/Cancel
         btnRow = wx.BoxSizer(wx.HORIZONTAL)
-        self.testBtn = wx.Button(self, label="Test")
+        self.testBtn = wx.Button(self, label="&Test")
         btnRow.Add(self.testBtn, 0, wx.RIGHT, 8)
+        self.helpBtn = _create_help_button(self)
+        btnRow.Add(self.helpBtn, 0, wx.RIGHT, 8)
         btnRow.AddStretchSpacer(1)
         okCancel = self.CreateButtonSizer(wx.OK | wx.CANCEL)
         btnRow.Add(okCancel, 0, wx.EXPAND)
@@ -1677,6 +1499,7 @@ class DectalkOptionsDialog(wx.Dialog):
         self.voiceChoice.Bind(wx.EVT_CHOICE, self._on_changed)
         self.rateSpin.Bind(wx.EVT_SPINCTRL, self._on_changed)
         self.rateSpin.Bind(wx.EVT_TEXT, self._on_changed)
+        _bind_numeric_page_keys(self.rateSpin, 75, 650, page_step=25, callback=self._on_changed)
 
     def _get_selected_voice_code(self) -> str:
         idx = self.voiceChoice.GetSelection()
@@ -1687,7 +1510,11 @@ class DectalkOptionsDialog(wx.Dialog):
     def _on_changed(self, evt):
         if self.autoTest.IsChecked():
             self._on_test(None)
-        evt.Skip()
+        try:
+            if evt is not None:
+                evt.Skip()
+        except Exception:
+            pass
 
     def _on_test(self, evt):
         sample = "This is a DECtalk test."
@@ -1714,6 +1541,7 @@ class DectalkOptionsDialog(wx.Dialog):
     def get_options(self, persist: bool = True) -> Dict[str, Any]:
         opts = {
             "voice": self._get_selected_voice_code(),
+            "voiceLabel": _choice_label(self.voiceChoice),
             "rate": int(self.rateSpin.GetValue()),
             "autoTest": bool(self.autoTest.IsChecked()),
         }
@@ -2017,6 +1845,33 @@ def _list_bestspeech_voices() -> List[str]:
         ]
 
 
+def _get_bestspeech_voice_defaults(voice: str = "fred") -> Dict[str, int]:
+    """Read Keynote Gold defaults after the selected voice applies its preset."""
+    defaults = {"rate": 90, "pitch": 50, "volume": 80}
+    try:
+        import synthDrivers.bestspeech as bs
+        drv = bs.SynthDriver()
+        try:
+            try:
+                drv.voice = str(voice or "fred")
+            except Exception:
+                pass
+            for key in ("rate", "pitch", "volume"):
+                try:
+                    value = int(getattr(drv, key))
+                    defaults[key] = max(0, min(100, value))
+                except Exception:
+                    pass
+        finally:
+            try:
+                drv.terminate()
+            except Exception:
+                pass
+    except Exception:
+        pass
+    return defaults
+
+
 class _BestSpeechCapturePlayer:
     """A minimal nvwave.WavePlayer-like object that captures PCM instead of playing it."""
 
@@ -2198,6 +2053,16 @@ def _render_with_nvda_generic_capture(
                     synth.rate = int(opts.get("rate", 50) or 50)
             except Exception:
                 pass
+            try:
+                if "pitch" in opts and hasattr(synth, "pitch"):
+                    synth.pitch = int(opts.get("pitch", 50) or 50)
+            except Exception:
+                pass
+            try:
+                if "volume" in opts and hasattr(synth, "volume"):
+                    synth.volume = max(0, min(100, int(opts.get("volume", 100) or 100)))
+            except Exception:
+                pass
         try:
             expects_done_notification = synthDriverHandler.synthDoneSpeaking in (getattr(synth, "supportedNotifications", set()) or set())
         except Exception:
@@ -2283,6 +2148,8 @@ def _render_with_bestspeech_offline(
     out_wav: str,
     voice: str = "fred",
     rate: int = 90,
+    pitch: int = 50,
+    volume: int = 100,
     rate_boost: bool = False,
     cancel_evt: Optional[threading.Event] = None,
     progress: Optional[Dict[str, Any]] = None,
@@ -2337,6 +2204,14 @@ def _render_with_bestspeech_offline(
         except Exception:
             pass
         try:
+            drv.pitch = max(0, min(100, int(pitch)))
+        except Exception:
+            pass
+        try:
+            drv.volume = max(0, min(100, int(volume)))
+        except Exception:
+            pass
+        try:
             drv.rateBoost = bool(rate_boost)
         except Exception:
             # some addon versions expose rateBoost only as internal field
@@ -2371,7 +2246,7 @@ def _render_with_bestspeech_offline(
         v_excitation = preset.get("excitation", getattr(drv, "_excitation", 3))
         v_inflection = preset.get("inflection", getattr(drv, "_inflection", 110))
         v_unvoiced = preset.get("unvoicedVolume", getattr(drv, "_unvoicedVolume", 0))
-        v_pitch = preset.get("pitch", getattr(drv, "_pitch", 130))
+        v_pitch = getattr(drv, "_pitch", preset.get("pitch", 130))
 
         t = f"~r{getattr(drv, '_rate', 175)}]~e{v_excitation}]~v{v_headsize}]~f{v_pitch}]~g{getattr(drv, '_volume', 100)}]~u{v_unvoiced}]~h{v_inflection}]{t} ~|"
 
@@ -2436,30 +2311,56 @@ class BestSpeechOptionsDialog(wx.Dialog):
         initial = initial or {}
 
         self.voices = _list_bestspeech_voices()
+        saved_voice = str(initial.get("voice", _cfg_get("bestspeechVoice", "") or "") or "")
+        if not saved_voice and self.voices:
+            saved_voice = self.voices[0]
+        voice_defaults = _get_bestspeech_voice_defaults(saved_voice or "fred")
+        tone_settings_current = bool(_cfg_get_bool("bestspeechToneSettingsCurrent", False))
+        initial_rate = int(initial.get("rate", _cfg_get("bestspeechRate", voice_defaults.get("rate", 90)) or voice_defaults.get("rate", 90)) or voice_defaults.get("rate", 90))
+        if tone_settings_current:
+            initial_pitch = int(initial.get("pitch", _cfg_get("bestspeechPitch", voice_defaults.get("pitch", 50)) or voice_defaults.get("pitch", 50)) or voice_defaults.get("pitch", 50))
+            initial_volume = int(initial.get("volume", _cfg_get("bestspeechVolume", voice_defaults.get("volume", 80)) or voice_defaults.get("volume", 80)) or voice_defaults.get("volume", 80))
+        else:
+            initial_pitch = int(initial.get("pitch", voice_defaults.get("pitch", 50)) or voice_defaults.get("pitch", 50))
+            initial_volume = int(initial.get("volume", voice_defaults.get("volume", 80)) or voice_defaults.get("volume", 80))
 
         sizer = wx.BoxSizer(wx.VERTICAL)
 
         row1 = wx.BoxSizer(wx.HORIZONTAL)
-        row1.Add(wx.StaticText(self, label="Voice:"), 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 8)
+        row1.Add(wx.StaticText(self, label="&Voice:"), 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 8)
         self.voiceChoice = wx.Choice(self, choices=self.voices if self.voices else ["(no voices found)"])
         row1.Add(self.voiceChoice, 1, wx.EXPAND)
         sizer.Add(row1, 0, wx.EXPAND | wx.ALL, 10)
 
         row2 = wx.BoxSizer(wx.HORIZONTAL)
-        row2.Add(wx.StaticText(self, label="Speed:"), 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 8)
-        self.rateSpin = wx.SpinCtrl(self, min=0, max=100, initial=int(initial.get("rate", _cfg_get("bestspeechRate", 90) or 90) or 90))
+        row2.Add(wx.StaticText(self, label="&Speed:"), 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 8)
+        self.rateSpin = wx.SpinCtrl(self, min=0, max=100, initial=max(0, min(100, initial_rate)))
         row2.Add(self.rateSpin, 0)
         sizer.Add(row2, 0, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.BOTTOM, 10)
 
-        self.rateBoostChk = wx.CheckBox(self, label="Rate boost (faster)")
+        row3 = wx.BoxSizer(wx.HORIZONTAL)
+        row3.Add(wx.StaticText(self, label="&Pitch:"), 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 8)
+        self.pitchSpin = wx.SpinCtrl(self, min=0, max=100, initial=max(0, min(100, initial_pitch)))
+        row3.Add(self.pitchSpin, 0)
+        sizer.Add(row3, 0, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.BOTTOM, 10)
+
+        row4 = wx.BoxSizer(wx.HORIZONTAL)
+        row4.Add(wx.StaticText(self, label="Vol&ume:"), 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 8)
+        self.volumeSpin = wx.SpinCtrl(self, min=0, max=100, initial=max(0, min(100, initial_volume)))
+        row4.Add(self.volumeSpin, 0)
+        sizer.Add(row4, 0, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.BOTTOM, 10)
+
+        self.rateBoostChk = wx.CheckBox(self, label="Rate &boost (faster)")
         self.rateBoostChk.SetValue(bool(initial.get("rateBoost", _cfg_get_bool("bestspeechRateBoost", False))))
         sizer.Add(self.rateBoostChk, 0, wx.LEFT | wx.RIGHT | wx.BOTTOM, 10)
 
         self.autoSpeakCB = _add_autospeak_checkbox(self, sizer, "bestspeechAutoSpeak", default=True)
 
         btnRow = wx.BoxSizer(wx.HORIZONTAL)
-        self.testBtn = wx.Button(self, label="Test (&T)")
+        self.testBtn = wx.Button(self, label="&Test")
         btnRow.Add(self.testBtn, 0, wx.RIGHT, 8)
+        self.helpBtn = _create_help_button(self)
+        btnRow.Add(self.helpBtn, 0, wx.RIGHT, 8)
         btnRow.AddStretchSpacer(1)
         okCancel = self.CreateButtonSizer(wx.OK | wx.CANCEL)
         btnRow.Add(okCancel, 0, wx.EXPAND)
@@ -2469,7 +2370,6 @@ class BestSpeechOptionsDialog(wx.Dialog):
         self.SetMinSize((520, -1))
 
         # Load persisted
-        saved_voice = str(initial.get("voice", _cfg_get("bestspeechVoice", "") or "") or "")
         if self.voices:
             if saved_voice and saved_voice in self.voices:
                 self.voiceChoice.SetSelection(self.voices.index(saved_voice))
@@ -2484,18 +2384,28 @@ class BestSpeechOptionsDialog(wx.Dialog):
 
         # Events
         self.testBtn.Bind(wx.EVT_BUTTON, self._on_test)
+        self._auto_test = _debounced_call(lambda: self._on_test(None), delay_ms=350)
 
         def _maybe_auto(evt):
             try:
                 if self.autoSpeakCB.GetValue():
-                    self._on_test(None)
+                    self._auto_test()
             except Exception:
                 pass
-            evt.Skip()
+            try:
+                if evt is not None:
+                    evt.Skip()
+            except Exception:
+                pass
 
         self.voiceChoice.Bind(wx.EVT_CHOICE, _maybe_auto)
         self.rateSpin.Bind(wx.EVT_SPINCTRL, _maybe_auto)
+        self.pitchSpin.Bind(wx.EVT_SPINCTRL, _maybe_auto)
+        self.volumeSpin.Bind(wx.EVT_SPINCTRL, _maybe_auto)
         self.rateBoostChk.Bind(wx.EVT_CHECKBOX, _maybe_auto)
+        _bind_numeric_page_keys(self.rateSpin, 0, 100, page_step=10, callback=_maybe_auto)
+        _bind_numeric_page_keys(self.pitchSpin, 0, 100, page_step=10, callback=_maybe_auto)
+        _bind_numeric_page_keys(self.volumeSpin, 0, 100, page_step=10, callback=_maybe_auto)
 
     def _get_voice(self) -> str:
         if not self.voices:
@@ -2515,6 +2425,8 @@ class BestSpeechOptionsDialog(wx.Dialog):
                 out_wav=tmp_wav,
                 voice=self._get_voice() or "fred",
                 rate=int(self.rateSpin.GetValue()),
+                pitch=int(self.pitchSpin.GetValue()),
+                volume=int(self.volumeSpin.GetValue()),
                 rate_boost=bool(self.rateBoostChk.GetValue()),
             )
             _play_wav(tmp_wav)
@@ -2530,13 +2442,19 @@ class BestSpeechOptionsDialog(wx.Dialog):
     def get_options(self, persist: bool = True) -> dict:
         opts = {
             "voice": self._get_voice(),
+            "voiceLabel": self._get_voice(),
             "rate": int(self.rateSpin.GetValue()),
+            "pitch": max(0, min(100, int(self.pitchSpin.GetValue()))),
+            "volume": max(0, min(100, int(self.volumeSpin.GetValue()))),
             "rateBoost": bool(self.rateBoostChk.GetValue()),
             "autoSpeak": bool(self.autoSpeakCB.GetValue()),
         }
         if persist:
             _cfg_set("bestspeechVoice", str(opts["voice"] or ""))
             _cfg_set("bestspeechRate", int(opts["rate"]))
+            _cfg_set("bestspeechPitch", int(opts["pitch"]))
+            _cfg_set("bestspeechVolume", int(opts["volume"]))
+            _set_cfg_bool("bestspeechToneSettingsCurrent", True)
             _cfg_set("bestspeechRateBoost", bool(opts["rateBoost"]))
             _set_cfg_bool("bestspeechAutoSpeak", bool(opts["autoSpeak"]))
         return opts
@@ -2575,7 +2493,7 @@ class SynthSelectDialog(wx.Dialog):
         super().__init__(parent, title="soundWave - Synthesizer")
         sizer = wx.BoxSizer(wx.VERTICAL)
 
-        sizer.Add(wx.StaticText(self, label="Choose a synthesizer to render with:"), 0, wx.ALL, 10)
+        sizer.Add(wx.StaticText(self, label="Choose a &synthesizer to render with:"), 0, wx.ALL, 10)
 
         choices: List[str] = []
         self._choice_meta: List[Dict[str, str]] = []
@@ -2633,10 +2551,10 @@ class SynthSelectDialog(wx.Dialog):
 
         # record base dir
         baseRow = wx.BoxSizer(wx.HORIZONTAL)
-        baseRow.Add(wx.StaticText(self, label="Record base folder:"), 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 8)
+        baseRow.Add(wx.StaticText(self, label="Record base &folder:"), 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 8)
         self.baseDir = wx.TextCtrl(self, value=str(_cfg_get("recordBaseDir", "") or ""))
         baseRow.Add(self.baseDir, 1, wx.EXPAND | wx.RIGHT, 8)
-        self.browseBtn = wx.Button(self, label="Browse…")
+        self.browseBtn = wx.Button(self, label="&Browse…")
         self.browseBtn.Bind(wx.EVT_BUTTON, self._on_browse)
         baseRow.Add(self.browseBtn, 0)
         sizer.Add(baseRow, 0, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.BOTTOM, 10)
@@ -2648,8 +2566,13 @@ class SynthSelectDialog(wx.Dialog):
         ), 0, wx.LEFT | wx.RIGHT | wx.BOTTOM, 10)
 
         
+        btnRow = wx.BoxSizer(wx.HORIZONTAL)
+        self.helpBtn = _create_help_button(self)
+        btnRow.Add(self.helpBtn, 0, wx.RIGHT, 8)
+        btnRow.AddStretchSpacer(1)
         btns = self.CreateButtonSizer(wx.OK | wx.CANCEL)
-        sizer.Add(btns, 0, wx.EXPAND | wx.ALL, 10)
+        btnRow.Add(btns, 0, wx.EXPAND)
+        sizer.Add(btnRow, 0, wx.EXPAND | wx.ALL, 10)
 
         self.SetSizer(sizer)
         self.SetMinSize((720, 260))
@@ -2847,26 +2770,36 @@ class GenericNvdaOptionsDialog(wx.Dialog):
         grid = wx.FlexGridSizer(rows=0, cols=2, vgap=8, hgap=8)
         grid.AddGrowableCol(1, 1)
 
-        grid.Add(wx.StaticText(panel, label="Voice:"), 0, wx.ALIGN_CENTER_VERTICAL)
+        grid.Add(wx.StaticText(panel, label="&Voice:"), 0, wx.ALIGN_CENTER_VERTICAL)
         self.voiceChoice = wx.Choice(panel)
         grid.Add(self.voiceChoice, 1, wx.EXPAND)
 
-        grid.Add(wx.StaticText(panel, label="Variant:"), 0, wx.ALIGN_CENTER_VERTICAL)
+        grid.Add(wx.StaticText(panel, label="Varia&nt:"), 0, wx.ALIGN_CENTER_VERTICAL)
         self.variantChoice = wx.Choice(panel)
         grid.Add(self.variantChoice, 1, wx.EXPAND)
 
-        grid.Add(wx.StaticText(panel, label="Rate:"), 0, wx.ALIGN_CENTER_VERTICAL)
+        grid.Add(wx.StaticText(panel, label="&Rate:"), 0, wx.ALIGN_CENTER_VERTICAL)
         self.rateSpin = wx.SpinCtrl(panel, min=0, max=100, initial=int(_cfg_get(self.cfg_prefix + "_rate", _safe_getattr(self.synth, "rate", 50) or 50)))
         grid.Add(self.rateSpin, 0, wx.EXPAND)
+
+        grid.Add(wx.StaticText(panel, label="&Pitch:"), 0, wx.ALIGN_CENTER_VERTICAL)
+        self.pitchSpin = wx.SpinCtrl(panel, min=0, max=100, initial=int(_cfg_get(self.cfg_prefix + "_pitch", _safe_getattr(self.synth, "pitch", 50) or 50)))
+        grid.Add(self.pitchSpin, 0, wx.EXPAND)
+
+        grid.Add(wx.StaticText(panel, label="Vol&ume:"), 0, wx.ALIGN_CENTER_VERTICAL)
+        self.volumeSpin = wx.SpinCtrl(panel, min=0, max=100, initial=int(_cfg_get(self.cfg_prefix + "_volume", _safe_getattr(self.synth, "volume", 100) or 100)))
+        grid.Add(self.volumeSpin, 0, wx.EXPAND)
 
         root.Add(grid, 1, wx.ALL | wx.EXPAND, 10)
         self.autoSpeakCB = _add_autospeak_checkbox(panel, root, self.cfg_prefix + "_autoTest", default=True)
 
         buttons = wx.StdDialogButtonSizer()
-        self.testBtn = wx.Button(panel, label="Test")
+        self.testBtn = wx.Button(panel, label="&Test")
+        self.helpBtn = _create_help_button(panel)
         ok = wx.Button(panel, wx.ID_OK)
         cancel = wx.Button(panel, wx.ID_CANCEL)
         buttons.AddButton(self.testBtn)
+        buttons.AddButton(self.helpBtn)
         buttons.AddButton(ok)
         buttons.AddButton(cancel)
         buttons.Realize()
@@ -2884,7 +2817,12 @@ class GenericNvdaOptionsDialog(wx.Dialog):
         self.voiceChoice.Bind(wx.EVT_CHOICE, self._on_voice_changed)
         self.variantChoice.Bind(wx.EVT_CHOICE, self._maybe_auto_test)
         self.rateSpin.Bind(wx.EVT_SPINCTRL, self._maybe_auto_test)
+        self.pitchSpin.Bind(wx.EVT_SPINCTRL, self._maybe_auto_test)
+        self.volumeSpin.Bind(wx.EVT_SPINCTRL, self._maybe_auto_test)
         self.testBtn.Bind(wx.EVT_BUTTON, self._on_test)
+        _bind_numeric_page_keys(self.rateSpin, 0, 100, page_step=10, callback=self._maybe_auto_test)
+        _bind_numeric_page_keys(self.pitchSpin, 0, 100, page_step=10, callback=self._maybe_auto_test)
+        _bind_numeric_page_keys(self.volumeSpin, 0, 100, page_step=10, callback=self._maybe_auto_test)
 
     def Destroy(self):
         try:
@@ -2990,14 +2928,20 @@ class GenericNvdaOptionsDialog(wx.Dialog):
     def get_options(self, persist: bool = True) -> Dict[str, Any]:
         opts = {
             "voice": self._choice_value(self.voiceChoice),
+            "voiceLabel": _choice_label(self.voiceChoice),
             "variant": self._choice_value(self.variantChoice),
+            "variantLabel": _choice_label(self.variantChoice),
             "rate": int(self.rateSpin.GetValue()),
+            "pitch": int(self.pitchSpin.GetValue()),
+            "volume": max(0, min(100, int(self.volumeSpin.GetValue()))),
             "autoTest": bool(self.autoSpeakCB.GetValue()),
         }
         if persist:
             _cfg_set(self.cfg_prefix + "_voice", opts["voice"])
             _cfg_set(self.cfg_prefix + "_variant", opts["variant"])
             _cfg_set(self.cfg_prefix + "_rate", int(opts["rate"]))
+            _cfg_set(self.cfg_prefix + "_pitch", int(opts["pitch"]))
+            _cfg_set(self.cfg_prefix + "_volume", int(opts["volume"]))
             _cfg_set(self.cfg_prefix + "_autoTest", bool(opts["autoTest"]))
         return opts
 
@@ -3070,13 +3014,13 @@ class IbmEciOptionsDialog(wx.Dialog):
         grid.AddGrowableCol(1, 1)
 
         # Voice (friendly list from .SYN when available)
-        grid.Add(wx.StaticText(pnl, label="Voice:"), 0, wx.ALIGN_CENTER_VERTICAL)
+        grid.Add(wx.StaticText(pnl, label="&Voice:"), 0, wx.ALIGN_CENTER_VERTICAL)
         self._voiceItems = _eci_enumerate_voices_from_syn(self.initial.get("dllPath", "") or "")
         self.voiceChoice = wx.Choice(pnl, choices=[lbl for (_vid, lbl) in self._voiceItems])
         grid.Add(self.voiceChoice, 1, wx.EXPAND)
 
         # Speed
-        grid.Add(wx.StaticText(pnl, label="Speed:"), 0, wx.ALIGN_CENTER_VERTICAL)
+        grid.Add(wx.StaticText(pnl, label="&Speed:"), 0, wx.ALIGN_CENTER_VERTICAL)
         speedRow = wx.BoxSizer(wx.HORIZONTAL)
         self.speedSpin = wx.SpinCtrl(pnl, min=0, max=250, initial=int(self.initial.get("speed", 110) or 110))
         speedRow.Add(self.speedSpin, 0, wx.RIGHT, 8)
@@ -3104,12 +3048,12 @@ class IbmEciOptionsDialog(wx.Dialog):
         root.Add(grid, 0, wx.EXPAND | wx.ALL, 12)
 
         # Advanced: DLL path (kept out of the way; rarely changed)
-        adv = wx.StaticBoxSizer(wx.StaticBox(pnl, label="Advanced"), wx.VERTICAL)
+        adv = wx.StaticBoxSizer(wx.StaticBox(pnl, label="&Advanced"), wx.VERTICAL)
         dllRow = wx.BoxSizer(wx.HORIZONTAL)
-        dllRow.Add(wx.StaticText(pnl, label="ECI DLL path:"), 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 8)
+        dllRow.Add(wx.StaticText(pnl, label="ECI &DLL path:"), 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 8)
         self.dllText = wx.TextCtrl(pnl, value=str(self.initial.get("dllPath", "") or ""))
         dllRow.Add(self.dllText, 1, wx.EXPAND | wx.RIGHT, 8)
-        self.browseBtn = wx.Button(pnl, label="Browse…")
+        self.browseBtn = wx.Button(pnl, label="&Browse…")
         dllRow.Add(self.browseBtn, 0)
         adv.Add(dllRow, 0, wx.EXPAND | wx.ALL, 8)
         root.Add(adv, 0, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.BOTTOM, 12)
@@ -3117,8 +3061,10 @@ class IbmEciOptionsDialog(wx.Dialog):
         self.autoSpeakCB = _add_autospeak_checkbox(pnl, root, "autoTestOnChangeIbmEci", default=True)
 
         btnRow = wx.BoxSizer(wx.HORIZONTAL)
-        self.testBtn = wx.Button(pnl, label="Test (&T)")
+        self.testBtn = wx.Button(pnl, label="&Test")
         btnRow.Add(self.testBtn, 0, wx.RIGHT, 8)
+        self.helpBtn = _create_help_button(pnl)
+        btnRow.Add(self.helpBtn, 0, wx.RIGHT, 8)
         btnRow.AddStretchSpacer(1)
 
         self.okBtn = wx.Button(pnl, wx.ID_OK)
@@ -3155,6 +3101,7 @@ class IbmEciOptionsDialog(wx.Dialog):
         self.dllText.Bind(wx.EVT_TEXT, _maybe_auto)
         self.voiceChoice.Bind(wx.EVT_CHOICE, _maybe_auto)
         self.speedSpin.Bind(wx.EVT_SPINCTRL, _maybe_auto)
+        _bind_numeric_page_keys(self.speedSpin, 0, 250, page_step=10, callback=_maybe_auto)
 
 
     def _on_browse(self, evt):
@@ -3201,6 +3148,7 @@ class IbmEciOptionsDialog(wx.Dialog):
         return {
             "dllPath": (self.dllText.GetValue() or "").strip(),
             "voiceId": int(self._voiceItems[self.voiceChoice.GetSelection()][0]) if self._voiceItems and self.voiceChoice.GetSelection() >= 0 else 0,
+            "voiceLabel": _choice_label(self.voiceChoice),
             "speed": int(self.speedSpin.GetValue()),
             "autoTest": bool(self.autoSpeakCB.GetValue()) if hasattr(self, "autoSpeakCB") else True,
         }
@@ -3382,34 +3330,36 @@ class SonataOptionsDialog(wx.Dialog):
 
         # Voice
         row1 = wx.BoxSizer(wx.HORIZONTAL)
-        row1.Add(wx.StaticText(self, label="Voice:"), 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 8)
+        row1.Add(wx.StaticText(self, label="&Voice:"), 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 8)
         self.voiceChoice = wx.Choice(self, choices=[v[0] for v in self.voices] if self.voices else ["(no voices found)"])
         row1.Add(self.voiceChoice, 1, wx.EXPAND)
         sizer.Add(row1, 0, wx.EXPAND | wx.ALL, 10)
 
         # Speaker
         row2 = wx.BoxSizer(wx.HORIZONTAL)
-        row2.Add(wx.StaticText(self, label="Speaker:"), 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 8)
+        row2.Add(wx.StaticText(self, label="S&peaker:"), 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 8)
         self.speakerChoice = wx.Choice(self, choices=["0"])
         row2.Add(self.speakerChoice, 1, wx.EXPAND)
         sizer.Add(row2, 0, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.BOTTOM, 10)
 
         # Speed
         row3 = wx.BoxSizer(wx.HORIZONTAL)
-        row3.Add(wx.StaticText(self, label="Speed (%):"), 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 8)
+        row3.Add(wx.StaticText(self, label="&Speed (%):"), 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 8)
         self.speedSpin = wx.SpinCtrl(self, min=50, max=400, initial=140)
         row3.Add(self.speedSpin, 0)
         sizer.Add(row3, 0, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.BOTTOM, 10)
 
         # Auto-test
-        self.autoTest = wx.CheckBox(self, label="Auto-speak when changing voice, speaker, or speed")
+        self.autoTest = wx.CheckBox(self, label="&Auto-speak when changing voice, speaker, or speed")
         self.autoTest.SetValue(bool(_get_cfg_bool("autoTestOnChangeSonata", True)))
         sizer.Add(self.autoTest, 0, wx.LEFT | wx.RIGHT | wx.BOTTOM, 10)
 
         # Buttons
         btnRow = wx.BoxSizer(wx.HORIZONTAL)
-        self.testBtn = wx.Button(self, label="Test (&T)")
+        self.testBtn = wx.Button(self, label="&Test")
         btnRow.Add(self.testBtn, 0, wx.RIGHT, 8)
+        self.helpBtn = _create_help_button(self)
+        btnRow.Add(self.helpBtn, 0, wx.RIGHT, 8)
         btnRow.AddStretchSpacer(1)
 
         self.okBtn = wx.Button(self, wx.ID_OK)
@@ -3456,6 +3406,7 @@ class SonataOptionsDialog(wx.Dialog):
         self.voiceChoice.Bind(wx.EVT_CHOICE, self._on_change)
         self.speakerChoice.Bind(wx.EVT_CHOICE, self._on_change)
         self.speedSpin.Bind(wx.EVT_SPINCTRL, self._on_change)
+        _bind_numeric_page_keys(self.speedSpin, 50, 400, page_step=10, callback=self._on_change)
 
         # Focus voice list first
         try:
@@ -3483,7 +3434,11 @@ class SonataOptionsDialog(wx.Dialog):
             self._rebuild_speakers()
         if self.autoTest.IsChecked():
             self._on_test(None)
-        evt.Skip()
+        try:
+            if evt is not None:
+                evt.Skip()
+        except Exception:
+            pass
 
     def _on_test(self, evt):
         try:
@@ -3506,6 +3461,7 @@ class SonataOptionsDialog(wx.Dialog):
         if not self.voices:
             opts = {
                 "voice_label": "",
+                "voiceLabel": "",
                 "voice_config_path": "",
                 "speaker": "0",
                 "speed_percent": int(self.speedSpin.GetValue()),
@@ -3535,6 +3491,7 @@ class SonataOptionsDialog(wx.Dialog):
 
         return {
             "voice_label": label,
+            "voiceLabel": label,
             "voice_config_path": cfg_path,
             "speaker": str(speaker),
             "speed_percent": speed,
@@ -3553,33 +3510,43 @@ class OrpheusOptionsDialog(wx.Dialog):
         pnl = wx.Panel(self)
         root = wx.BoxSizer(wx.VERTICAL)
 
-        grid = wx.FlexGridSizer(rows=4, cols=2, vgap=8, hgap=10)
+        grid = wx.FlexGridSizer(rows=0, cols=2, vgap=8, hgap=10)
         grid.AddGrowableCol(1, 1)
 
-        grid.Add(wx.StaticText(pnl, label="Language:"), 0, wx.ALIGN_CENTER_VERTICAL)
+        grid.Add(wx.StaticText(pnl, label="&Language:"), 0, wx.ALIGN_CENTER_VERTICAL)
         self.langChoice = wx.Choice(pnl, choices=[])
         grid.Add(self.langChoice, 1, wx.EXPAND)
 
-        grid.Add(wx.StaticText(pnl, label="Voice:"), 0, wx.ALIGN_CENTER_VERTICAL)
+        grid.Add(wx.StaticText(pnl, label="&Voice:"), 0, wx.ALIGN_CENTER_VERTICAL)
         self.voiceChoice = wx.Choice(pnl, choices=[])
         grid.Add(self.voiceChoice, 1, wx.EXPAND)
 
-        grid.Add(wx.StaticText(pnl, label="Speed (%):"), 0, wx.ALIGN_CENTER_VERTICAL)
+        grid.Add(wx.StaticText(pnl, label="&Speed (%):"), 0, wx.ALIGN_CENTER_VERTICAL)
         self.speedSpin = wx.SpinCtrl(pnl, min=20, max=400, initial=int(self.initial.get("speed", 100) or 100))
         grid.Add(self.speedSpin, 0, wx.ALIGN_LEFT)
 
-        self.autoTestChk = wx.CheckBox(pnl, label="Auto-speak when changing options")
-        self.autoTestChk.SetValue(bool(self.initial.get("autoTest", False)))
-        grid.Add(self.autoTestChk, 0, wx.TOP, 6)
-        grid.AddSpacer(0)
+        grid.Add(wx.StaticText(pnl, label="&Pitch:"), 0, wx.ALIGN_CENTER_VERTICAL)
+        self.pitchSpin = wx.SpinCtrl(pnl, min=0, max=100, initial=int(self.initial.get("pitch", _safe_getattr(self.synth, "pitch", 50) or 50)))
+        grid.Add(self.pitchSpin, 0, wx.ALIGN_LEFT)
+
+        grid.Add(wx.StaticText(pnl, label="Vol&ume:"), 0, wx.ALIGN_CENTER_VERTICAL)
+        self.volumeSpin = wx.SpinCtrl(pnl, min=0, max=100, initial=int(self.initial.get("volume", _safe_getattr(self.synth, "volume", _safe_getattr(self.synth, "_volume", 100)) or 100)))
+        grid.Add(self.volumeSpin, 0, wx.ALIGN_LEFT)
 
         root.Add(grid, 0, wx.EXPAND | wx.ALL, 12)
 
-        self.autoSpeakCB = _add_autospeak_checkbox(pnl, root, "orpheusAutoSpeak", default=True)
+        self.autoSpeakCB = _add_autospeak_checkbox(
+            pnl,
+            root,
+            "autoTestOnChangeOrpheus",
+            default=bool(self.initial.get("autoTest", True)),
+        )
 
         btnRow = wx.BoxSizer(wx.HORIZONTAL)
-        self.testBtn = wx.Button(pnl, label="Test")
+        self.testBtn = wx.Button(pnl, label="&Test")
         btnRow.Add(self.testBtn, 0, wx.RIGHT, 8)
+        self.helpBtn = _create_help_button(pnl)
+        btnRow.Add(self.helpBtn, 0, wx.RIGHT, 8)
         btnRow.AddStretchSpacer(1)
         self.okBtn = wx.Button(pnl, wx.ID_OK)
         self.cancelBtn = wx.Button(pnl, wx.ID_CANCEL)
@@ -3622,14 +3589,21 @@ class OrpheusOptionsDialog(wx.Dialog):
         self.langChoice.Bind(wx.EVT_CHOICE, _maybe_auto)
         self.voiceChoice.Bind(wx.EVT_CHOICE, _maybe_auto)
         self.speedSpin.Bind(wx.EVT_SPINCTRL, _maybe_auto)
+        self.pitchSpin.Bind(wx.EVT_SPINCTRL, _maybe_auto)
+        self.volumeSpin.Bind(wx.EVT_SPINCTRL, _maybe_auto)
+        _bind_numeric_page_keys(self.speedSpin, 20, 400, page_step=10, callback=self._on_speed_change)
+        _bind_numeric_page_keys(self.pitchSpin, 0, 100, page_step=10, callback=self._on_pitch_change)
+        _bind_numeric_page_keys(self.volumeSpin, 0, 100, page_step=10, callback=self._on_volume_change)
 
         self.Bind(wx.EVT_CHOICE, self._on_lang_change, self.langChoice)
         self.Bind(wx.EVT_CHOICE, self._on_voice_change, self.voiceChoice)
         self.Bind(wx.EVT_SPINCTRL, self._on_speed_change, self.speedSpin)
+        self.Bind(wx.EVT_SPINCTRL, self._on_pitch_change, self.pitchSpin)
+        self.Bind(wx.EVT_SPINCTRL, self._on_volume_change, self.volumeSpin)
 
     def _maybe_auto_test(self):
         try:
-            if self.autoTestChk.GetValue():
+            if self.autoSpeakCB.GetValue():
                 self._on_test(None)
         except Exception:
             pass
@@ -3650,6 +3624,12 @@ class OrpheusOptionsDialog(wx.Dialog):
         self._maybe_auto_test()
 
     def _on_speed_change(self, evt):
+        self._maybe_auto_test()
+
+    def _on_pitch_change(self, evt):
+        self._maybe_auto_test()
+
+    def _on_volume_change(self, evt):
         self._maybe_auto_test()
 
     def _populate_languages(self):
@@ -3684,6 +3664,18 @@ class OrpheusOptionsDialog(wx.Dialog):
             sp = self.initial.get("speed", None)
             if sp is not None:
                 self.speedSpin.SetValue(int(sp))
+        except Exception:
+            pass
+        try:
+            pitch = self.initial.get("pitch", None)
+            if pitch is not None:
+                self.pitchSpin.SetValue(max(0, min(100, int(pitch))))
+        except Exception:
+            pass
+        try:
+            volume = self.initial.get("volume", None)
+            if volume is not None:
+                self.volumeSpin.SetValue(max(0, min(100, int(volume))))
         except Exception:
             pass
 
@@ -3740,6 +3732,18 @@ class OrpheusOptionsDialog(wx.Dialog):
         except Exception:
             return 100
 
+    def get_pitch(self) -> int:
+        try:
+            return max(0, min(100, int(self.pitchSpin.GetValue())))
+        except Exception:
+            return 50
+
+    def get_volume(self) -> int:
+        try:
+            return max(0, min(100, int(self.volumeSpin.GetValue())))
+        except Exception:
+            return 100
+
     def apply_to_synth(self):
         try:
             if hasattr(self.synth, "voice"):
@@ -3756,48 +3760,43 @@ class OrpheusOptionsDialog(wx.Dialog):
                 self.synth.rate = int(self.get_speed())
         except Exception:
             pass
+        try:
+            if hasattr(self.synth, "pitch"):
+                self.synth.pitch = int(self.get_pitch())
+        except Exception:
+            pass
+        try:
+            volume = int(self.get_volume())
+            if hasattr(self.synth, "volume"):
+                self.synth.volume = volume
+            if hasattr(self.synth, "_volume"):
+                self.synth._volume = volume
+        except Exception:
+            pass
 
     def get_options(self, persist: bool = True) -> Dict[str, object]:
         opts = {
             "languageId": self.get_language_id(),
+            "voiceLabel": _choice_label(self.langChoice),
             "variantId": self.get_variant_id(),
+            "variantLabel": _choice_label(self.voiceChoice),
             "speed": self.get_speed(),
-            "autoTest": bool(self.autoTestChk.GetValue()),
+            "pitch": self.get_pitch(),
+            "volume": self.get_volume(),
+            "autoTest": bool(self.autoSpeakCB.GetValue()),
         }
         if persist:
             _cfg_set("orpheusLanguageId", opts["languageId"])
             _cfg_set("orpheusVariantId", opts["variantId"])
             _cfg_set("orpheusSpeed", int(opts["speed"]))
+            _cfg_set("orpheusPitch", int(opts["pitch"]))
+            _cfg_set("orpheusVolume", int(opts["volume"]))
             _set_cfg_bool("autoTestOnChangeOrpheus", bool(opts["autoTest"]))
         return opts
 
 # ----------------------------
 # Orpheus capture renderer
 # ----------------------------
-
-    def _maybe_auto_test(self, evt=None):
-        try:
-            if hasattr(self, 'autoTestChk') and self.autoTestChk.GetValue():
-                _set_cfg_bool('autoTestOnChangeSAPI', True)
-                if hasattr(self, '_on_test'):
-                    self._on_test(None)
-            else:
-                _set_cfg_bool('autoTestOnChangeSAPI', False)
-        except Exception:
-            pass
-
-
-    def _on_show_focus(self, evt):
-        try:
-            if evt.IsShown() and hasattr(self, 'voiceChoice'):
-                wx.CallAfter(self.voiceChoice.SetFocus)
-        except Exception:
-            pass
-        try:
-            evt.Skip()
-        except Exception:
-            pass
-
 def _apply_orpheus_volume(audio_data: bytes, synth) -> bytes:
     """Match the Orpheus driver volume scaling without feeding live playback."""
     try:
@@ -3992,6 +3991,20 @@ def _render_with_orpheus_capture(text: str, out_wav: str, orpheusSynth, opts: Op
         try:
             if hasattr(synth, "rate") and "speed" in opts:
                 synth.rate = int(opts.get("speed") or 100)
+        except Exception:
+            pass
+        try:
+            if hasattr(synth, "pitch") and "pitch" in opts:
+                synth.pitch = int(opts.get("pitch") or 50)
+        except Exception:
+            pass
+        try:
+            if "volume" in opts:
+                volume = max(0, min(100, int(opts.get("volume") or 100)))
+                if hasattr(synth, "volume"):
+                    synth.volume = volume
+                if hasattr(synth, "_volume"):
+                    synth._volume = volume
         except Exception:
             pass
 
@@ -4728,6 +4741,7 @@ def _do_render_impl():
     orpheus_opts = None
     dectalk_opts = None
     nvda_opts = None
+    voice_label = ""
     if kind == "sonata":
         try:
             od = SonataOptionsDialog(parent)
@@ -4738,6 +4752,7 @@ def _do_render_impl():
             if _show_modal(od) != wx.ID_OK:
                 return
             sonata_opts = od.get_options(persist=True)
+            voice_label = str(sonata_opts.get("voiceLabel", "") or sonata_opts.get("voice_label", "") or "")
         finally:
             try:
                 od.Destroy()
@@ -4750,6 +4765,7 @@ def _do_render_impl():
             if _show_modal(od) != wx.ID_OK:
                 return
             sapi_opts = od.get_options(persist=True)
+            voice_label = str(sapi_opts.get("voiceName", "") or "")
         finally:
             try:
                 od.Destroy()
@@ -4769,6 +4785,7 @@ def _do_render_impl():
             if _show_modal(od) != wx.ID_OK:
                 return
             sapi32_opts = od.get_options(persist=True)
+            voice_label = str(sapi32_opts.get("voiceName", "") or "")
         finally:
             try:
                 od.Destroy()
@@ -4782,6 +4799,7 @@ def _do_render_impl():
             if _show_modal(od) != wx.ID_OK:
                 return
             dectalk_opts = od.get_options(persist=True)
+            voice_label = str(dectalk_opts.get("voiceLabel", "") or dectalk_opts.get("voice", "") or "")
         finally:
             try:
                 od.Destroy()
@@ -4796,6 +4814,7 @@ def _do_render_impl():
             if _show_modal(od) != wx.ID_OK:
                 return
             bs_opts = od.get_options(persist=True)
+            voice_label = str(bs_opts.get("voiceLabel", "") or bs_opts.get("voice", "") or "")
         finally:
             try:
                 od.Destroy()
@@ -4817,6 +4836,8 @@ def _do_render_impl():
             "languageId": _cfg_get("orpheusLanguageId", "") or "",
             "variantId": _cfg_get("orpheusVariantId", "") or "",
             "speed": int(_cfg_get("orpheusSpeed", 100) or 100),
+            "pitch": int(_cfg_get("orpheusPitch", 50) or 50),
+            "volume": int(_cfg_get("orpheusVolume", 100) or 100),
             "autoTest": _get_cfg_bool("autoTestOnChangeOrpheus", True),
         }
         od = OrpheusOptionsDialog(parent, live, initial=init)
@@ -4824,9 +4845,12 @@ def _do_render_impl():
             if _show_modal(od) != wx.ID_OK:
                 return
             orpheus_opts = od.get_options()
+            voice_label = str(orpheus_opts.get("variantLabel", "") or orpheus_opts.get("voiceLabel", "") or "")
             _cfg_set("orpheusLanguageId", str(orpheus_opts.get("languageId", "") or ""))
             _cfg_set("orpheusVariantId", str(orpheus_opts.get("variantId", "") or ""))
             _cfg_set("orpheusSpeed", int(orpheus_opts.get("speed", 100) or 100))
+            _cfg_set("orpheusPitch", int(orpheus_opts.get("pitch", 50) or 50))
+            _cfg_set("orpheusVolume", int(orpheus_opts.get("volume", 100) or 100))
             _set_cfg_bool("autoTestOnChangeOrpheus", bool(orpheus_opts.get("autoTest", True)))
         finally:
             try:
@@ -4848,6 +4872,7 @@ def _do_render_impl():
             if _show_modal(od) != wx.ID_OK:
                 return
             eci = od.get_options()
+            voice_label = str(eci.get("voiceLabel", "") or eci.get("voiceId", "") or "")
             _cfg_set("ibmeciDllPath", eci.get("dllPath", "") or "")
             _cfg_set("ibmeciVoiceId", int(eci.get("voiceId", 0) or 0))
             _cfg_set("ibmeciSpeed", int(eci.get("speed", 110) or 110))
@@ -4873,6 +4898,7 @@ def _do_render_impl():
             if _show_modal(od) != wx.ID_OK:
                 return
             nvda_opts = od.get_options(persist=True)
+            voice_label = str(nvda_opts.get("variantLabel", "") or nvda_opts.get("voiceLabel", "") or nvda_opts.get("voice", "") or "")
         finally:
             try:
                 od.Destroy()
@@ -4880,7 +4906,7 @@ def _do_render_impl():
                 pass
 
     # 4) Output path (defaults into record base dir / synth subdir)
-    suggestion_base = _build_suggested_output_base(base or "output", synth_label)
+    suggestion_base = _build_voice_aware_output_base(base or "output", synth_label, voice_label)
     out_path, fmt = _pick_output_path(parent, suggestion_base=suggestion_base, synth_label=synth_label)
     if not out_path:
         return
@@ -5011,6 +5037,8 @@ def _do_render_impl():
                         out_wav=chunk_wav,
                         voice=str((bs_opts or {}).get("voice", "fred")),
                         rate=int((bs_opts or {}).get("rate", 90) or 90),
+                        pitch=int((bs_opts or {}).get("pitch", 50) or 50),
+                        volume=int((bs_opts or {}).get("volume", 100) or 100),
                         rate_boost=bool((bs_opts or {}).get("rateBoost", False)),
                         cancel_evt=cancel_evt,
                         progress=result.progress,
@@ -5050,6 +5078,7 @@ def _do_render_impl():
                             chunk_wav,
                             voice_name=str(_cfg_get("sapi532VoiceName", "") or "") or None,
                             rate=int(_cfg_get("sapi532Rate", 0) or 0),
+                            volume=int(_cfg_get("sapi532Volume", 100) or 100),
                         )
                     return _render_with_nvda_generic_capture(
                         chunk_text,
@@ -5063,11 +5092,13 @@ def _do_render_impl():
                 if kind == "sapi5_32":
                     voice_name = str((sapi32_opts or {}).get("voiceName", "") or "") or None
                     rate = int((sapi32_opts or {}).get("rate", 0) or 0)
-                    return _render_with_sapi5_32(chunk_text, chunk_wav, voice_name=voice_name, rate=rate)
+                    volume = int((sapi32_opts or {}).get("volume", 100) or 100)
+                    return _render_with_sapi5_32(chunk_text, chunk_wav, voice_name=voice_name, rate=rate, volume=volume)
 
                 voice_name = str(_cfg_get('sapi5VoiceName', '') or '') or None
                 rate = int(_cfg_get('sapi5Rate', 0) or 0)
-                _render_with_sapi5(chunk_text, chunk_wav, voice_name=voice_name, rate=rate)
+                volume = int(_cfg_get('sapi5Volume', 100) or 100)
+                _render_with_sapi5(chunk_text, chunk_wav, voice_name=voice_name, rate=rate, volume=volume)
                 return "SAPI5"
 
             text_chunks = _split_text_for_render(text, RENDER_CHUNK_CHARS) if len(text or "") >= CHUNK_RENDER_MIN_CHARS else [text]
