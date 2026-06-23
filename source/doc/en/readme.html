@@ -73,7 +73,7 @@ Most settings dialogs include:
   <tbody>
     <tr>
       <td><strong>SAPI5</strong></td>
-      <td>Uses installed Microsoft SAPI5 voices. 32-bit SAPI5 voices are supported through a separate 32-bit helper path when available. SAPI5 rate and volume can be adjusted in the render dialog.</td>
+      <td>Uses installed Microsoft SAPI5 voices. 32-bit SAPI5 voices are supported through a separate 32-bit helper path when available. SAPI5 rate, pitch, and volume can be adjusted in the render dialog. soundWave asks SAPI for the selected voice's default output format instead of forcing a fixed sample rate, falling back to 22.05 kHz 16-bit mono only if SAPI does not expose a format.</td>
     </tr>
     <tr>
       <td><strong>Sonata</strong></td>
@@ -115,6 +115,12 @@ soundWave uses NVDA's add-on update channel for store-compatible updates.
 </p>
 
 <h2>Changes</h2>
+
+<h3>1.0.3</h3>
+<ul>
+  <li>Added SAPI5 pitch support using SAPI's native XML pitch tag.</li>
+  <li>Changed SAPI5 WAV rendering to use the selected voice's default SAPI output format where available, rather than always forcing 22.05 kHz 16-bit mono.</li>
+</ul>
 
 <h3>1.0.2</h3>
 <ul>

@@ -33,6 +33,7 @@ from __future__ import annotations
 import os
 import glob
 import array
+import html
 import importlib
 import re
 import sys
@@ -1083,7 +1084,33 @@ def _list_sapi5_voices() -> List[str]:
             pass
 
 
-def _render_with_sapi5(text: str, out_wav: str, voice_name: Optional[str] = None, rate: int = 0, volume: int = 100):
+def _sapi5_xml_for_pitch(text: str, pitch: int) -> Tuple[str, int]:
+    """Return text and Speak flags for SAPI pitch support."""
+    try:
+        pitch = max(-10, min(10, int(pitch)))
+    except Exception:
+        pitch = 0
+    if pitch == 0:
+        return text or "", 0
+    escaped = html.escape(text or "", quote=False)
+    return f'<pitch absmiddle="{pitch}">{escaped}</pitch>', 8
+
+
+def _sapi5_stream_format_type(voice) -> int:
+    try:
+        return int(voice.AudioOutputStream.Format.Type)
+    except Exception:
+        return 22
+
+
+def _render_with_sapi5(
+    text: str,
+    out_wav: str,
+    voice_name: Optional[str] = None,
+    rate: int = 0,
+    volume: int = 100,
+    pitch: int = 0,
+):
     if comtypes is None:
         raise RuntimeError("comtypes not available; cannot use SAPI5 renderer.")
     if not out_wav.lower().endswith(".wav"):
@@ -1125,11 +1152,11 @@ def _render_with_sapi5(text: str, out_wav: str, voice_name: Optional[str] = None
                 pass
 
         stream = comtypes.client.CreateObject("SAPI.SpFileStream")
-        # 22kHz 16-bit mono is SAFT22kHz16BitMono = 22
-        stream.Format.Type = 22
+        stream.Format.Type = _sapi5_stream_format_type(voice)
         stream.Open(out_wav, 3, False)
         voice.AudioOutputStream = stream
-        voice.Speak(text or "", 0)
+        speak_text, flags = _sapi5_xml_for_pitch(text or "", pitch)
+        voice.Speak(speak_text, flags)
         stream.Close()
     finally:
         try:
@@ -1203,7 +1230,14 @@ def _has_sapi5_32() -> bool:
     return False
 
 
-def _render_with_sapi5_32(text: str, out_wav: str, voice_name: Optional[str] = None, rate: int = 0, volume: int = 100):
+def _render_with_sapi5_32(
+    text: str,
+    out_wav: str,
+    voice_name: Optional[str] = None,
+    rate: int = 0,
+    volume: int = 100,
+    pitch: int = 0,
+):
     ps = _get_32bit_powershell()
     if not ps:
         raise RuntimeError("32-bit PowerShell was not found; cannot render 32-bit SAPI voices.")
@@ -1222,7 +1256,8 @@ param(
     [string]$OutPath,
     [string]$VoiceName,
     [int]$Rate,
-    [int]$Volume
+    [int]$Volume,
+    [int]$Pitch
 )
 $ErrorActionPreference = "Stop"
 $text = [System.IO.File]::ReadAllText($TextPath, [System.Text.Encoding]::UTF8)
@@ -1239,13 +1274,24 @@ if ($VoiceName) {
 $voice.Rate = $Rate
 $voice.Volume = [Math]::Max(0, [Math]::Min(100, $Volume))
 $stream = New-Object -ComObject SAPI.SpFileStream
-$stream.Format.Type = 22
+try {
+    $stream.Format.Type = $voice.AudioOutputStream.Format.Type
+} catch {
+    $stream.Format.Type = 22
+}
 if (Test-Path -LiteralPath $OutPath) {
     Remove-Item -LiteralPath $OutPath -Force
 }
 $stream.Open($OutPath, 3, $false)
 $voice.AudioOutputStream = $stream
-[void]$voice.Speak($text, 0)
+$safePitch = [Math]::Max(-10, [Math]::Min(10, $Pitch))
+if ($safePitch -ne 0) {
+    $escaped = [System.Security.SecurityElement]::Escape($text)
+    $text = "<pitch absmiddle=`"$safePitch`">$escaped</pitch>"
+    [void]$voice.Speak($text, 8)
+} else {
+    [void]$voice.Speak($text, 0)
+}
 $stream.Close()
 '''
         with open(script_path, "w", encoding="utf-8") as f:
@@ -1263,6 +1309,7 @@ $stream.Close()
                 str(voice_name or ""),
                 str(int(rate or 0)),
                 str(max(0, min(100, int(volume or 100)))),
+                str(max(-10, min(10, int(pitch or 0)))),
             ],
             timeout=TIMEOUT_SECONDS,
         )
@@ -1312,12 +1359,18 @@ class Sapi5OptionsDialog(wx.Dialog):
         sizer.Add(row2, 0, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.BOTTOM, 10)
 
         row3 = wx.BoxSizer(wx.HORIZONTAL)
-        row3.Add(wx.StaticText(self, label="Vol&ume:"), 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 8)
-        self.volumeSpin = wx.SpinCtrl(self, min=0, max=100, initial=100)
-        row3.Add(self.volumeSpin, 0)
+        row3.Add(wx.StaticText(self, label="&Pitch:"), 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 8)
+        self.pitchSpin = wx.SpinCtrl(self, min=-10, max=10, initial=0)
+        row3.Add(self.pitchSpin, 0)
         sizer.Add(row3, 0, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.BOTTOM, 10)
 
-        self.autoTest = wx.CheckBox(self, label="&Auto-speak when changing voice, rate, or volume")
+        row4 = wx.BoxSizer(wx.HORIZONTAL)
+        row4.Add(wx.StaticText(self, label="Vol&ume:"), 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 8)
+        self.volumeSpin = wx.SpinCtrl(self, min=0, max=100, initial=100)
+        row4.Add(self.volumeSpin, 0)
+        sizer.Add(row4, 0, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.BOTTOM, 10)
+
+        self.autoTest = wx.CheckBox(self, label="&Auto-speak when changing voice, rate, pitch, or volume")
         self.autoTest.SetValue(bool(_get_cfg_bool(f"autoTestOnChange{cfg_prefix}", True)))
         sizer.Add(self.autoTest, 0, wx.LEFT | wx.RIGHT | wx.BOTTOM, 10)
 
@@ -1343,6 +1396,7 @@ class Sapi5OptionsDialog(wx.Dialog):
         # Load persisted selections
         voice_name = str(_cfg_get(f"{cfg_prefix}VoiceName", "") or "")
         rate = int(_cfg_get(f"{cfg_prefix}Rate", 0) or 0)
+        pitch = int(_cfg_get(f"{cfg_prefix}Pitch", 0) or 0)
         volume = int(_cfg_get(f"{cfg_prefix}Volume", 100) or 100)
 
         if self.voices:
@@ -1354,20 +1408,25 @@ class Sapi5OptionsDialog(wx.Dialog):
             self.voiceChoice.SetSelection(0)
 
         try:
-            self.rateSpin.SetValue(rate)
+            self.rateSpin.SetValue(max(-10, min(10, rate)))
+        except Exception:
+            pass
+        try:
+            self.pitchSpin.SetValue(max(-10, min(10, pitch)))
         except Exception:
             pass
         try:
             self.volumeSpin.SetValue(max(0, min(100, volume)))
         except Exception:
             pass
-
         # Events
         self.testBtn.Bind(wx.EVT_BUTTON, self._on_test)
         self.voiceChoice.Bind(wx.EVT_CHOICE, self._on_change)
         self.rateSpin.Bind(wx.EVT_SPINCTRL, self._on_change)
+        self.pitchSpin.Bind(wx.EVT_SPINCTRL, self._on_change)
         self.volumeSpin.Bind(wx.EVT_SPINCTRL, self._on_change)
         _bind_numeric_page_keys(self.rateSpin, -10, 10, page_step=5, callback=self._on_change)
+        _bind_numeric_page_keys(self.pitchSpin, -10, 10, page_step=5, callback=self._on_change)
         _bind_numeric_page_keys(self.volumeSpin, 0, 100, page_step=10, callback=self._on_change)
 
     def _on_change(self, evt):
@@ -1378,10 +1437,11 @@ class Sapi5OptionsDialog(wx.Dialog):
         try:
             voice = self.get_voice_name()
             rate = self.get_rate()
+            pitch = self.get_pitch()
             volume = self.get_volume()
             # quick temp file
             tmp = os.path.join(tempfile.gettempdir(), "soundWave_sapi_test.wav")
-            self._render_fn(self.SAMPLE_TEXT, tmp, voice_name=voice, rate=rate, volume=volume)
+            self._render_fn(self.SAMPLE_TEXT, tmp, voice_name=voice, rate=rate, volume=volume, pitch=pitch)
             _play_wav(tmp)
         except Exception as e:
             _error("Test failed:\n" + str(e))
@@ -1396,7 +1456,13 @@ class Sapi5OptionsDialog(wx.Dialog):
 
     def get_rate(self) -> int:
         try:
-            return int(self.rateSpin.GetValue())
+            return max(-10, min(10, int(self.rateSpin.GetValue())))
+        except Exception:
+            return 0
+
+    def get_pitch(self) -> int:
+        try:
+            return max(-10, min(10, int(self.pitchSpin.GetValue())))
         except Exception:
             return 0
 
@@ -1410,12 +1476,14 @@ class Sapi5OptionsDialog(wx.Dialog):
         opts = {
             "voiceName": self.get_voice_name(),
             "rate": self.get_rate(),
+            "pitch": self.get_pitch(),
             "volume": self.get_volume(),
             "autoTest": bool(self.autoTest.IsChecked()),
         }
         if persist:
             _cfg_set(f"{self._cfg_prefix}VoiceName", opts["voiceName"])
             _cfg_set(f"{self._cfg_prefix}Rate", int(opts["rate"]))
+            _cfg_set(f"{self._cfg_prefix}Pitch", int(opts["pitch"]))
             _cfg_set(f"{self._cfg_prefix}Volume", int(opts["volume"]))
             _set_cfg_bool(f"autoTestOnChange{self._cfg_prefix}", bool(opts["autoTest"]))
         return opts
@@ -5079,6 +5147,7 @@ def _do_render_impl():
                             voice_name=str(_cfg_get("sapi532VoiceName", "") or "") or None,
                             rate=int(_cfg_get("sapi532Rate", 0) or 0),
                             volume=int(_cfg_get("sapi532Volume", 100) or 100),
+                            pitch=int(_cfg_get("sapi532Pitch", 0) or 0),
                         )
                     return _render_with_nvda_generic_capture(
                         chunk_text,
@@ -5093,12 +5162,14 @@ def _do_render_impl():
                     voice_name = str((sapi32_opts or {}).get("voiceName", "") or "") or None
                     rate = int((sapi32_opts or {}).get("rate", 0) or 0)
                     volume = int((sapi32_opts or {}).get("volume", 100) or 100)
-                    return _render_with_sapi5_32(chunk_text, chunk_wav, voice_name=voice_name, rate=rate, volume=volume)
+                    pitch = int((sapi32_opts or {}).get("pitch", 0) or 0)
+                    return _render_with_sapi5_32(chunk_text, chunk_wav, voice_name=voice_name, rate=rate, volume=volume, pitch=pitch)
 
                 voice_name = str(_cfg_get('sapi5VoiceName', '') or '') or None
                 rate = int(_cfg_get('sapi5Rate', 0) or 0)
                 volume = int(_cfg_get('sapi5Volume', 100) or 100)
-                _render_with_sapi5(chunk_text, chunk_wav, voice_name=voice_name, rate=rate, volume=volume)
+                pitch = int(_cfg_get('sapi5Pitch', 0) or 0)
+                _render_with_sapi5(chunk_text, chunk_wav, voice_name=voice_name, rate=rate, volume=volume, pitch=pitch)
                 return "SAPI5"
 
             text_chunks = _split_text_for_render(text, RENDER_CHUNK_CHARS) if len(text or "") >= CHUNK_RENDER_MIN_CHARS else [text]

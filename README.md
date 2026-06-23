@@ -26,6 +26,7 @@ soundWave is an NVDA add-on that renders text to an audio file using installed s
 
 ## Changes
 
+- 1.0.3: Added SAPI5 pitch support and changed SAPI5 WAV rendering to use the selected voice's default SAPI output format where available.
 - 1.0.2: Added pitch and volume controls where available, improved numeric keyboard adjustment, remembered render details state, added voice names to suggested filenames, and improved dialog help/keyboard access.
 - 1.0.1: Aligned update handling with NVDA Add-on Store distribution.
 - 1.0.0: Initial release.
