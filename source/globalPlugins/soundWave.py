@@ -210,6 +210,82 @@ def _get_synth_instance(name: str):
 
     return None
 
+
+def _is_google_tts_synth(synth_name: str) -> bool:
+    """Return True for the googleTtsForNvda driver family."""
+    name = (synth_name or "").strip().lower()
+    if not name:
+        return False
+    return "googletts" in name or "google_tts" in name or "google-tts" in name
+
+
+def _google_tts_sample_rate(synth) -> int:
+    for attr in ("sampleRate", "_sampleRate", "samplesPerSec", "_samplesPerSec"):
+        try:
+            value = int(getattr(synth, attr))
+            if value > 0:
+                return value
+        except Exception:
+            pass
+    return 24000
+
+
+def _google_tts_has_queued_speech(synth) -> bool:
+    try:
+        fn = getattr(synth, "_has_queued_speech", None)
+        if callable(fn):
+            return bool(fn())
+    except Exception:
+        pass
+    try:
+        queue = getattr(synth, "_speechQueue", None)
+        if queue is not None:
+            return len(queue) > 0
+    except Exception:
+        pass
+    return False
+
+
+def _patch_google_tts_capture(synth, player: "_GenericCaptureWavePlayer"):
+    """Capture googleTtsForNvda PCM by temporarily replacing its audio feed hooks."""
+    orig_feed_audio = getattr(synth, "_feed_audio", None)
+    if not callable(orig_feed_audio):
+        return None
+    orig_feed_silence = getattr(synth, "_feed_silence", None)
+
+    def _feed_audio(pcm):
+        if pcm:
+            player.feed(pcm)
+
+    def _feed_silence(milliseconds):
+        try:
+            ms = float(milliseconds or 0)
+        except Exception:
+            ms = 0
+        if ms <= 0:
+            return
+        frames = int(player.samplesPerSec * ms / 1000.0)
+        if frames > 0:
+            player.feed(b"\x00" * frames * int(player.channels) * int(player.bitsPerSample // 8))
+
+    synth._feed_audio = _feed_audio
+    if callable(orig_feed_silence):
+        synth._feed_silence = _feed_silence
+
+    def _restore():
+        try:
+            synth._feed_audio = orig_feed_audio
+        except Exception:
+            pass
+        if callable(orig_feed_silence):
+            try:
+                synth._feed_silence = orig_feed_silence
+            except Exception:
+                pass
+
+    return _restore
+
+
 def _cfg_get_bool(key: str, default: bool = False) -> bool:
     v = _cfg_get(key, None)
     if v is None:
@@ -2082,6 +2158,8 @@ def _render_with_nvda_generic_capture(
     done_evt = threading.Event()
     saw_done_notification = False
     expects_done_notification = False
+    google_restore_capture = None
+    is_google_tts = _is_google_tts_synth(synth_name)
 
     def _on_synth_done(synth=None, **kwargs):
         nonlocal saw_done_notification
@@ -2093,7 +2171,9 @@ def _render_with_nvda_generic_capture(
 
     current_synth_holder = {"synth": None}
     try:
-        nvwave.WavePlayer = _make_capture_wave_player_factory(players)
+        capture_factory = _make_capture_wave_player_factory(players)
+        if not is_google_tts:
+            nvwave.WavePlayer = capture_factory
         synth = _get_synth_instance(synth_name)
         current_synth_holder["synth"] = synth
         if synth is None or not hasattr(synth, "speak"):
@@ -2103,6 +2183,11 @@ def _render_with_nvda_generic_capture(
                 "WorldVoice did not initialize its voice manager. Its workspace engines appear to be missing "
                 "or failing to load; see the NVDA log for the missing WorldVoice-workspace DLLs."
             )
+        if is_google_tts:
+            google_player = capture_factory(channels=1, samplesPerSec=_google_tts_sample_rate(synth), bitsPerSample=16)
+            google_restore_capture = _patch_google_tts_capture(synth, google_player)
+            if google_restore_capture is None:
+                raise RuntimeError("Google TTS For NVDA does not expose the expected audio capture hook.")
         if opts:
             try:
                 voice = str(opts.get("voice", "") or "")
@@ -2161,6 +2246,10 @@ def _render_with_nvda_generic_capture(
                     progress["sampwidth"] = int(players[0].bitsPerSample // 8)
             if total_bytes > 0 and done_evt.is_set():
                 break
+            if is_google_tts and total_bytes > 0:
+                if not _google_tts_has_queued_speech(synth) and (done_evt.is_set() or (last_audio and time.time() - last_audio >= 1.5)):
+                    time.sleep(0.2)
+                    break
             # Some older/nonstandard synths may not notify synthDoneSpeaking.
             # Keep this as a conservative fallback only; short quiet gaps are
             # common in long renders and must not be treated as completion.
@@ -2170,6 +2259,11 @@ def _render_with_nvda_generic_capture(
         else:
             raise RuntimeError("Generic NVDA capture timed out.")
     finally:
+        if google_restore_capture is not None:
+            try:
+                google_restore_capture()
+            except Exception:
+                pass
         try:
             synthDriverHandler.synthDoneSpeaking.unregister(_on_synth_done)
         except Exception:
