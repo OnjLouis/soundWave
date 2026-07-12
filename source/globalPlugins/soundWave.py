@@ -3067,6 +3067,9 @@ class GenericNvdaOptionsDialog(wx.Dialog):
             pass
 
     def _on_test(self, evt=None):
+        if _is_google_tts_synth(self.synth_id):
+            return
+
         tmp_dir = tempfile.mkdtemp(prefix="soundWave_generic_test_")
         tmp_wav = os.path.join(tmp_dir, "test.wav")
         try:
