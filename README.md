@@ -6,18 +6,19 @@ soundWave is an NVDA add-on that renders text to an audio file using installed s
 
 1. Press `NVDA+Ctrl+=` to open soundWave.
 2. Choose a synthesizer.
-3. Choose the input source: clipboard, text file, or typed/pasted text.
+3. Choose the input source: clipboard, text file, folder of text files, or typed/pasted text.
 4. Configure the synthesizer and use `Test` to preview settings.
 5. Choose an output file and render.
 
 ## Features
 
-- Render clipboard text, text files, or typed text.
-- Export WAV files, with MP3 export available when ffmpeg is installed.
+- Render clipboard text, text files, folders of text files, or typed text.
+- Export WAV files, with MP3, FLAC, and M4A export available when ffmpeg is installed.
 - Render large inputs in chunks.
 - Use synthesizer-specific settings where available.
 - Adjust rate, pitch, volume, voice, language, or variant where the selected synthesizer exposes those controls.
-- Suggested filenames include the selected synthesizer and voice where available.
+- Configure separate naming templates for single-render folders, single-render files, batch folders, and batch files.
+- Optional post-render actions can open the output folder, play the rendered audio, or hide the summary.
 - Use NVDA's add-on update channel for store-compatible updates.
 
 ## Documentation
@@ -26,6 +27,8 @@ soundWave is an NVDA add-on that renders text to an audio file using installed s
 
 ## Changes
 
+- 1.1.0: Major rendering update. Added folder/batch input, MP3/FLAC/M4A output, configurable output naming, optional dialog skipping, Google TTS dialog preview/render fixes, Pocket TTS direct rendering improvements including EOS sensitivity, Supertonic chunking, batch playlist playback, and split specialist synth support into separate modules.
+- 1.0.4: Added googleTtsForNvda rendering support.
 - 1.0.3: Added SAPI5 pitch support and changed SAPI5 WAV rendering to use the selected voice's default SAPI output format where available.
 - 1.0.2: Added pitch and volume controls where available, improved numeric keyboard adjustment, remembered render details state, added voice names to suggested filenames, and improved dialog help/keyboard access.
 - 1.0.1: Aligned update handling with NVDA Add-on Store distribution.

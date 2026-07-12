@@ -31,26 +31,135 @@ It can export audio from the clipboard, a text file, or text entered directly in
 <ol>
   <li>Press <span class="kbd">NVDA</span>+<span class="kbd">Ctrl</span>+<span class="kbd">=</span> to open soundWave.</li>
   <li>Choose a synthesizer.</li>
-  <li>Choose the input source: clipboard, text file, or typed/pasted text.</li>
+  <li>Optionally set the record base folder. This is the default save folder for renders; soundWave creates output folders under it using your naming templates.</li>
+  <li>Choose the input source: clipboard, a text file, a folder of text files, or typed/pasted text.</li>
   <li>Configure the synthesizer. Use <strong>Test</strong> to preview the selected settings.</li>
   <li>Choose an output filename and format.</li>
   <li>Wait for the render to complete, then review the summary.</li>
 </ol>
 
 <p>
-Press <span class="kbd">F1</span>, or tab to the Help button from any soundWave dialog, to open this manual.
+In soundWave render dialogs, press <span class="kbd">F1</span> to open this manual.
+In the soundWave panel inside NVDA Settings, tab to the Help button or press <span class="kbd">Alt</span>+<span class="kbd">H</span>.
 Dialog controls include keyboard accelerators where practical, such as <span class="kbd">Alt</span>+<span class="kbd">T</span> for Test.
 </p>
 
 <h2>Input and output</h2>
 
 <ul>
-  <li><strong>Input:</strong> clipboard text, a text file, or typed/pasted text.</li>
-  <li><strong>Output:</strong> WAV is always supported. MP3 is available when ffmpeg is installed and available on the system PATH.</li>
+  <li><strong>Input:</strong> clipboard text, a text file, a folder of text files, or typed/pasted text.</li>
+  <li><strong>Output:</strong> WAV is always supported. MP3, FLAC, and M4A are available when ffmpeg is installed and available on the system PATH.</li>
+  <li><strong>Batch input:</strong> choosing a folder renders each readable text-like file as a separate audio file in sorted order. By default, batch renders are written to a synthesizer and voice subfolder, and filenames are automatically prefixed with ordered numbers.</li>
   <li><strong>Large inputs:</strong> long text is rendered in chunks. If a single WAV would become too large, soundWave writes numbered part files.</li>
-  <li><strong>Filenames:</strong> suggested filenames include the selected synthesizer name, and the save dialog remembers the last folder used.</li>
-  <li><strong>Voice names:</strong> when soundWave can identify the selected voice, the suggested filename includes it so multiple renders with the same input and synthesizer are easier to distinguish.</li>
+  <li><strong>Folders and filenames:</strong> soundWave can name single-render folders, single-render files, batch folders, and batch files separately.</li>
+  <li><strong>Voice names:</strong> when soundWave can identify the selected voice, it can include that voice in folder or file templates so multiple renders with the same input and synthesizer are easier to distinguish.</li>
 </ul>
+
+<h2>Settings</h2>
+
+<p>
+Open NVDA Settings and choose <strong>soundWave</strong> to set defaults used by future renders.
+</p>
+
+<ul>
+  <li><strong>Default save folder:</strong> the record base folder used by the first soundWave dialog. Leaving it blank uses <strong>Documents\SoundWave</strong>, so rendered files stay somewhere most users can find.</li>
+  <li><strong>Folder and file naming:</strong> separate templates control single-render folders, single-render files, batch folders, and batch files. The tables below show the defaults, tokens, and examples.</li>
+  <li><strong>Default output format:</strong> choose WAV, or MP3, FLAC, or M4A when ffmpeg is available. Optional checkboxes let you skip the single-render Save As dialog and the batch format picker.</li>
+  <li><strong>After rendering:</strong> choose whether soundWave opens the output folder once the whole render finishes, opens rendered audio in your default media player, or shows the render summary. Batch auto-play opens the rendered files as a playlist. Automatic folder opening does not reopen a folder soundWave has already opened in the current NVDA session.</li>
+</ul>
+
+<h3>Naming templates</h3>
+
+<p>
+Naming fields are templates. soundWave replaces each token with information from the current render before suggesting the folder or filename.
+You can remove tokens, move them, add your own words, or change the punctuation between them.
+</p>
+
+<table>
+  <thead>
+    <tr><th>Setting</th><th>Default</th><th>Example output</th><th>What it controls</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Single render folder pattern</td>
+      <td><code>%engine% - %voice%</code></td>
+      <td><code>Sonata - Kirsten Two En Medium</code></td>
+      <td>The folder offered by the Save As dialog for clipboard, typed text, or one text file.</td>
+    </tr>
+    <tr>
+      <td>Single file name pattern</td>
+      <td><code>%source%</code></td>
+      <td><code>Clipboard.wav</code></td>
+      <td>The suggested filename for a single render.</td>
+    </tr>
+    <tr>
+      <td>Batch folder pattern</td>
+      <td><code>%engine% - %voice%</code></td>
+      <td><code>Keynote Gold - Fred</code></td>
+      <td>The output folder created when rendering a folder of text files.</td>
+    </tr>
+    <tr>
+      <td>Batch file pattern</td>
+      <td><code>%number% - %source%</code></td>
+      <td><code>03 - chapter three.wav</code></td>
+      <td>The filename for each rendered file in a batch.</td>
+    </tr>
+  </tbody>
+</table>
+
+<h3>Naming examples</h3>
+
+<table>
+  <thead>
+    <tr><th>Pattern</th><th>Example output</th><th>When it is useful</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>%engine% - %voice%</code></td>
+      <td><code>Orpheus - Synthetic Dave</code></td>
+      <td>Groups output by synthesizer and voice.</td>
+    </tr>
+    <tr>
+      <td><code>%source% - %engine%</code></td>
+      <td><code>chapter one - SAPI5.wav</code></td>
+      <td>Keeps the source first while still identifying the synthesizer.</td>
+    </tr>
+    <tr>
+      <td><code>%number% - %source%</code></td>
+      <td><code>01 - opening credits.wav</code></td>
+      <td>Keeps batch output in a predictable order.</td>
+    </tr>
+  </tbody>
+</table>
+
+<table>
+  <caption>Filename token meanings</caption>
+  <thead>
+    <tr><th>Token</th><th>Meaning</th><th>Example value</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>%source%</code></td>
+      <td>The clipboard, typed text, source file name, or source folder item name.</td>
+      <td><code>Clipboard</code>, <code>Typed</code>, <code>chapter one</code>, or <code>meeting notes</code></td>
+    </tr>
+    <tr>
+      <td><code>%engine%</code></td>
+      <td>The synthesizer name.</td>
+      <td><code>Orpheus</code>, <code>Sonata</code>, <code>SAPI5</code>, or <code>Pocket TTS</code></td>
+    </tr>
+    <tr>
+      <td><code>%voice%</code></td>
+      <td>The selected voice when soundWave can identify it. If no voice is known, this part is left out cleanly.</td>
+      <td><code>Synthetic Dave</code>, <code>Kirsten Two En Medium</code>, or <code>Fred</code></td>
+    </tr>
+    <tr>
+      <td><code>%number%</code></td>
+      <td>An ordered number. Folder renders add this automatically; the token is available for custom naming patterns.</td>
+      <td><code>01</code>, <code>02</code>, or <code>03</code></td>
+    </tr>
+  </tbody>
+</table>
 
 <h2>Synthesizer Options</h2>
 
@@ -77,15 +186,23 @@ Most settings dialogs include:
     </tr>
     <tr>
       <td><strong>googleTtsForNvda</strong></td>
-      <td>Requires the Google TTS For NVDA add-on and installed Google voice packages. soundWave captures the add-on's generated PCM audio directly when rendering.</td>
+      <td>Requires the Google TTS For NVDA add-on and installed Google voice packages. soundWave captures the add-on's generated PCM audio directly when rendering. The Test button renders a short sample to a temporary WAV and plays it back, avoiding NVDA's live speech path. soundWave only lists Google voices that are installed and reliable through this offline render path, so its list may be shorter than the Google add-on's full voice catalogue.</td>
+    </tr>
+    <tr>
+      <td><strong>Pocket TTS</strong></td>
+      <td>Requires the Pocket TTS add-on. soundWave renders in smaller segments when needed so longer text is less likely to hit model limits. The options dialog includes Pocket TTS's end-of-sentence sensitivity setting when the installed synth exposes it.</td>
+    </tr>
+    <tr>
+      <td><strong>Supertonic</strong></td>
+      <td>Requires the Supertonic add-on. soundWave uses smaller render chunks for Supertonic to avoid model-size failures on longer input.</td>
     </tr>
     <tr>
       <td><strong>Sonata</strong></td>
       <td>Requires the Sonata Neural Voices add-on and available voice configuration files.</td>
     </tr>
     <tr>
-      <td><strong>IBM ECI / IBM TTS</strong></td>
-      <td>Automatically searches for ECI.DLL inside the installed IBMTTS add-on folder. A manual DLL path can be set if needed.</td>
+      <td><strong>Eloquence and IBMTTS</strong></td>
+      <td>Available when the relevant NVDA add-on is installed. soundWave detects the speech engine automatically and exposes voice and speed options before rendering.</td>
     </tr>
     <tr>
       <td><strong>Orpheus</strong></td>
@@ -93,7 +210,7 @@ Most settings dialogs include:
     </tr>
     <tr>
       <td><strong>DECtalk and Keynote Gold</strong></td>
-      <td>Available when the required add-on or DLL is installed and discoverable. Keynote Gold exposes voice, speed, pitch, volume, and rate boost in its render dialog.</td>
+      <td>Available when the required add-on is installed and discoverable. Keynote Gold exposes voice, speed, pitch, volume, and rate boost in its render dialog.</td>
     </tr>
     <tr>
       <td><strong>Other NVDA synthesizers</strong></td>
@@ -105,12 +222,8 @@ Most settings dialogs include:
 <h2>Render Summary</h2>
 
 <p>
-After rendering, soundWave reports the synthesizer, saved path, backend, elapsed time, audio length, and realtime speed factor when available.
+After rendering, soundWave reports the synthesizer, saved path, elapsed time, audio length, and realtime speed factor when available.
 </p>
-
-<div class="note">
-  <p><strong>Backend</strong> is a diagnostic label for the internal render method used. Most users do not need to choose or understand it.</p>
-</div>
 
 <h2>Updates</h2>
 
@@ -119,6 +232,29 @@ soundWave uses NVDA's add-on update channel for store-compatible updates.
 </p>
 
 <h2>Changes</h2>
+
+<h3>1.1.0</h3>
+<ul>
+  <li>Greatly improved googleTtsForNvda support. SoundWave now renders through Google's bridge more reliably, lists only installed voices that work through the offline render path, retries once if the bridge page is not ready, and refuses to silently fall back to a different voice.</li>
+  <li>Improved googleTtsForNvda previews by rendering the test phrase to a temporary WAV before playback, allowing automatic preview to stay enabled without using NVDA's live speech path.</li>
+  <li>Improved googleTtsForNvda render progress text while SoundWave is waiting for Google to deliver audio.</li>
+  <li>Improved Pocket TTS rendering by skipping blank input lines and splitting text into safer segments for the model.</li>
+  <li>Added Pocket TTS end-of-sentence sensitivity to the synth options dialog when available.</li>
+  <li>Added Supertonic-specific chunking so longer input can render without hitting the model's input-size limit.</li>
+  <li>Added FLAC and M4A output when ffmpeg is installed and available on the system PATH.</li>
+  <li>Changed output format selection so single renders and batch renders remember the last selected format.</li>
+  <li>Added opt-in settings to use the default output format without showing the single-render Save As dialog or batch format picker.</li>
+  <li>Changed batch auto-play so completed folder renders open as a playlist rather than playing only the first rendered file.</li>
+  <li>Changed automatic output folder opening so soundWave does not reopen the same folder repeatedly during the same NVDA session.</li>
+  <li>Added a soundWave settings panel in NVDA Settings for the default save folder, naming templates, and post-render actions.</li>
+  <li>Added post-render actions to open the output folder, play the completed audio file, and control whether the render summary is shown.</li>
+  <li>Added an Open Folder button to the render completion summary.</li>
+  <li>Added folder input for batch rendering.</li>
+  <li>Improved output naming with separate templates for single-render folders, single-render files, batch folders, and batch files.</li>
+  <li>Improved suggested output filenames so selected voice names are included for more render paths.</li>
+  <li>Split specialist synthesizer support into separate modules for SAPI5, DECtalk, BestSpeech, Sonata, Pocket TTS, googleTtsForNvda, Eloquence/IBMTTS, Orpheus, and generic NVDA capture paths.</li>
+  <li>Added automatic detection for Eloquence and IBMTTS so they render through the dedicated engine path instead of the generic NVDA capture path.</li>
+</ul>
 
 <h3>1.0.4</h3>
 <ul>
@@ -139,7 +275,7 @@ soundWave uses NVDA's add-on update channel for store-compatible updates.
   <li>Changed render details to a line-by-line list so progress information is easier to review with a screen reader.</li>
   <li>Remembered whether render details are shown or hidden between renders.</li>
   <li>Added selected voice names to suggested output filenames when SoundWave can identify the voice.</li>
-  <li>Added F1 manual access with tabbable Help buttons.</li>
+  <li>Added F1 manual access in soundWave render dialogs and tabbable Help buttons.</li>
   <li>Improved dialog keyboard accelerators, including Test buttons and synthesizer option controls.</li>
 </ul>
 
@@ -157,10 +293,10 @@ soundWave uses NVDA's add-on update channel for store-compatible updates.
 
 <ul>
   <li><strong>No audio is produced:</strong> the selected synthesizer may not expose an audio path soundWave can render. Try another synthesizer and check the NVDA log.</li>
-  <li><strong>IBM ECI cannot find the DLL:</strong> open IBM ECI options and set the correct ECI.DLL path manually.</li>
+  <li><strong>Eloquence or IBMTTS is not available:</strong> install or update the relevant NVDA add-on, reload NVDA, and try again.</li>
   <li><strong>Orpheus will not start:</strong> switch NVDA's current synthesizer to Orpheus, then open soundWave again.</li>
   <li><strong>WorldVoice does not initialize:</strong> check the NVDA log for missing files under WorldVoice-workspace. soundWave cannot render WorldVoice until WorldVoice itself loads cleanly.</li>
-  <li><strong>MP3 export fails:</strong> install ffmpeg and ensure the ffmpeg command works from a Command Prompt.</li>
+  <li><strong>MP3, FLAC, or M4A export fails:</strong> install ffmpeg and ensure the ffmpeg command works from a Command Prompt.</li>
   <li><strong>Rendering appears stuck:</strong> use Cancel. If the issue repeats, include the synthesizer name, settings, input type, and relevant NVDA log entries in the report.</li>
 </ul>
 
