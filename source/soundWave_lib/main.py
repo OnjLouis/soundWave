@@ -245,6 +245,7 @@ ORPHEUS_FALLBACK_SYNTH = "espeak"
 RENDER_CHUNK_CHARS = 12000
 CHUNK_RENDER_MIN_CHARS = 24000
 SUPERTONIC_RENDER_CHUNK_CHARS = 700
+GOOGLE_TTS_RENDER_CHUNK_CHARS = 900
 MAX_WAV_DATA_BYTES = 3600 * 1024 * 1024
 DEFAULT_FILENAME_PATTERN = "%source% - %engine% - %voice%"
 DEFAULT_SINGLE_FOLDER_PATTERN = "%engine% - %voice%"
@@ -252,6 +253,7 @@ DEFAULT_SINGLE_FILE_PATTERN = "%source%"
 DEFAULT_BATCH_FOLDER_PATTERN = "%engine% - %voice%"
 DEFAULT_BATCH_FILE_PATTERN = "%number% - %source%"
 _AUTO_OPENED_FOLDERS = set()
+_ACTIVE_RENDER_PROGRESS = None
 
 
 def _get_current_synth_name() -> str:
@@ -836,6 +838,10 @@ class _RenderProgressDialog(wx.Dialog):
         self.helpBtn = _create_help_button(self)
         btnSizer.Add(self.helpBtn, 0, wx.ALL, 10)
 
+        self.minimizeBtn = wx.Button(self, label="&Minimize")
+        self.minimizeBtn.Bind(wx.EVT_BUTTON, self._on_minimize)
+        btnSizer.Add(self.minimizeBtn, 0, wx.ALL, 10)
+
         btnSizer.AddStretchSpacer(1)
 
         self.cancelBtn = wx.Button(self, label="&Cancel")
@@ -859,7 +865,8 @@ class _RenderProgressDialog(wx.Dialog):
         # Tab order: Show/Hide details -> Cancel (and when details are shown: Details -> Show/Hide details -> Cancel)
         try:
             self.helpBtn.MoveAfterInTabOrder(self.detailsBtn)
-            self.cancelBtn.MoveAfterInTabOrder(self.helpBtn)
+            self.minimizeBtn.MoveAfterInTabOrder(self.helpBtn)
+            self.cancelBtn.MoveAfterInTabOrder(self.minimizeBtn)
         except Exception:
             pass
 
@@ -876,6 +883,9 @@ class _RenderProgressDialog(wx.Dialog):
             if key == wx.WXK_ESCAPE:
                 # Mirror Cancel button behavior
                 self._on_cancel(None)
+                return
+            if key == ord("M") and evt.GetModifiers() == wx.MOD_ALT:
+                self._on_minimize(None)
                 return
         except Exception:
             pass
@@ -907,6 +917,23 @@ class _RenderProgressDialog(wx.Dialog):
         self._closing = True
         wx.CallAfter(self.Destroy)
 
+    def _on_minimize(self, evt):
+        self.hide_progress()
+
+    def hide_progress(self):
+        try:
+            self.Hide()
+        except Exception:
+            pass
+
+    def restore_progress(self):
+        try:
+            self.Show()
+            self.Raise()
+            self.SetFocus()
+        except Exception:
+            pass
+
     def _on_toggle_details(self, evt):
         self._detailsShown = not self._detailsShown
         _cfg_set("renderDetailsShown", self._detailsShown)
@@ -923,7 +950,8 @@ class _RenderProgressDialog(wx.Dialog):
             try:
                 self.detailsBtn.MoveAfterInTabOrder(self.details)
                 self.helpBtn.MoveAfterInTabOrder(self.detailsBtn)
-                self.cancelBtn.MoveAfterInTabOrder(self.helpBtn)
+                self.minimizeBtn.MoveAfterInTabOrder(self.helpBtn)
+                self.cancelBtn.MoveAfterInTabOrder(self.minimizeBtn)
             except Exception:
                 pass
             if set_focus:
@@ -937,7 +965,8 @@ class _RenderProgressDialog(wx.Dialog):
             self.detailsBtn.SetLabel("Show &details")
             try:
                 self.helpBtn.MoveAfterInTabOrder(self.detailsBtn)
-                self.cancelBtn.MoveAfterInTabOrder(self.helpBtn)
+                self.minimizeBtn.MoveAfterInTabOrder(self.helpBtn)
+                self.cancelBtn.MoveAfterInTabOrder(self.minimizeBtn)
             except Exception:
                 pass
         self.Layout()
@@ -1099,6 +1128,25 @@ def _format_bytes(byte_count: int) -> str:
     if unit == "B":
         return "%d B" % int(size)
     return "%.1f %s" % (size, unit)
+
+
+def _format_duration(seconds: Optional[float]) -> str:
+    try:
+        total = float(seconds)
+    except Exception:
+        return "unknown"
+    if total < 0:
+        total = 0.0
+    if total < 60:
+        return "%.3f s" % total
+    whole = int(total)
+    frac = total - whole
+    hours, rem = divmod(whole, 3600)
+    minutes, secs = divmod(rem, 60)
+    sec_text = "%.1f s" % (secs + frac)
+    if hours:
+        return "%d h %d min %s" % (hours, minutes, sec_text)
+    return "%d min %s" % (minutes, sec_text)
 
 
 def _choice_label(ctrl) -> str:
@@ -1343,6 +1391,7 @@ from soundWave_lib.synths.nvda_capture import (
     BestSpeechOptionsDialog,
     GenericNvdaOptionsDialog,
 )
+from soundWave_lib.synths import google_tts
 
 # Sonata availability probe
 _runtime.publish(globals())
@@ -1661,6 +1710,8 @@ def _split_text_for_render(text: str, max_chars: int = RENDER_CHUNK_CHARS) -> Li
 
 def _chunk_size_for_render(kind: str, nvda_name: str = "", synth_label: str = "") -> int:
     joined = f"{kind} {nvda_name} {synth_label}".lower()
+    if "googletts" in joined or "google tts" in joined or "google_tts" in joined or "google-tts" in joined:
+        return GOOGLE_TTS_RENDER_CHUNK_CHARS
     if "supertonic" in joined:
         return SUPERTONIC_RENDER_CHUNK_CHARS
     return RENDER_CHUNK_CHARS
@@ -1707,6 +1758,25 @@ def _wav_duration_seconds(path: str) -> Optional[float]:
     return None
 
 
+def _restore_active_render_progress() -> bool:
+    global _ACTIVE_RENDER_PROGRESS
+    dlg = _ACTIVE_RENDER_PROGRESS
+    if dlg is None:
+        return False
+    try:
+        if not dlg:
+            _ACTIVE_RENDER_PROGRESS = None
+            return False
+    except Exception:
+        pass
+    try:
+        dlg.restore_progress()
+        return True
+    except Exception:
+        _ACTIVE_RENDER_PROGRESS = None
+        return False
+
+
 def _atomic_replace(src_path: str, dest_path: str):
     tmp_dest = dest_path + ".tmp"
     try:
@@ -1726,6 +1796,9 @@ def _atomic_replace(src_path: str, dest_path: str):
 _runtime.publish(globals())
 
 def _do_render_impl():
+    global _ACTIVE_RENDER_PROGRESS
+    if _restore_active_render_progress():
+        return
     parent = getattr(gui, "mainFrame", None) or wx.GetApp().GetTopWindow()
 
     # 1) Choose synth + base record dir
@@ -1988,6 +2061,7 @@ def _do_render_impl():
     result = RenderResult(synth_label=synth_label)
 
     prog = _RenderProgressDialog(parent)
+    _ACTIVE_RENDER_PROGRESS = prog
     try:
         prog._cancel_evt = cancel_evt
     except Exception:
@@ -2076,12 +2150,18 @@ def _do_render_impl():
     def worker():
         nonlocal tmp_wav
         wall0 = time.time()
+        google_synth = None
+        is_google_nvda_render = kind == "nvda" and google_tts.is_google_tts_synth("%s %s" % (nvda_name, synth_label))
         try:
             try:
                 total_chars = sum(len(job.get("text", "") or "") for job in render_jobs)
                 log.info('soundWave: render worker started (kind=%s, synth=%s, jobs=%d, chars=%d)' % (kind, synth_label, len(render_jobs), total_chars))
             except Exception:
                 pass
+            if is_google_nvda_render:
+                google_synth = _get_synth_instance(nvda_name)
+                if google_synth is None:
+                    raise RuntimeError("Google TTS For NVDA could not be initialized for rendering.")
 
             def _render_one(chunk_text: str, chunk_wav: str) -> str:
                 if kind == "sonata":
@@ -2145,6 +2225,15 @@ def _do_render_impl():
 
                 if kind == "nvda":
                     joined = f"{nvda_name} {synth_label}".lower()
+                    if google_synth is not None:
+                        return google_tts.render_to_wav(
+                            chunk_text,
+                            chunk_wav,
+                            google_synth,
+                            opts=nvda_opts,
+                            progress=result.progress,
+                            cancel_evt=cancel_evt,
+                        )
                     if "speech api version 5" in joined or "_sapi5" in joined:
                         return _render_with_sapi5_32(
                             chunk_text,
@@ -2291,6 +2380,11 @@ def _do_render_impl():
             result.err = e
             log.error("soundWave: render failed: %s" % e, exc_info=True)
         finally:
+            if google_synth is not None:
+                try:
+                    google_synth.terminate()
+                except Exception:
+                    pass
             try:
                 log.info('soundWave: render worker finished (ok=%s, err=%s)' % (result.ok, bool(result.err)))
             except Exception:
@@ -2308,9 +2402,12 @@ def _do_render_impl():
     t.start()
 
     def finish():
+        global _ACTIVE_RENDER_PROGRESS
         if _finish_state.get('done'):
             return
         _finish_state['done'] = True
+        if _ACTIVE_RENDER_PROGRESS is prog:
+            _ACTIVE_RENDER_PROGRESS = None
 
         # Always restore Orpheus live synth and methods if we switched away.
         if kind == "orpheus":
@@ -2370,14 +2467,14 @@ def _do_render_impl():
                 f"Synth: {result.synth_label}",
                 f"Saved to: {saved}",
                 f"Backend: {result.mode or 'unknown'}",
-                f"Time taken: {result.wall_s:.3f} s",
+                f"Time taken: {_format_duration(result.wall_s)}",
             ]
             if result.chunks and result.chunks > 1:
                 msg.append("Text chunks: %d" % result.chunks)
             if result.parts and result.parts > 1:
                 msg.append("Audio files: %d" % result.parts)
             if result.audio_s:
-                msg.append(f"Audio length: {result.audio_s:.3f} s")
+                msg.append(f"Audio length: {_format_duration(result.audio_s)}")
             if result.ftr_ratio is not None:
                 speed_x = None
                 try:
@@ -2448,14 +2545,14 @@ def _do_render_impl():
                 label = result.mode or synth_label or 'Rendering'
 
                 # Human-friendly summary
-                prog.set_summary('%s… Elapsed %.0f s' % (label, elapsed,))
+                prog.set_summary('%s… Elapsed %s' % (label, _format_duration(elapsed),))
 
                 # Details (once per second)
                 if (now - float(_last_ui.get('ts', 0.0) or 0.0)) >= 1.0:
                     _last_ui['ts'] = now
                     details = []
                     details.append('Synth: %s' % (label,))
-                    details.append('Elapsed time: %.1f s' % (elapsed,))
+                    details.append('Elapsed time: %s' % (_format_duration(elapsed),))
 
                     # Renderer-provided telemetry (optional)
                     try:
@@ -2495,7 +2592,7 @@ def _do_render_impl():
                             rendered_s = None
 
                         if rendered_s is not None:
-                            details.append('Audio rendered: %.1f s' % (rendered_s,))
+                            details.append('Audio rendered: %s' % (_format_duration(rendered_s),))
                             if elapsed > 0.05:
                                 details.append('Conversion rate: %.2fx realtime' % (rendered_s / elapsed,))
                         elif byte_count > 0:

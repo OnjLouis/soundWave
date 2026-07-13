@@ -55,6 +55,20 @@ Dialog controls include keyboard accelerators where practical, such as <span cla
   <li><strong>Voice names:</strong> when soundWave can identify the selected voice, it can include that voice in folder or file templates so multiple renders with the same input and synthesizer are easier to distinguish.</li>
 </ul>
 
+<h2>Render progress</h2>
+
+<p>
+During rendering, soundWave shows a progress dialog with a Cancel button and optional line-by-line details.
+Use <strong>Show details</strong> to review current file, text chunk, elapsed time, rendered audio length, and conversion rate where available.
+Long durations are shown as minutes or hours rather than raw seconds.
+</p>
+
+<p>
+For long renders, use <strong>Minimize</strong> or press <span class="kbd">Alt</span>+<span class="kbd">M</span> to hide the progress dialog.
+The render continues in the background and the hidden dialog is kept out of <span class="kbd">Alt</span>+<span class="kbd">Tab</span>.
+Press the soundWave command again, <span class="kbd">NVDA</span>+<span class="kbd">Ctrl</span>+<span class="kbd">=</span>, to bring the progress dialog back.
+</p>
+
 <h2>Settings</h2>
 
 <p>
@@ -232,6 +246,15 @@ soundWave uses NVDA's add-on update channel for store-compatible updates.
 </p>
 
 <h2>Changes</h2>
+
+<h3>1.1.1</h3>
+<ul>
+  <li>Improved long googleTtsForNvda renders by reusing a single Google bridge instance across the whole render, using smaller Google-specific chunks, and retrying recoverable Chrome DevTools bridge failures.</li>
+  <li>Changed the progress dialog so it can be minimized with <span class="kbd">Alt</span>+<span class="kbd">M</span>. Pressing the soundWave command again restores the active render progress instead of opening a second render dialog.</li>
+  <li>Improved elapsed time and audio length reporting so long renders are shown in minutes or hours instead of only raw seconds.</li>
+  <li>Restored generic NVDA synthesizer voice, variant, language, rate, pitch, and volume settings after capture to reduce the chance of settings leaking back into the user's running NVDA speech.</li>
+  <li>Closes <a href="https://github.com/OnjLouis/soundWave/issues/5">#5</a>.</li>
+</ul>
 
 <h3>1.1.0</h3>
 <ul>

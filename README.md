@@ -27,6 +27,7 @@ soundWave is an NVDA add-on that renders text to an audio file using installed s
 
 ## Changes
 
+- 1.1.1: Improved long Google TTS renders by reusing one bridge instance, using smaller Google chunks, and retrying recoverable DevTools bridge failures. Added progress minimization/restoration and friendlier long-duration reporting. Restored generic NVDA synth settings after capture to reduce voice/language state leaks. Closes issue #5.
 - 1.1.0: Major rendering update. Added folder/batch input, MP3/FLAC/M4A output, configurable output naming, optional dialog skipping, Google TTS dialog preview/render fixes, Pocket TTS direct rendering improvements including EOS sensitivity, Supertonic chunking, batch playlist playback, and split specialist synth support into separate modules.
 - 1.0.4: Added googleTtsForNvda rendering support.
 - 1.0.3: Added SAPI5 pitch support and changed SAPI5 WAV rendering to use the selected voice's default SAPI output format where available.

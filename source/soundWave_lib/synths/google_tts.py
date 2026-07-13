@@ -19,6 +19,17 @@ def _is_missing_bridge_function_error(exc: Exception) -> bool:
     return "googlettsfornvdaspeak is not a function" in message
 
 
+def _is_retryable_bridge_error(exc: Exception) -> bool:
+    message = str(exc or "").lower()
+    return (
+        _is_missing_bridge_function_error(exc)
+        or "chrome devtools port is not ready" in message
+        or "chrome devtools websocket is not connected" in message
+        or "devtools websocket closed" in message
+        or "websocket closed" in message
+    )
+
+
 def is_google_tts_synth(synth_name: str) -> bool:
     """Return True for the googleTtsForNvda driver family."""
     name = (synth_name or "").strip().lower()
@@ -190,22 +201,28 @@ def render_to_wav(text: str, out_wav: str, synth, opts=None, progress=None, canc
                     progress["channels"] = 1
                     progress["sampwidth"] = 2
 
-        try:
-            synth._bridge.speak(text or "", options, on_audio, cancel_evt)  # noqa: SLF001
-        except Exception as e:
-            if not _is_missing_bridge_function_error(e):
-                raise
-            log.debug("soundWave: Google TTS bridge was not ready; resetting bridge and retrying once")
-            pcm_parts.clear()
-            if progress is not None:
-                progress["bytes"] = 0
-                progress["buffers"] = 0
-                progress["last_audio_ts"] = None
-                progress["waitingText"] = "Audio progress: reconnecting to Google TTS"
-            _reset_bridge(synth)
-            if cancel_evt.is_set():
-                raise RuntimeError("Cancelled.") from e
-            synth._bridge.speak(text or "", options, on_audio, cancel_evt)  # noqa: SLF001
+        last_error = None
+        for attempt in range(1, 4):
+            try:
+                synth._bridge.speak(text or "", options, on_audio, cancel_evt)  # noqa: SLF001
+                break
+            except Exception as e:
+                last_error = e
+                if not _is_retryable_bridge_error(e) or attempt >= 3:
+                    raise
+                log.debug("soundWave: Google TTS bridge was not ready; resetting bridge and retrying attempt %d", attempt + 1)
+                pcm_parts.clear()
+                if progress is not None:
+                    progress["bytes"] = 0
+                    progress["buffers"] = 0
+                    progress["last_audio_ts"] = None
+                    progress["waitingText"] = "Audio progress: reconnecting to Google TTS"
+                _reset_bridge(synth)
+                if cancel_evt.is_set():
+                    raise RuntimeError("Cancelled.") from e
+                time.sleep(1.0 * attempt)
+        else:
+            raise last_error or RuntimeError("Google TTS bridge failed.")
     except Exception as e:
         raise RuntimeError("Google TTS render failed: %s" % (str(e).strip() or e.__class__.__name__)) from e
 

@@ -207,6 +207,26 @@ def _make_capture_wave_player_factory(players: List[_GenericCaptureWavePlayer]):
     return _factory
 
 
+def _snapshot_synth_settings(synth) -> Dict[str, Any]:
+    snapshot: Dict[str, Any] = {}
+    for attr in ("voice", "variant", "language", "rate", "pitch", "volume"):
+        try:
+            if hasattr(synth, attr):
+                snapshot[attr] = getattr(synth, attr)
+        except Exception:
+            pass
+    return snapshot
+
+
+def _restore_synth_settings(synth, snapshot: Dict[str, Any]) -> None:
+    for attr, value in (snapshot or {}).items():
+        try:
+            if hasattr(synth, attr):
+                setattr(synth, attr, value)
+        except Exception:
+            pass
+
+
 def _render_with_nvda_generic_capture(
     text: str,
     out_wav: str,
@@ -235,6 +255,7 @@ def _render_with_nvda_generic_capture(
     expects_done_notification = False
     is_google_tts = google_tts.is_google_tts_synth(synth_name)
     is_pocket_tts = pocket_tts.is_pocket_tts_synth(synth_name)
+    original_settings: Dict[str, Any] = {}
 
     def _on_synth_done(synth=None, **kwargs):
         nonlocal saw_done_notification
@@ -253,6 +274,7 @@ def _render_with_nvda_generic_capture(
         current_synth_holder["synth"] = synth
         if synth is None or not hasattr(synth, "speak"):
             raise RuntimeError("Couldn't create NVDA synth instance for %s." % synth_name)
+        original_settings = _snapshot_synth_settings(synth)
         if (synth_name or "").lower() == "worldvoice" and not hasattr(synth, "_voiceManager"):
             raise RuntimeError(
                 "WorldVoice did not initialize its voice manager. Its workspace engines appear to be missing "
@@ -341,6 +363,7 @@ def _render_with_nvda_generic_capture(
         except Exception:
             pass
         if synth is not None:
+            _restore_synth_settings(synth, original_settings)
             try:
                 synth.cancel()
             except Exception:
