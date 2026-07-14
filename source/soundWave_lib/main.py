@@ -246,6 +246,7 @@ RENDER_CHUNK_CHARS = 12000
 CHUNK_RENDER_MIN_CHARS = 24000
 SUPERTONIC_RENDER_CHUNK_CHARS = 700
 GOOGLE_TTS_RENDER_CHUNK_CHARS = 900
+ORPHEUS_CLASSIC_RENDER_CHUNK_CHARS = 2400
 MAX_WAV_DATA_BYTES = 3600 * 1024 * 1024
 DEFAULT_FILENAME_PATTERN = "%source% - %engine% - %voice%"
 DEFAULT_SINGLE_FOLDER_PATTERN = "%engine% - %voice%"
@@ -1392,6 +1393,10 @@ from soundWave_lib.synths.nvda_capture import (
     GenericNvdaOptionsDialog,
 )
 from soundWave_lib.synths import google_tts
+from soundWave_lib.synths.orpheus_classic import (
+    is_orpheus_classic_synth,
+    render_with_orpheus_classic_capture,
+)
 
 # Sonata availability probe
 _runtime.publish(globals())
@@ -1712,6 +1717,8 @@ def _chunk_size_for_render(kind: str, nvda_name: str = "", synth_label: str = ""
     joined = f"{kind} {nvda_name} {synth_label}".lower()
     if "googletts" in joined or "google tts" in joined or "google_tts" in joined or "google-tts" in joined:
         return GOOGLE_TTS_RENDER_CHUNK_CHARS
+    if "orpheusclassic" in joined or "orpheus classic" in joined:
+        return ORPHEUS_CLASSIC_RENDER_CHUNK_CHARS
     if "supertonic" in joined:
         return SUPERTONIC_RENDER_CHUNK_CHARS
     return RENDER_CHUNK_CHARS
@@ -2233,6 +2240,15 @@ def _do_render_impl():
                             opts=nvda_opts,
                             progress=result.progress,
                             cancel_evt=cancel_evt,
+                        )
+                    if is_orpheus_classic_synth(nvda_name, synth_label):
+                        return render_with_orpheus_classic_capture(
+                            chunk_text,
+                            chunk_wav,
+                            synth_name=nvda_name,
+                            cancel_evt=cancel_evt,
+                            progress=result.progress,
+                            opts=nvda_opts,
                         )
                     if "speech api version 5" in joined or "_sapi5" in joined:
                         return _render_with_sapi5_32(

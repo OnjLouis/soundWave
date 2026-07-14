@@ -223,6 +223,10 @@ Most settings dialogs include:
       <td>Requires Orpheus to be the current NVDA synthesizer before rendering starts. Language, voice, speed, pitch, and volume can be adjusted before rendering. During rendering, soundWave temporarily switches NVDA to an available fallback synthesizer.</td>
     </tr>
     <tr>
+      <td><strong>Orpheus Classic</strong></td>
+      <td>Available when the Orpheus Classic add-on is installed. soundWave uses a dedicated capture path for this older synthesizer so longer pauses and punctuation do not produce truncated output.</td>
+    </tr>
+    <tr>
       <td><strong>DECtalk and Keynote Gold</strong></td>
       <td>Available when the required add-on is installed and discoverable. Keynote Gold exposes voice, speed, pitch, volume, and rate boost in its render dialog.</td>
     </tr>
@@ -246,6 +250,12 @@ soundWave uses NVDA's add-on update channel for store-compatible updates.
 </p>
 
 <h2>Changes</h2>
+
+<h3>1.1.2</h3>
+<ul>
+  <li>Added a dedicated Orpheus Classic capture path. soundWave now renders Orpheus Classic through its normal NVDA driver flow while capturing generated audio directly, avoiding the very short output that could occur through generic NVDA capture.</li>
+  <li>Improved Orpheus Classic rendering around larger punctuation pauses, including lines with exclamation marks and longer pauses inside Mastodon-style posts.</li>
+</ul>
 
 <h3>1.1.1</h3>
 <ul>
