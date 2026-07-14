@@ -79,6 +79,7 @@ Open NVDA Settings and choose <strong>soundWave</strong> to set defaults used by
   <li><strong>Default save folder:</strong> the record base folder used by the first soundWave dialog. Leaving it blank uses <strong>Documents\SoundWave</strong>, so rendered files stay somewhere most users can find.</li>
   <li><strong>Folder and file naming:</strong> separate templates control single-render folders, single-render files, batch folders, and batch files. The tables below show the defaults, tokens, and examples.</li>
   <li><strong>Default output format:</strong> choose WAV, or MP3, FLAC, or M4A when ffmpeg is available. Optional checkboxes let you skip the single-render Save As dialog and the batch format picker.</li>
+  <li><strong>Pitch post-processing:</strong> optionally apply a Sonic-style pitch shift after the synthesizer has rendered the audio. <strong>Sonic pitch</strong> uses a 0 to 100 scale where 50 is unchanged. Lower values deepen the finished file and higher values raise it. The full range maps to roughly -12 to +12 semitones and requires ffmpeg with rubberband support.</li>
   <li><strong>After rendering:</strong> choose whether soundWave opens the output folder once the whole render finishes, opens rendered audio in your default media player, or shows the render summary. Batch auto-play opens the rendered files as a playlist. Automatic folder opening does not reopen a folder soundWave has already opened in the current NVDA session.</li>
 </ul>
 
@@ -250,6 +251,16 @@ soundWave uses NVDA's add-on update channel for store-compatible updates.
 </p>
 
 <h2>Changes</h2>
+
+<h3>1.2.0</h3>
+<ul>
+  <li>Added optional post-render pitch processing. It works on the completed WAV before final WAV/MP3/FLAC/M4A output, so existing synthesizer render paths stay unchanged. The setting is off by default, uses a 0 to 100 Sonic pitch scale, and maps the full range to roughly -12 to +12 semitones.</li>
+  <li>Added Polish and Slovak interface localization, based on <a href="https://github.com/OnjLouis/soundWave/pull/10">#10</a> by Kazimierz Parzych and DJ Graco.</li>
+  <li>Added Polish and Slovak manuals, based on <a href="https://github.com/OnjLouis/soundWave/pull/9">#9</a> by Kazimierz Parzych.</li>
+  <li>Added an output-folder write check before rendering starts, so inaccessible or broken folders fail quickly with a clear SoundWave error instead of rendering first and failing during final conversion.</li>
+  <li>Closes <a href="https://github.com/OnjLouis/soundWave/issues/7">#7</a>.</li>
+  <li>Closes <a href="https://github.com/OnjLouis/soundWave/issues/8">#8</a>.</li>
+</ul>
 
 <h3>1.1.2</h3>
 <ul>

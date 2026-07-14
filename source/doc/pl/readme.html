@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8">
+  <title>soundWave - dokumentacja</title>
+  <style>
+    body { font-family: system-ui, -apple-system, Segoe UI, Arial, sans-serif; line-height: 1.5; margin: 1.5rem; }
+    h1,h2,h3 { line-height: 1.2; }
+    code, pre { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace; }
+    pre { padding: 0.75rem; border: 1px solid #ddd; overflow: auto; }
+    .note { border-left: 4px solid #999; padding: 0.5rem 0.75rem; background: #fafafa; }
+    .warn { border-left: 4px solid #c60; padding: 0.5rem 0.75rem; background: #fff7ea; }
+    ul { margin-top: 0.25rem; }
+    .kbd { padding: 0.1rem 0.35rem; border: 1px solid #ccc; border-bottom-width: 2px; border-radius: 4px; background: #f7f7f7; }
+    table { border-collapse: collapse; width: 100%; margin: 0.75rem 0; }
+    th, td { border: 1px solid #ddd; padding: 0.5rem; vertical-align: top; }
+    th { background: #f4f4f4; text-align: left; }
+  </style>
+</head>
+<body>
+
+<h1>soundWave</h1>
+
+<p>
+soundWave to dodatek do NVDA, który renderuje tekst do pliku audio przy użyciu zainstalowanych silników mowy.
+Może eksportować dźwięk z tekstu znajdującego się w schowku, z pliku tekstowego, z folderu plików tekstowych albo z tekstu wpisanego bezpośrednio w dodatku.
+</p>
+
+<h2>Szybki start</h2>
+
+<ol>
+  <li>Naciśnij <span class="kbd">NVDA</span>+<span class="kbd">Ctrl</span>+<span class="kbd">=</span>, aby otworzyć soundWave.</li>
+  <li>Wybierz syntezator.</li>
+  <li>Opcjonalnie ustaw bazowy folder nagrań. Jest to domyślny folder zapisu renderów; soundWave tworzy w nim foldery wyjściowe według szablonów nazewnictwa.</li>
+  <li>Wybierz źródło tekstu: schowek, plik tekstowy, folder plików tekstowych albo tekst wpisany lub wklejony ręcznie.</li>
+  <li>Skonfiguruj syntezator. Użyj przycisku <strong>Test</strong>, aby odsłuchać krótki podgląd wybranych ustawień.</li>
+  <li>Wybierz nazwę pliku wyjściowego i format.</li>
+  <li>Poczekaj na zakończenie renderowania, a następnie sprawdź podsumowanie.</li>
+</ol>
+
+<p>
+W oknach renderowania soundWave naciśnij <span class="kbd">F1</span>, aby otworzyć tę instrukcję.
+W panelu soundWave w ustawieniach NVDA przejdź klawiszem Tab do przycisku Pomoc albo użyj skrótu <span class="kbd">Alt</span>+<span class="kbd">H</span>.
+Kontrolki dialogów mają skróty klawiaturowe tam, gdzie jest to praktyczne, na przykład <span class="kbd">Alt</span>+<span class="kbd">T</span> dla przycisku Test.
+</p>
+
+<h2>Wejście i wyjście</h2>
+
+<ul>
+  <li><strong>Wejście:</strong> tekst ze schowka, plik tekstowy, folder plików tekstowych albo tekst wpisany lub wklejony ręcznie.</li>
+  <li><strong>Wyjście:</strong> WAV jest zawsze obsługiwany. MP3, FLAC i M4A są dostępne, gdy ffmpeg jest zainstalowany i dostępny w systemowej zmiennej PATH.</li>
+  <li><strong>Tryb wsadowy:</strong> wybranie folderu renderuje każdy czytelny plik tekstowy jako osobny plik audio w kolejności sortowania. Domyślnie renderowanie wsadowe zapisuje pliki w podfolderze syntezatora i głosu, a nazwy plików otrzymują automatyczne numery porządkowe.</li>
+  <li><strong>Długie teksty:</strong> długi tekst jest renderowany w częściach. Jeśli jeden plik WAV byłby zbyt duży, soundWave zapisuje ponumerowane pliki części.</li>
+  <li><strong>Foldery i nazwy plików:</strong> soundWave może osobno nazywać foldery pojedynczego renderowania, pojedyncze pliki, foldery wsadowe i pliki wsadowe.</li>
+  <li><strong>Nazwy głosów:</strong> gdy soundWave potrafi rozpoznać wybrany głos, może użyć jego nazwy w szablonach folderów lub plików, aby łatwiej rozróżniać rendery tego samego tekstu z różnymi syntezatorami lub głosami.</li>
+</ul>
+
+<h2>Postęp renderowania</h2>
+
+<p>
+Podczas renderowania soundWave pokazuje okno postępu z przyciskiem Anuluj oraz opcjonalnymi szczegółami wiersz po wierszu.
+Użyj przycisku <strong>Pokaż szczegóły</strong>, aby sprawdzić bieżący plik, fragment tekstu, czas działania, długość wyrenderowanego audio i współczynnik szybkości, jeśli te informacje są dostępne.
+Długie czasy są pokazywane jako minuty albo godziny, a nie tylko jako liczba sekund.
+</p>
+
+<p>
+Przy długich renderach użyj przycisku <strong>Minimalizuj</strong> albo skrótu <span class="kbd">Alt</span>+<span class="kbd">M</span>, aby ukryć okno postępu.
+Renderowanie będzie działać w tle, a ukryte okno nie będzie przeszkadzać na liście <span class="kbd">Alt</span>+<span class="kbd">Tab</span>.
+Naciśnij ponownie polecenie soundWave, <span class="kbd">NVDA</span>+<span class="kbd">Ctrl</span>+<span class="kbd">=</span>, aby przywrócić aktywne okno postępu.
+</p>
+
+<h2>Ustawienia</h2>
+
+<p>
+Otwórz ustawienia NVDA i wybierz kategorię <strong>soundWave</strong>, aby ustawić domyślne opcje używane przez kolejne rendery.
+</p>
+
+<ul>
+  <li><strong>Domyślny folder zapisu:</strong> bazowy folder nagrań używany w pierwszym oknie soundWave. Pozostawienie pola pustego używa folderu <strong>Dokumenty\SoundWave</strong>, dzięki czemu wyrenderowane pliki trafiają w miejsce łatwe do odnalezienia.</li>
+  <li><strong>Nazywanie folderów i plików:</strong> osobne szablony kontrolują foldery pojedynczego renderowania, pojedyncze pliki, foldery wsadowe i pliki wsadowe. Poniższe tabele pokazują ustawienia domyślne, znaczniki i przykłady.</li>
+  <li><strong>Domyślny format wyjściowy:</strong> wybierz WAV albo MP3, FLAC lub M4A, gdy dostępny jest ffmpeg. Opcjonalne pola wyboru pozwalają pominąć okno Zapisz jako dla pojedynczego renderowania oraz wybór formatu dla trybu wsadowego.</li>
+  <li><strong>Po renderowaniu:</strong> wybierz, czy soundWave ma otworzyć folder wyjściowy po zakończeniu całego renderowania, odtworzyć plik audio w domyślnym odtwarzaczu albo pokazać podsumowanie renderowania. Automatyczne odtwarzanie w trybie wsadowym otwiera wyrenderowane pliki jako listę odtwarzania. Automatyczne otwieranie folderu nie otwiera ponownie folderu, który soundWave już otworzył w bieżącej sesji NVDA.</li>
+</ul>
+
+<h3>Szablony nazw</h3>
+
+<p>
+Pola nazw są szablonami. soundWave zastępuje każdy znacznik informacjami z bieżącego renderowania przed zaproponowaniem folderu lub nazwy pliku.
+Możesz usuwać znaczniki, przenosić je, dodawać własne słowa albo zmieniać interpunkcję między nimi.
+</p>
+
+<table>
+  <thead>
+    <tr><th>Ustawienie</th><th>Domyślnie</th><th>Przykładowy wynik</th><th>Co kontroluje</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Wzorzec folderu pojedynczego renderowania</td>
+      <td><code>%engine% - %voice%</code></td>
+      <td><code>Sonata - Kirsten Two En Medium</code></td>
+      <td>Folder proponowany przez okno Zapisz jako dla schowka, wpisanego tekstu albo jednego pliku tekstowego.</td>
+    </tr>
+    <tr>
+      <td>Wzorzec nazwy pojedynczego pliku</td>
+      <td><code>%source%</code></td>
+      <td><code>Schowek.wav</code></td>
+      <td>Sugerowana nazwa pliku dla pojedynczego renderowania.</td>
+    </tr>
+    <tr>
+      <td>Wzorzec folderu wsadowego</td>
+      <td><code>%engine% - %voice%</code></td>
+      <td><code>Keynote Gold - Fred</code></td>
+      <td>Folder wyjściowy tworzony podczas renderowania folderu plików tekstowych.</td>
+    </tr>
+    <tr>
+      <td>Wzorzec pliku wsadowego</td>
+      <td><code>%number% - %source%</code></td>
+      <td><code>03 - rozdział trzeci.wav</code></td>
+      <td>Nazwa każdego wyrenderowanego pliku w trybie wsadowym.</td>
+    </tr>
+  </tbody>
+</table>
+
+<h3>Przykłady nazw</h3>
+
+<table>
+  <thead>
+    <tr><th>Wzorzec</th><th>Przykładowy wynik</th><th>Kiedy jest przydatny</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>%engine% - %voice%</code></td>
+      <td><code>Orpheus - Synthetic Dave</code></td>
+      <td>Grupuje wyjście według syntezatora i głosu.</td>
+    </tr>
+    <tr>
+      <td><code>%source% - %engine%</code></td>
+      <td><code>rozdział pierwszy - SAPI5.wav</code></td>
+      <td>Zostawia nazwę źródła na początku, ale nadal pokazuje syntezator.</td>
+    </tr>
+    <tr>
+      <td><code>%number% - %source%</code></td>
+      <td><code>01 - napisy początkowe.wav</code></td>
+      <td>Utrzymuje przewidywalną kolejność plików wsadowych.</td>
+    </tr>
+  </tbody>
+</table>
+
+<table>
+  <caption>Znaczenie znaczników nazw plików</caption>
+  <thead>
+    <tr><th>Znacznik</th><th>Znaczenie</th><th>Przykładowa wartość</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>%source%</code></td>
+      <td>Schowek, wpisany tekst, nazwa pliku źródłowego albo nazwa elementu z folderu źródłowego.</td>
+      <td><code>Schowek</code>, <code>Wpisany tekst</code>, <code>rozdział pierwszy</code> albo <code>notatki ze spotkania</code></td>
+    </tr>
+    <tr>
+      <td><code>%engine%</code></td>
+      <td>Nazwa syntezatora.</td>
+      <td><code>Orpheus</code>, <code>Sonata</code>, <code>SAPI5</code> albo <code>Pocket TTS</code></td>
+    </tr>
+    <tr>
+      <td><code>%voice%</code></td>
+      <td>Wybrany głos, jeśli soundWave potrafi go rozpoznać. Jeśli głos nie jest znany, ta część jest usuwana w czysty sposób.</td>
+      <td><code>Synthetic Dave</code>, <code>Kirsten Two En Medium</code> albo <code>Fred</code></td>
+    </tr>
+    <tr>
+      <td><code>%number%</code></td>
+      <td>Numer porządkowy. Renderowanie folderu dodaje go automatycznie; znacznik jest dostępny także dla własnych wzorców nazw.</td>
+      <td><code>01</code>, <code>02</code> albo <code>03</code></td>
+    </tr>
+  </tbody>
+</table>
+
+<h2>Opcje syntezatorów</h2>
+
+<p>
+Syntezatory udostępniają takie ustawienia jak głos, język, wariant, szybkość, tempo, wysokość albo głośność tam, gdzie dana opcja jest obsługiwana.
+Większość okien ustawień zawiera:
+</p>
+<ul>
+  <li><strong>Automatycznie odtwarzaj przy zmianie ustawień</strong>, aby automatycznie odsłuchiwać zmiany.</li>
+  <li><strong>Test</strong>, aby odtworzyć krótki przykład z bieżącymi ustawieniami.</li>
+  <li>Ustawienia trwałe zapisywane w konfiguracji NVDA.</li>
+</ul>
+
+<h2>Obsługiwane syntezatory</h2>
+
+<table>
+  <thead>
+    <tr><th>Syntezator</th><th>Uwagi</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>SAPI5</strong></td>
+      <td>Używa zainstalowanych głosów Microsoft SAPI5. Głosy SAPI5 32-bit są obsługiwane osobną ścieżką pomocniczą 32-bit, jeśli jest dostępna. W oknie renderowania można regulować tempo, wysokość i głośność SAPI5. soundWave pyta SAPI o domyślny format wyjściowy wybranego głosu zamiast wymuszać stałą częstotliwość próbkowania; jeśli SAPI nie udostępnia formatu, używany jest zapasowy format 22,05 kHz 16-bit mono.</td>
+    </tr>
+    <tr>
+      <td><strong>googleTtsForNvda</strong></td>
+      <td>Wymaga dodatku Google TTS For NVDA oraz zainstalowanych pakietów głosów Google. Podczas renderowania soundWave bezpośrednio przechwytuje audio PCM generowane przez dodatek. Przycisk Test renderuje krótką próbkę do tymczasowego pliku WAV i ją odtwarza, omijając ścieżkę bieżącej mowy NVDA. soundWave pokazuje tylko głosy Google zainstalowane i stabilne w tej ścieżce renderowania offline, więc lista może być krótsza niż pełny katalog głosów dodatku Google.</td>
+    </tr>
+    <tr>
+      <td><strong>Pocket TTS</strong></td>
+      <td>Wymaga dodatku Pocket TTS. soundWave renderuje w mniejszych segmentach, gdy jest to potrzebne, aby dłuższy tekst rzadziej trafiał na ograniczenia modelu. Okno opcji zawiera czułość końca zdania Pocket TTS, jeśli zainstalowany syntezator ją udostępnia.</td>
+    </tr>
+    <tr>
+      <td><strong>Supertonic</strong></td>
+      <td>Wymaga dodatku Supertonic. soundWave używa mniejszych fragmentów renderowania dla Supertonic, aby dłuższe wejście mogło zostać wyrenderowane bez przekroczenia limitu rozmiaru wejścia modelu.</td>
+    </tr>
+    <tr>
+      <td><strong>Sonata</strong></td>
+      <td>Wymaga dodatku Sonata Neural Voices oraz dostępnych plików konfiguracji głosów.</td>
+    </tr>
+    <tr>
+      <td><strong>Eloquence i IBMTTS</strong></td>
+      <td>Dostępne, gdy zainstalowany jest odpowiedni dodatek NVDA. soundWave automatycznie wykrywa silnik mowy i udostępnia opcje głosu oraz szybkości przed renderowaniem.</td>
+    </tr>
+    <tr>
+      <td><strong>Orpheus</strong></td>
+      <td>Wymaga ustawienia Orpheus jako bieżącego syntezatora NVDA przed rozpoczęciem renderowania. Przed renderowaniem można regulować język, głos, szybkość, wysokość i głośność. Podczas renderowania soundWave tymczasowo przełącza NVDA na dostępny syntezator zapasowy.</td>
+    </tr>
+    <tr>
+      <td><strong>Orpheus Classic</strong></td>
+      <td>Dostępny, gdy zainstalowany jest dodatek Orpheus Classic. soundWave używa dedykowanej ścieżki przechwytywania dla tego starszego syntezatora, dzięki czemu dłuższe pauzy i znaki interpunkcyjne nie powodują ucinania wyjścia.</td>
+    </tr>
+    <tr>
+      <td><strong>DECtalk i Keynote Gold</strong></td>
+      <td>Dostępne, gdy wymagany dodatek jest zainstalowany i możliwy do wykrycia. Keynote Gold udostępnia w oknie renderowania głos, szybkość, wysokość, głośność i przyspieszenie tempa.</td>
+    </tr>
+    <tr>
+      <td><strong>Inne syntezatory NVDA</strong></td>
+      <td>soundWave może renderować wiele innych zainstalowanych syntezatorów NVDA, jeśli używają normalnej ścieżki wyjścia audio NVDA. Ogólne okno opcji stosuje głos, wariant, tempo, wysokość i głośność tam, gdzie wybrany syntezator udostępnia te ustawienia.</td>
+    </tr>
+  </tbody>
+</table>
+
+<h2>Podsumowanie renderowania</h2>
+
+<p>
+Po renderowaniu soundWave zgłasza syntezator, ścieżkę zapisu, czas działania, długość audio i współczynnik szybkości względem czasu rzeczywistego, jeśli jest dostępny.
+</p>
+
+<h2>Aktualizacje</h2>
+
+<p>
+soundWave używa kanału aktualizacji dodatków NVDA zgodnego z dystrybucją przez Add-on Store.
+</p>
+
+<h2>Zmiany</h2>
+
+<h3>1.1.2</h3>
+<ul>
+  <li>Dodano dedykowaną ścieżkę przechwytywania Orpheus Classic. soundWave renderuje teraz Orpheus Classic przez normalny przepływ sterownika NVDA, jednocześnie bezpośrednio przechwytując wygenerowane audio, co zapobiega bardzo krótkiemu wyjściu, które mogło wystąpić przez ogólne przechwytywanie NVDA.</li>
+  <li>Ulepszono renderowanie Orpheus Classic wokół dłuższych pauz interpunkcyjnych, w tym linii z wykrzyknikami i dłuższych pauz we wpisach podobnych do Mastodona.</li>
+</ul>
+
+<h3>1.1.1</h3>
+<ul>
+  <li>Ulepszono długie rendery googleTtsForNvda przez ponowne użycie jednej instancji mostu Google dla całego renderowania, mniejsze fragmenty specyficzne dla Google i ponawianie po odzyskiwalnych błędach mostu Chrome DevTools.</li>
+  <li>Zmieniono okno postępu tak, aby można je było zminimalizować skrótem <span class="kbd">Alt</span>+<span class="kbd">M</span>. Ponowne użycie polecenia soundWave przywraca aktywny postęp zamiast otwierać drugie okno renderowania.</li>
+  <li>Ulepszono raportowanie czasu działania i długości audio, aby długie rendery były pokazywane w minutach albo godzinach, a nie tylko w sekundach.</li>
+  <li>Przywracanie ustawień głosu, wariantu, języka, tempa, wysokości i głośności po ogólnym przechwytywaniu NVDA zmniejsza ryzyko przeniesienia ustawień do bieżącej mowy NVDA.</li>
+  <li>Zamknięto <a href="https://github.com/OnjLouis/soundWave/issues/5">#5</a>.</li>
+</ul>
+
+<h3>1.1.0</h3>
+<ul>
+  <li>Znacznie ulepszono obsługę googleTtsForNvda. SoundWave renderuje przez most Google bardziej niezawodnie, pokazuje tylko zainstalowane głosy działające przez ścieżkę renderowania offline, ponawia próbę, jeśli strona mostu nie jest gotowa, i nie przełącza po cichu na inny głos.</li>
+  <li>Ulepszono podglądy googleTtsForNvda przez renderowanie frazy testowej do tymczasowego pliku WAV przed odtworzeniem, dzięki czemu automatyczny podgląd może pozostać włączony bez używania bieżącej mowy NVDA.</li>
+  <li>Ulepszono tekst postępu renderowania googleTtsForNvda podczas oczekiwania na audio od Google.</li>
+  <li>Ulepszono renderowanie Pocket TTS przez pomijanie pustych wierszy i dzielenie tekstu na bezpieczniejsze segmenty dla modelu.</li>
+  <li>Dodano czułość końca zdania Pocket TTS do okna opcji syntezatora, jeśli jest dostępna.</li>
+  <li>Dodano dzielenie tekstu specyficzne dla Supertonic, aby dłuższe wejście mogło renderować się bez przekroczenia limitu rozmiaru wejścia modelu.</li>
+  <li>Dodano wyjście FLAC i M4A, gdy ffmpeg jest zainstalowany i dostępny w systemowej zmiennej PATH.</li>
+  <li>Zmieniono wybór formatu wyjściowego tak, aby pojedyncze i wsadowe rendery pamiętały ostatnio wybrany format.</li>
+  <li>Dodano opcjonalne ustawienia pozwalające używać domyślnego formatu wyjściowego bez pokazywania okna Zapisz jako dla pojedynczego renderowania albo wyboru formatu wsadowego.</li>
+  <li>Zmieniono automatyczne odtwarzanie w trybie wsadowym tak, aby ukończone rendery folderu otwierały się jako lista odtwarzania, a nie odtwarzały tylko pierwszy plik.</li>
+  <li>Zmieniono automatyczne otwieranie folderu wyjściowego tak, aby soundWave nie otwierał wielokrotnie tego samego folderu w jednej sesji NVDA.</li>
+  <li>Dodano panel ustawień soundWave w ustawieniach NVDA dla domyślnego folderu zapisu, szablonów nazw i akcji po renderowaniu.</li>
+  <li>Dodano akcje po renderowaniu: otwarcie folderu wyjściowego, odtworzenie ukończonego pliku audio i sterowanie wyświetlaniem podsumowania renderowania.</li>
+  <li>Dodano przycisk Otwórz folder do podsumowania renderowania.</li>
+  <li>Dodano wejście folderu do renderowania wsadowego.</li>
+  <li>Ulepszono nazewnictwo wyjścia przez osobne szablony dla folderów pojedynczego renderowania, pojedynczych plików, folderów wsadowych i plików wsadowych.</li>
+  <li>Ulepszono sugerowane nazwy plików wyjściowych tak, aby wybrane nazwy głosów były uwzględniane w większej liczbie ścieżek renderowania.</li>
+  <li>Podzielono specjalistyczną obsługę syntezatorów na osobne moduły dla SAPI5, DECtalk, BestSpeech, Sonata, Pocket TTS, googleTtsForNvda, Eloquence/IBMTTS, Orpheus i ogólnych ścieżek przechwytywania NVDA.</li>
+  <li>Dodano automatyczne wykrywanie Eloquence i IBMTTS, aby renderowały przez dedykowaną ścieżkę silnika zamiast przez ogólne przechwytywanie NVDA.</li>
+</ul>
+
+<h3>1.0.4</h3>
+<ul>
+  <li>Dodano obsługę renderowania googleTtsForNvda na podstawie <a href="https://github.com/OnjLouis/soundWave/pull/3">PR #3</a> autorstwa Ruslana Dolovaniuka.</li>
+</ul>
+
+<h3>1.0.3</h3>
+<ul>
+  <li>Dodano obsługę wysokości SAPI5 przy użyciu natywnego znacznika XML pitch w SAPI.</li>
+  <li>Zmieniono renderowanie WAV SAPI5 tak, aby używało domyślnego formatu wyjściowego wybranego głosu SAPI, jeśli jest dostępny, zamiast zawsze wymuszać 22,05 kHz 16-bit mono.</li>
+</ul>
+
+<h3>1.0.2</h3>
+<ul>
+  <li>Dodano kontrolki wysokości i głośności dla Orpheus, Keynote Gold i ogólnego renderowania syntezatorów NVDA.</li>
+  <li>Dodano obsługę głośności dla renderowania SAPI5.</li>
+  <li>Ulepszono klawiaturową regulację opcji liczbowych. Page Up i Page Down wykonują większe zmiany, a Home i End przechodzą do wartości minimalnej i maksymalnej.</li>
+  <li>Zmieniono szczegóły renderowania na listę wiersz po wierszu, aby informacje o postępie były łatwiejsze do przeglądania za pomocą czytnika ekranu.</li>
+  <li>Zapamiętywanie tego, czy szczegóły renderowania są pokazane czy ukryte, między renderowaniami.</li>
+  <li>Dodano nazwy wybranych głosów do sugerowanych nazw plików wyjściowych, gdy SoundWave potrafi rozpoznać głos.</li>
+  <li>Dodano dostęp do instrukcji klawiszem F1 w oknach renderowania soundWave oraz przyciski Pomoc dostępne klawiszem Tab.</li>
+  <li>Ulepszono skróty klawiaturowe w oknach dialogowych, w tym przyciski Test i kontrolki opcji syntezatora.</li>
+</ul>
+
+<h3>1.0.1</h3>
+<ul>
+  <li>Dostosowano obsługę aktualizacji do dystrybucji przez NVDA Add-on Store.</li>
+</ul>
+
+<h3>1.0.0</h3>
+<ul>
+  <li>Pierwsze wydanie.</li>
+</ul>
+
+<h2>Rozwiązywanie problemów</h2>
+
+<ul>
+  <li><strong>Nie powstaje audio:</strong> wybrany syntezator może nie udostępniać ścieżki audio, którą soundWave potrafi renderować. Spróbuj innego syntezatora i sprawdź log NVDA.</li>
+  <li><strong>Eloquence lub IBMTTS nie jest dostępny:</strong> zainstaluj lub zaktualizuj odpowiedni dodatek NVDA, przeładuj NVDA i spróbuj ponownie.</li>
+  <li><strong>Orpheus się nie uruchamia:</strong> przełącz bieżący syntezator NVDA na Orpheus, a następnie ponownie otwórz soundWave.</li>
+  <li><strong>WorldVoice się nie inicjuje:</strong> sprawdź log NVDA pod kątem brakujących plików w WorldVoice-workspace. soundWave nie może renderować WorldVoice, dopóki sam WorldVoice nie załaduje się poprawnie.</li>
+  <li><strong>Eksport MP3, FLAC lub M4A nie działa:</strong> zainstaluj ffmpeg i upewnij się, że polecenie ffmpeg działa z wiersza polecenia.</li>
+  <li><strong>Renderowanie wygląda na zawieszone:</strong> użyj Anuluj. Jeśli problem się powtarza, dołącz do zgłoszenia nazwę syntezatora, ustawienia, typ wejścia i odpowiednie wpisy z logu NVDA.</li>
+</ul>
+
+</body>
+</html>

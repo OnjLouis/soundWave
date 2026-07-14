@@ -30,10 +30,28 @@ from soundWave_lib import runtime as _runtime
 
 
 def _ensure_dir(path: str) -> None:
-    """Create directory if it doesn't exist (idempotent)."""
+    """Create directory and verify SoundWave can write into it."""
     if not path:
         return
     os.makedirs(path, exist_ok=True)
+    if not os.path.isdir(path):
+        raise RuntimeError(_("Output path exists but is not a folder:\n{path}").format(path=path))
+    probe_path = os.path.join(path, ".soundwave-write-test")
+    try:
+        with open(probe_path, "w", encoding="ascii") as f:
+            f.write("ok")
+    except Exception as e:
+        raise RuntimeError(
+            _("SoundWave cannot write to this output folder:\n{path}\n\n{error}").format(
+                path=path,
+                error=e,
+            )
+        ) from e
+    finally:
+        try:
+            os.remove(probe_path)
+        except Exception:
+            pass
 
 import globalPluginHandler
 import gui
@@ -217,6 +235,17 @@ def _cfg_get_bool(key: str, default: bool = False) -> bool:
     s = str(v).strip().lower()
     return s in ("1", "true", "yes", "on")
 
+def _cfg_get_int(key: str, default: int = 0, minimum: Optional[int] = None, maximum: Optional[int] = None) -> int:
+    try:
+        value = int(_cfg_get(key, default) or default)
+    except Exception:
+        value = int(default)
+    if minimum is not None:
+        value = max(int(minimum), value)
+    if maximum is not None:
+        value = min(int(maximum), value)
+    return value
+
 def _add_autospeak_checkbox(parent, sizer, key: str, default: bool = True):
     cb = wx.CheckBox(parent, label=_("&Auto speak when changing settings"))
     cb.SetValue(_cfg_get_bool(key, default))
@@ -299,6 +328,8 @@ DEFAULT_SINGLE_FOLDER_PATTERN = "%engine% - %voice%"
 DEFAULT_SINGLE_FILE_PATTERN = "%source%"
 DEFAULT_BATCH_FOLDER_PATTERN = "%engine% - %voice%"
 DEFAULT_BATCH_FILE_PATTERN = "%number% - %source%"
+DEFAULT_SONIC_PITCH = 50
+SONIC_PITCH_MAX_SEMITONES = 12.0
 _AUTO_OPENED_FOLDERS = set()
 _ACTIVE_RENDER_PROGRESS = None
 
@@ -1663,6 +1694,54 @@ def _convert_with_ffmpeg(in_wav: str, out_path: str, fmt: str = "mp3"):
         err = proc.stderr.decode("utf-8", errors="replace").strip()
         raise RuntimeError(_("ffmpeg failed: {error}").format(error=err or _("unknown error")))
 
+def _sonic_pitch_enabled() -> bool:
+    return _cfg_get_bool("sonicPitchEnabled", False)
+
+def _sonic_pitch_value() -> int:
+    return _cfg_get_int("sonicPitch", DEFAULT_SONIC_PITCH, 0, 100)
+
+def _sonic_pitch_semitones() -> float:
+    return ((_sonic_pitch_value() - 50.0) / 50.0) * SONIC_PITCH_MAX_SEMITONES
+
+def _apply_sonic_pitch_if_enabled(wav_path: str) -> str:
+    """Apply optional post-render pitch shift to a WAV file in place."""
+    if not _sonic_pitch_enabled():
+        return wav_path
+    semitones = _sonic_pitch_semitones()
+    if abs(semitones) < 0.001:
+        return wav_path
+    ffmpeg = shutil.which("ffmpeg")
+    if not ffmpeg:
+        raise RuntimeError(_("Sonic pitch post-processing requires ffmpeg on PATH."))
+    ratio = 2 ** (float(semitones) / 12.0)
+    base, ext = os.path.splitext(wav_path)
+    tmp_out = "%s.pitch%s" % (base, ext or ".wav")
+    args = [
+        ffmpeg,
+        "-y",
+        "-i",
+        wav_path,
+        "-af",
+        "rubberband=pitch=%.8f" % ratio,
+        "-c:a",
+        "pcm_s16le",
+        tmp_out,
+    ]
+    proc = subprocess.run(
+        args,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE
+    )
+    if proc.returncode != 0:
+        err = proc.stderr.decode("utf-8", errors="replace").strip()
+        try:
+            os.remove(tmp_out)
+        except Exception:
+            pass
+        raise RuntimeError(_("Sonic pitch post-processing failed: {error}").format(error=err or _("unknown error")))
+    _atomic_replace(tmp_out, wav_path)
+    return wav_path
+
 
 # ----------------------------
 # Rendering
@@ -2427,6 +2506,7 @@ def _do_render_impl():
                     raise RuntimeError(_("Cancelled."))
 
                 if len(part_paths) == 1:
+                    part_paths[0] = _apply_sonic_pitch_if_enabled(part_paths[0])
                     if fmt == "wav":
                         _atomic_replace(part_paths[0], job_out_path)
                     else:
@@ -2436,6 +2516,7 @@ def _do_render_impl():
                     base_out, ext_out = os.path.splitext(job_out_path)
                     ext = ".%s" % fmt if fmt != "wav" else ".wav"
                     for part_idx, part_wav in enumerate(part_paths, start=1):
+                        part_wav = _apply_sonic_pitch_if_enabled(part_wav)
                         part_out = "%s.part%03d%s" % (base_out, part_idx, ext)
                         if fmt == "wav":
                             _atomic_replace(part_wav, part_out)
@@ -2751,6 +2832,17 @@ class SoundWaveSettingsPanel(gui.settingsDialogs.SettingsPanel):
             label=_("MP3, FLAC, and M4A are available when ffmpeg is installed and available on PATH.")
         ))
 
+        self.sonicPitchEnabled = wx.CheckBox(self, label=_("Enable pitch post-processin&g"))
+        self.sonicPitchEnabled.SetValue(_cfg_get_bool("sonicPitchEnabled", False))
+        helper.addItem(self.sonicPitchEnabled)
+        self.sonicPitch = helper.addLabeledControl(_("Sonic pit&ch:"), wx.SpinCtrl, min=0, max=100)
+        self.sonicPitch.SetValue(_sonic_pitch_value())
+        _bind_numeric_page_keys(self.sonicPitch, 0, 100, page_step=10)
+        helper.addItem(wx.StaticText(
+            self,
+            label=_("Optional post-render pitch shift. 50 is unchanged; lower values deepen the finished audio and higher values raise it. The full range maps to roughly -12 to +12 semitones. Requires ffmpeg with rubberband support.")
+        ))
+
         self.skipSingleSaveDialog = wx.CheckBox(self, label=_("Skip single-render Save &As dialog"))
         self.skipSingleSaveDialog.SetValue(_cfg_get_bool("skipSingleSaveDialog", False))
         self.skipBatchFormatDialog = wx.CheckBox(self, label=_("Skip batch output format &choice"))
@@ -2806,6 +2898,8 @@ class SoundWaveSettingsPanel(gui.settingsDialogs.SettingsPanel):
         except Exception:
             pass
         _cfg_set("defaultOutputFormat", fmt if fmt in _available_output_formats() else "wav")
+        _cfg_set("sonicPitchEnabled", bool(self.sonicPitchEnabled.GetValue()))
+        _cfg_set("sonicPitch", int(self.sonicPitch.GetValue()))
         _cfg_set("skipSingleSaveDialog", bool(self.skipSingleSaveDialog.GetValue()))
         _cfg_set("skipBatchFormatDialog", bool(self.skipBatchFormatDialog.GetValue()))
         _cfg_set("autoOpenFolderAfterRender", bool(self.autoOpenFolder.GetValue()))

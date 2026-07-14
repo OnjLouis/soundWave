@@ -17,6 +17,7 @@ soundWave is an NVDA add-on that renders text to an audio file using installed s
 - Render large inputs in chunks.
 - Use synthesizer-specific settings where available.
 - Adjust rate, pitch, volume, voice, language, or variant where the selected synthesizer exposes those controls.
+- Optionally apply post-render Sonic-style pitch processing to the finished audio.
 - Configure separate naming templates for single-render folders, single-render files, batch folders, and batch files.
 - Optional post-render actions can open the output folder, play the rendered audio, or hide the summary.
 - Use NVDA's add-on update channel for store-compatible updates.
@@ -27,6 +28,7 @@ soundWave is an NVDA add-on that renders text to an audio file using installed s
 
 ## Changes
 
+- 1.2.0: Added optional post-render Sonic-style pitch processing, Polish and Slovak interface localization, Polish and Slovak manuals, and an output-folder write check before rendering starts. Closes issues #7 and #8. Based on PR #9 and PR #10.
 - 1.1.2: Added a dedicated Orpheus Classic capture path. SoundWave now renders Orpheus Classic through its normal NVDA driver flow while capturing the generated audio directly, which avoids very short/truncated output from the generic NVDA capture path.
 - 1.1.1: Improved long Google TTS renders by reusing one bridge instance, using smaller Google chunks, and retrying recoverable DevTools bridge failures. Added progress minimization/restoration and friendlier long-duration reporting. Restored generic NVDA synth settings after capture to reduce voice/language state leaks. Closes issue #5.
 - 1.1.0: Major rendering update. Added folder/batch input, MP3/FLAC/M4A output, configurable output naming, optional dialog skipping, Google TTS dialog preview/render fixes, Pocket TTS direct rendering improvements including EOS sensitivity, Supertonic chunking, batch playlist playback, and split specialist synth support into separate modules.
