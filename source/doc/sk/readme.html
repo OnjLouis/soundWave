@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="sk">
+<head>
+  <meta charset="utf-8">
+  <title>soundWave - dokumentácia</title>
+  <style>
+    body { font-family: system-ui, -apple-system, Segoe UI, Arial, sans-serif; line-height: 1.5; margin: 1.5rem; }
+    h1,h2,h3 { line-height: 1.2; }
+    code, pre { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace; }
+    pre { padding: 0.75rem; border: 1px solid #ddd; overflow: auto; }
+    .note { border-left: 4px solid #999; padding: 0.5rem 0.75rem; background: #fafafa; }
+    .warn { border-left: 4px solid #c60; padding: 0.5rem 0.75rem; background: #fff7ea; }
+    ul { margin-top: 0.25rem; }
+    .kbd { padding: 0.1rem 0.35rem; border: 1px solid #ccc; border-bottom-width: 2px; border-radius: 4px; background: #f7f7f7; }
+    table { border-collapse: collapse; width: 100%; margin: 0.75rem 0; }
+    th, td { border: 1px solid #ddd; padding: 0.5rem; vertical-align: top; }
+    th { background: #f4f4f4; text-align: left; }
+  </style>
+</head>
+<body>
+
+<h1>soundWave</h1>
+
+<p>
+soundWave je doplnok pre NVDA, ktorý renderuje text do zvukového súboru pomocou nainštalovaných rečových enginov.
+Dokáže exportovať zvuk z textu v schránke, z textového súboru, z priečinka textových súborov alebo z textu zadaného priamo v doplnku.
+</p>
+
+<h2>Rýchly začiatok</h2>
+
+<ol>
+  <li>Stlačte <span class="kbd">NVDA</span>+<span class="kbd">Ctrl</span>+<span class="kbd">=</span>, aby ste otvorili soundWave.</li>
+  <li>Vyberte syntetizér.</li>
+  <li>Voliteľne nastavte základný priečinok nahrávok. Je to predvolený priečinok na ukladanie renderov; soundWave v ňom vytvára výstupné priečinky podľa vašich šablón pomenovania.</li>
+  <li>Vyberte zdroj vstupu: schránku, textový súbor, priečinok textových súborov alebo ručne zadaný či prilepený text.</li>
+  <li>Nakonfigurujte syntetizér. Tlačidlom <strong>Testovať</strong> si vypočujte krátku ukážku aktuálnych nastavení.</li>
+  <li>Vyberte názov výstupného súboru a formát.</li>
+  <li>Počkajte na dokončenie renderovania a potom si pozrite súhrn.</li>
+</ol>
+
+<p>
+V dialógoch renderovania soundWave stlačte <span class="kbd">F1</span>, aby ste otvorili túto príručku.
+V paneli soundWave v nastaveniach NVDA prejdite klávesom Tab na tlačidlo Pomocník alebo použite skratku <span class="kbd">Alt</span>+<span class="kbd">H</span>.
+Ovládacie prvky dialógov majú klávesové skratky tam, kde je to praktické, napríklad <span class="kbd">Alt</span>+<span class="kbd">T</span> pre tlačidlo Testovať.
+</p>
+
+<h2>Vstup a výstup</h2>
+
+<ul>
+  <li><strong>Vstup:</strong> text zo schránky, textový súbor, priečinok textových súborov alebo ručne zadaný či prilepený text.</li>
+  <li><strong>Výstup:</strong> WAV je podporovaný vždy. MP3, FLAC a M4A sú dostupné, keď je ffmpeg nainštalovaný a dostupný v systémovej premennej PATH.</li>
+  <li><strong>Dávkový vstup:</strong> výber priečinka vyrenderuje každý čitateľný textový súbor ako samostatný zvukový súbor v zoradenom poradí. Dávkové renderovanie sa predvolene ukladá do podpriečinka syntetizéra a hlasu a názvy súborov dostanú poradové čísla.</li>
+  <li><strong>Dlhé vstupy:</strong> dlhý text sa renderuje po častiach. Ak by jeden súbor WAV bol príliš veľký, soundWave zapíše očíslované časti.</li>
+  <li><strong>Priečinky a názvy súborov:</strong> soundWave môže samostatne pomenovať priečinky jedného renderovania, jednotlivé súbory, dávkové priečinky a dávkové súbory.</li>
+  <li><strong>Názvy hlasov:</strong> keď soundWave dokáže rozpoznať vybraný hlas, môže ho zahrnúť do šablón priečinkov alebo súborov, aby sa rendery toho istého vstupu s rôznymi syntetizérmi alebo hlasmi dali ľahšie rozlíšiť.</li>
+</ul>
+
+<h2>Priebeh renderovania</h2>
+
+<p>
+Počas renderovania soundWave zobrazuje dialóg priebehu s tlačidlom Zrušiť a voliteľnými podrobnosťami po riadkoch.
+Tlačidlom <strong>Zobraziť podrobnosti</strong> môžete skontrolovať aktuálny súbor, časť textu, uplynulý čas, dĺžku vyrenderovaného zvuku a rýchlosť konverzie, ak sú tieto údaje dostupné.
+Dlhé trvania sa zobrazujú v minútach alebo hodinách, nie iba ako počet sekúnd.
+</p>
+
+<p>
+Pri dlhých renderoch použite tlačidlo <strong>Minimalizovať</strong> alebo skratku <span class="kbd">Alt</span>+<span class="kbd">M</span>, aby ste skryli dialóg priebehu.
+Renderovanie pokračuje na pozadí a skrytý dialóg nezostáva v zozname <span class="kbd">Alt</span>+<span class="kbd">Tab</span>.
+Opätovným stlačením príkazu soundWave, <span class="kbd">NVDA</span>+<span class="kbd">Ctrl</span>+<span class="kbd">=</span>, vrátite aktívny dialóg priebehu.
+</p>
+
+<h2>Nastavenia</h2>
+
+<p>
+Otvorte nastavenia NVDA a vyberte kategóriu <strong>soundWave</strong>, aby ste nastavili predvoľby pre budúce rendery.
+</p>
+
+<ul>
+  <li><strong>Predvolený priečinok uloženia:</strong> základný priečinok nahrávok používaný v prvom dialógu soundWave. Ak ho ponecháte prázdny, použije sa <strong>Dokumenty\SoundWave</strong>, takže vyrenderované súbory zostanú na mieste, ktoré väčšina používateľov ľahko nájde.</li>
+  <li><strong>Pomenovanie priečinkov a súborov:</strong> samostatné šablóny riadia priečinky jedného renderovania, jednotlivé súbory, dávkové priečinky a dávkové súbory. Tabuľky nižšie ukazujú predvolené hodnoty, značky a príklady.</li>
+  <li><strong>Predvolený výstupný formát:</strong> vyberte WAV alebo MP3, FLAC či M4A, keď je dostupný ffmpeg. Voliteľné začiarkavacie políčka umožňujú preskočiť dialóg Uložiť ako pre jedno renderovanie a výber formátu pre dávku.</li>
+  <li><strong>Po renderovaní:</strong> vyberte, či má soundWave po dokončení celého renderovania otvoriť výstupný priečinok, otvoriť zvuk v predvolenom prehrávači médií alebo zobraziť súhrn renderovania. Automatické prehratie dávky otvorí vyrenderované súbory ako zoznam prehrávania. Automatické otvorenie priečinka znovu neotvorí priečinok, ktorý už soundWave otvoril v aktuálnej relácii NVDA.</li>
+</ul>
+
+<h3>Šablóny názvov</h3>
+
+<p>
+Polia názvov sú šablóny. soundWave pred navrhnutím priečinka alebo názvu súboru nahradí každú značku informáciami z aktuálneho renderovania.
+Značky môžete odstrániť, presunúť, pridať vlastné slová alebo zmeniť interpunkciu medzi nimi.
+</p>
+
+<table>
+  <thead>
+    <tr><th>Nastavenie</th><th>Predvolené</th><th>Príklad výstupu</th><th>Čo ovláda</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Vzor priečinka jedného renderovania</td>
+      <td><code>%engine% - %voice%</code></td>
+      <td><code>Sonata - Kirsten Two En Medium</code></td>
+      <td>Priečinok ponúknutý dialógom Uložiť ako pre schránku, ručne zadaný text alebo jeden textový súbor.</td>
+    </tr>
+    <tr>
+      <td>Vzor názvu jedného súboru</td>
+      <td><code>%source%</code></td>
+      <td><code>Schránka.wav</code></td>
+      <td>Navrhovaný názov súboru pre jedno renderovanie.</td>
+    </tr>
+    <tr>
+      <td>Vzor dávkového priečinka</td>
+      <td><code>%engine% - %voice%</code></td>
+      <td><code>Keynote Gold - Fred</code></td>
+      <td>Výstupný priečinok vytvorený pri renderovaní priečinka textových súborov.</td>
+    </tr>
+    <tr>
+      <td>Vzor dávkového súboru</td>
+      <td><code>%number% - %source%</code></td>
+      <td><code>03 - tretia kapitola.wav</code></td>
+      <td>Názov každého vyrenderovaného súboru v dávke.</td>
+    </tr>
+  </tbody>
+</table>
+
+<h3>Príklady pomenovania</h3>
+
+<table>
+  <thead>
+    <tr><th>Vzor</th><th>Príklad výstupu</th><th>Kedy je užitočný</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>%engine% - %voice%</code></td>
+      <td><code>Orpheus - Synthetic Dave</code></td>
+      <td>Zoskupuje výstup podľa syntetizéra a hlasu.</td>
+    </tr>
+    <tr>
+      <td><code>%source% - %engine%</code></td>
+      <td><code>prvá kapitola - SAPI5.wav</code></td>
+      <td>Ponechá zdroj na začiatku, ale stále označí syntetizér.</td>
+    </tr>
+    <tr>
+      <td><code>%number% - %source%</code></td>
+      <td><code>01 - úvodné titulky.wav</code></td>
+      <td>Udržiava výstup dávky v predvídateľnom poradí.</td>
+    </tr>
+  </tbody>
+</table>
+
+<table>
+  <caption>Význam značiek názvu súboru</caption>
+  <thead>
+    <tr><th>Značka</th><th>Význam</th><th>Príklad hodnoty</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>%source%</code></td>
+      <td>Schránka, zadaný text, názov zdrojového súboru alebo názov položky zo zdrojového priečinka.</td>
+      <td><code>Schránka</code>, <code>Zadaný text</code>, <code>prvá kapitola</code> alebo <code>poznámky zo stretnutia</code></td>
+    </tr>
+    <tr>
+      <td><code>%engine%</code></td>
+      <td>Názov syntetizéra.</td>
+      <td><code>Orpheus</code>, <code>Sonata</code>, <code>SAPI5</code> alebo <code>Pocket TTS</code></td>
+    </tr>
+    <tr>
+      <td><code>%voice%</code></td>
+      <td>Vybraný hlas, keď ho soundWave dokáže rozpoznať. Ak hlas nie je známy, táto časť sa čisto odstráni.</td>
+      <td><code>Synthetic Dave</code>, <code>Kirsten Two En Medium</code> alebo <code>Fred</code></td>
+    </tr>
+    <tr>
+      <td><code>%number%</code></td>
+      <td>Poradové číslo. Renderovanie priečinka ho pridáva automaticky; značka je dostupná aj pre vlastné vzory pomenovania.</td>
+      <td><code>01</code>, <code>02</code> alebo <code>03</code></td>
+    </tr>
+  </tbody>
+</table>
+
+<h2>Možnosti syntetizátorov</h2>
+
+<p>
+Syntetizátory sprístupňujú nastavenia ako hlas, jazyk, variant, rýchlosť, tempo, výška alebo hlasitosť tam, kde sú tieto možnosti dostupné.
+Väčšina dialógov nastavení obsahuje:
+</p>
+<ul>
+  <li><strong>Automaticky prehrať pri zmene nastavení</strong> na automatický náhľad zmien.</li>
+  <li><strong>Testovať</strong> na prehratie krátkej ukážky s aktuálnymi nastaveniami.</li>
+  <li>Trvalé nastavenia uložené v konfigurácii NVDA.</li>
+</ul>
+
+<h2>Podporované syntetizátory</h2>
+
+<table>
+  <thead>
+    <tr><th>Syntetizér</th><th>Poznámky</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>SAPI5</strong></td>
+      <td>Používa nainštalované hlasy Microsoft SAPI5. 32-bitové hlasy SAPI5 sú podporované samostatnou 32-bitovou pomocnou cestou, keď je dostupná. V dialógu renderovania možno nastaviť tempo, výšku a hlasitosť SAPI5. soundWave sa pýta SAPI na predvolený výstupný formát vybraného hlasu namiesto vynucovania pevnej vzorkovacej frekvencie; ak SAPI formát neposkytne, použije sa záložný formát 22,05 kHz 16-bit mono.</td>
+    </tr>
+    <tr>
+      <td><strong>googleTtsForNvda</strong></td>
+      <td>Vyžaduje doplnok Google TTS For NVDA a nainštalované balíky hlasov Google. soundWave pri renderovaní priamo zachytáva PCM zvuk generovaný doplnkom. Tlačidlo Testovať vyrenderuje krátku ukážku do dočasného WAV súboru a prehrá ju, takže nepoužíva živú reč NVDA. soundWave zobrazuje iba hlasy Google, ktoré sú nainštalované a spoľahlivé v tejto offline renderovacej ceste, takže zoznam môže byť kratší ako úplný katalóg hlasov doplnku Google.</td>
+    </tr>
+    <tr>
+      <td><strong>Pocket TTS</strong></td>
+      <td>Vyžaduje doplnok Pocket TTS. soundWave podľa potreby renderuje v menších segmentoch, aby dlhší text menej často narazil na limity modelu. Dialóg možností obsahuje citlivosť konca vety Pocket TTS, ak ju nainštalovaný syntetizér sprístupňuje.</td>
+    </tr>
+    <tr>
+      <td><strong>Supertonic</strong></td>
+      <td>Vyžaduje doplnok Supertonic. soundWave používa pre Supertonic menšie časti renderovania, aby sa dlhší vstup dal vyrenderovať bez prekročenia limitu veľkosti vstupu modelu.</td>
+    </tr>
+    <tr>
+      <td><strong>Sonata</strong></td>
+      <td>Vyžaduje doplnok Sonata Neural Voices a dostupné konfiguračné súbory hlasov.</td>
+    </tr>
+    <tr>
+      <td><strong>Eloquence a IBMTTS</strong></td>
+      <td>Dostupné, keď je nainštalovaný príslušný doplnok NVDA. soundWave automaticky zistí rečový engine a pred renderovaním ponúkne možnosti hlasu a rýchlosti.</td>
+    </tr>
+    <tr>
+      <td><strong>Orpheus</strong></td>
+      <td>Vyžaduje, aby bol Orpheus aktuálnym syntetizérom NVDA pred začatím renderovania. Pred renderovaním možno nastaviť jazyk, hlas, rýchlosť, výšku a hlasitosť. Počas renderovania soundWave dočasne prepne NVDA na dostupný záložný syntetizér.</td>
+    </tr>
+    <tr>
+      <td><strong>Orpheus Classic</strong></td>
+      <td>Dostupný, keď je nainštalovaný doplnok Orpheus Classic. soundWave používa pre tento starší syntetizér vyhradenú zachytávaciu cestu, aby dlhšie pauzy a interpunkcia nespôsobovali skrátený výstup.</td>
+    </tr>
+    <tr>
+      <td><strong>DECtalk a Keynote Gold</strong></td>
+      <td>Dostupné, keď je požadovaný doplnok nainštalovaný a zistiteľný. Keynote Gold v dialógu renderovania sprístupňuje hlas, rýchlosť, výšku, hlasitosť a zrýchlenie tempa.</td>
+    </tr>
+    <tr>
+      <td><strong>Iné syntetizátory NVDA</strong></td>
+      <td>soundWave dokáže renderovať mnoho ďalších nainštalovaných syntetizátorov NVDA, keď používajú bežnú zvukovú výstupnú cestu NVDA. Všeobecný dialóg použije hlas, variant, tempo, výšku a hlasitosť tam, kde ich vybraný syntetizér sprístupňuje.</td>
+    </tr>
+  </tbody>
+</table>
+
+<h2>Súhrn renderovania</h2>
+
+<p>
+Po renderovaní soundWave oznámi syntetizér, uloženú cestu, uplynulý čas, dĺžku zvuku a faktor rýchlosti voči reálnemu času, ak je dostupný.
+</p>
+
+<h2>Aktualizácie</h2>
+
+<p>
+soundWave používa aktualizačný kanál doplnkov NVDA kompatibilný s distribúciou cez Add-on Store.
+</p>
+
+<h2>Zmeny</h2>
+
+<h3>1.1.2</h3>
+<ul>
+  <li>Pridaná vyhradená cesta zachytávania Orpheus Classic. soundWave teraz renderuje Orpheus Classic cez bežný tok ovládača NVDA a priamo zachytáva generovaný zvuk, čím sa predchádza veľmi krátkemu výstupu, ktorý sa mohol objaviť pri všeobecnom zachytávaní NVDA.</li>
+  <li>Vylepšené renderovanie Orpheus Classic pri väčších interpunkčných pauzách vrátane riadkov s výkričníkmi a dlhších páuz v príspevkoch podobných Mastodonu.</li>
+</ul>
+
+<h3>1.1.1</h3>
+<ul>
+  <li>Vylepšené dlhé rendery googleTtsForNvda opätovným použitím jednej inštancie mosta Google počas celého renderovania, menšími časťami špecifickými pre Google a opakovaním obnoviteľných zlyhaní mosta Chrome DevTools.</li>
+  <li>Zmenený dialóg priebehu tak, aby sa dal minimalizovať skratkou <span class="kbd">Alt</span>+<span class="kbd">M</span>. Opätovné stlačenie príkazu soundWave obnoví aktívny priebeh namiesto otvorenia druhého renderovacieho dialógu.</li>
+  <li>Vylepšené hlásenie uplynulého času a dĺžky zvuku, aby sa dlhé rendery zobrazovali v minútach alebo hodinách, nie iba v sekundách.</li>
+  <li>Po zachytávaní všeobecných syntetizátorov NVDA sa obnovujú nastavenia hlasu, variantu, jazyka, tempa, výšky a hlasitosti, aby sa znížilo riziko prenesenia nastavení späť do bežiacej reči NVDA.</li>
+  <li>Zatvára <a href="https://github.com/OnjLouis/soundWave/issues/5">#5</a>.</li>
+</ul>
+
+<h3>1.1.0</h3>
+<ul>
+  <li>Výrazne vylepšená podpora googleTtsForNvda. SoundWave renderuje cez most Google spoľahlivejšie, zobrazuje iba nainštalované hlasy fungujúce cez offline renderovaciu cestu, skúsi to znova, ak stránka mosta nie je pripravená, a neprepína potichu na iný hlas.</li>
+  <li>Vylepšené ukážky googleTtsForNvda renderovaním testovacej frázy do dočasného WAV súboru pred prehratím, takže automatický náhľad môže zostať zapnutý bez použitia živej reči NVDA.</li>
+  <li>Vylepšený text priebehu renderovania googleTtsForNvda počas čakania na zvuk od Google.</li>
+  <li>Vylepšené renderovanie Pocket TTS preskočením prázdnych riadkov a rozdelením textu na bezpečnejšie segmenty pre model.</li>
+  <li>Pridaná citlivosť konca vety Pocket TTS do dialógu možností syntetizátora, keď je dostupná.</li>
+  <li>Pridané delenie špecifické pre Supertonic, aby sa dlhší vstup dal renderovať bez prekročenia limitu veľkosti vstupu modelu.</li>
+  <li>Pridaný výstup FLAC a M4A, keď je ffmpeg nainštalovaný a dostupný v systémovej premennej PATH.</li>
+  <li>Zmenený výber výstupného formátu tak, aby si jedno aj dávkové renderovanie pamätalo posledný vybraný formát.</li>
+  <li>Pridané voliteľné nastavenia na použitie predvoleného výstupného formátu bez zobrazenia dialógu Uložiť ako pri jednom renderovaní alebo výberu dávkového formátu.</li>
+  <li>Zmenené automatické prehratie dávky tak, aby dokončené renderovanie priečinka otvorilo zoznam prehrávania namiesto prehratia iba prvého súboru.</li>
+  <li>Zmenené automatické otváranie výstupného priečinka tak, aby soundWave neotváral rovnaký priečinok opakovane v jednej relácii NVDA.</li>
+  <li>Pridaný panel nastavení soundWave v nastaveniach NVDA pre predvolený priečinok uloženia, šablóny pomenovania a akcie po renderovaní.</li>
+  <li>Pridané akcie po renderovaní na otvorenie výstupného priečinka, prehratie dokončeného zvukového súboru a ovládanie zobrazenia súhrnu renderovania.</li>
+  <li>Pridané tlačidlo Otvoriť priečinok do súhrnu dokončeného renderovania.</li>
+  <li>Pridaný vstup priečinka pre dávkové renderovanie.</li>
+  <li>Vylepšené pomenovanie výstupu samostatnými šablónami pre priečinky jedného renderovania, jednotlivé súbory, dávkové priečinky a dávkové súbory.</li>
+  <li>Vylepšené navrhované názvy výstupných súborov tak, aby sa vybrané názvy hlasov zahrnuli do viacerých renderovacích ciest.</li>
+  <li>Špecializovaná podpora syntetizátorov bola rozdelená do samostatných modulov pre SAPI5, DECtalk, BestSpeech, Sonata, Pocket TTS, googleTtsForNvda, Eloquence/IBMTTS, Orpheus a všeobecné zachytávacie cesty NVDA.</li>
+  <li>Pridané automatické zisťovanie Eloquence a IBMTTS, aby renderovali cez vyhradenú cestu enginu namiesto všeobecného zachytávania NVDA.</li>
+</ul>
+
+<h3>1.0.4</h3>
+<ul>
+  <li>Pridaná podpora renderovania googleTtsForNvda na základe <a href="https://github.com/OnjLouis/soundWave/pull/3">PR #3</a> od Ruslana Dolovaniuka.</li>
+</ul>
+
+<h3>1.0.3</h3>
+<ul>
+  <li>Pridaná podpora výšky SAPI5 pomocou natívnej XML značky pitch v SAPI.</li>
+  <li>Zmenené renderovanie WAV pre SAPI5 tak, aby používalo predvolený výstupný formát vybraného hlasu SAPI, keď je dostupný, namiesto pevného vynútenia 22,05 kHz 16-bit mono.</li>
+</ul>
+
+<h3>1.0.2</h3>
+<ul>
+  <li>Pridané ovládanie výšky a hlasitosti pre Orpheus, Keynote Gold a všeobecné renderovanie syntetizátorov NVDA.</li>
+  <li>Pridaná podpora hlasitosti pre renderovanie SAPI5.</li>
+  <li>Vylepšené klávesové nastavovanie číselných možností. Page Up a Page Down teraz robia väčšie zmeny a Home a End skočia na minimálnu alebo maximálnu hodnotu.</li>
+  <li>Podrobnosti renderovania boli zmenené na zoznam po riadkoch, aby sa informácie o priebehu dali ľahšie kontrolovať čítačom obrazovky.</li>
+  <li>Zapamätá sa, či sú podrobnosti renderovania zobrazené alebo skryté medzi rendermi.</li>
+  <li>Pridané názvy vybraných hlasov do navrhovaných výstupných názvov, keď SoundWave dokáže hlas rozpoznať.</li>
+  <li>Pridaný prístup k príručke klávesom F1 v renderovacích dialógoch soundWave a tlačidlá Pomocník dostupné klávesom Tab.</li>
+  <li>Vylepšené klávesové skratky dialógov vrátane tlačidiel Testovať a ovládacích prvkov možností syntetizátora.</li>
+</ul>
+
+<h3>1.0.1</h3>
+<ul>
+  <li>Zladená podpora aktualizácií s distribúciou cez NVDA Add-on Store.</li>
+</ul>
+
+<h3>1.0.0</h3>
+<ul>
+  <li>Prvé vydanie.</li>
+</ul>
+
+<h2>Riešenie problémov</h2>
+
+<ul>
+  <li><strong>Nevytvorí sa žiadny zvuk:</strong> vybraný syntetizér nemusí sprístupňovať zvukovú cestu, ktorú soundWave dokáže renderovať. Skúste iný syntetizér a skontrolujte log NVDA.</li>
+  <li><strong>Eloquence alebo IBMTTS nie je dostupný:</strong> nainštalujte alebo aktualizujte príslušný doplnok NVDA, znovu načítajte NVDA a skúste to znova.</li>
+  <li><strong>Orpheus sa nespustí:</strong> prepnite aktuálny syntetizér NVDA na Orpheus a potom znova otvorte soundWave.</li>
+  <li><strong>WorldVoice sa neinicializuje:</strong> skontrolujte log NVDA, či nechýbajú súbory pod WorldVoice-workspace. soundWave nemôže renderovať WorldVoice, kým sa samotný WorldVoice nenačíta správne.</li>
+  <li><strong>Export MP3, FLAC alebo M4A zlyhá:</strong> nainštalujte ffmpeg a uistite sa, že príkaz ffmpeg funguje z príkazového riadka.</li>
+  <li><strong>Renderovanie vyzerá zaseknuté:</strong> použite Zrušiť. Ak sa problém opakuje, do hlásenia uveďte názov syntetizéra, nastavenia, typ vstupu a príslušné záznamy z logu NVDA.</li>
+</ul>
+
+</body>
+</html>
