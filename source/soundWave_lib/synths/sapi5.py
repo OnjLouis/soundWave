@@ -70,7 +70,7 @@ def _render_with_sapi5(
     pitch: int = 0,
 ):
     if comtypes is None:
-        raise RuntimeError("comtypes not available; cannot use SAPI5 renderer.")
+        raise RuntimeError(_("comtypes not available; cannot use SAPI5 renderer."))
     if not out_wav.lower().endswith(".wav"):
         out_wav += ".wav"
 
@@ -198,7 +198,7 @@ def _render_with_sapi5_32(
 ):
     ps = _get_32bit_powershell()
     if not ps:
-        raise RuntimeError("32-bit PowerShell was not found; cannot render 32-bit SAPI voices.")
+        raise RuntimeError(_("32-bit PowerShell was not found; cannot render 32-bit SAPI voices."))
     if not out_wav.lower().endswith(".wav"):
         out_wav += ".wav"
 
@@ -275,9 +275,9 @@ $stream.Close()
             err = proc.stderr.decode("utf-8", errors="replace").strip()
             if not err:
                 err = proc.stdout.decode("utf-8", errors="replace").strip()
-            raise RuntimeError("32-bit SAPI render failed: %s" % (err or "unknown error"))
+            raise RuntimeError(_("32-bit SAPI render failed: %s") % (err or _("unknown error")))
         if not os.path.isfile(out_wav) or os.path.getsize(out_wav) <= 44:
-            raise RuntimeError("32-bit SAPI render failed: output file was not created.")
+            raise RuntimeError(_("32-bit SAPI render failed: output file was not created."))
     finally:
         try:
             shutil.rmtree(tmp_dir, ignore_errors=True)
@@ -291,12 +291,12 @@ class Sapi5OptionsDialog(wx.Dialog):
     def __init__(
         self,
         parent,
-        title: str = "soundWave - SAPI5 options",
+        title: Optional[str] = None,
         voice_list_fn=None,
         render_fn=None,
         cfg_prefix: str = "sapi5",
     ):
-        super().__init__(parent, title=title)
+        super().__init__(parent, title=title or _("soundWave - SAPI5 options"))
         self._voice_list_fn = voice_list_fn or _list_sapi5_voices
         self._render_fn = render_fn or _render_with_sapi5
         self._cfg_prefix = cfg_prefix
@@ -305,35 +305,35 @@ class Sapi5OptionsDialog(wx.Dialog):
         sizer = wx.BoxSizer(wx.VERTICAL)
 
         row1 = wx.BoxSizer(wx.HORIZONTAL)
-        row1.Add(wx.StaticText(self, label="&Voice:"), 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 8)
-        self.voiceChoice = wx.Choice(self, choices=(self.voices if self.voices else ["(no voices found)"]))
+        row1.Add(wx.StaticText(self, label=_("&Voice:")), 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 8)
+        self.voiceChoice = wx.Choice(self, choices=(self.voices if self.voices else [_("(no voices found)")]))
         row1.Add(self.voiceChoice, 1, wx.EXPAND)
         sizer.Add(row1, 0, wx.EXPAND | wx.ALL, 10)
 
         row2 = wx.BoxSizer(wx.HORIZONTAL)
-        row2.Add(wx.StaticText(self, label="&Rate:"), 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 8)
+        row2.Add(wx.StaticText(self, label=_("&Rate:")), 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 8)
         self.rateSpin = wx.SpinCtrl(self, min=-10, max=10, initial=0)
         row2.Add(self.rateSpin, 0)
         sizer.Add(row2, 0, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.BOTTOM, 10)
 
         row3 = wx.BoxSizer(wx.HORIZONTAL)
-        row3.Add(wx.StaticText(self, label="&Pitch:"), 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 8)
+        row3.Add(wx.StaticText(self, label=_("&Pitch:")), 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 8)
         self.pitchSpin = wx.SpinCtrl(self, min=-10, max=10, initial=0)
         row3.Add(self.pitchSpin, 0)
         sizer.Add(row3, 0, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.BOTTOM, 10)
 
         row4 = wx.BoxSizer(wx.HORIZONTAL)
-        row4.Add(wx.StaticText(self, label="Vol&ume:"), 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 8)
+        row4.Add(wx.StaticText(self, label=_("Vol&ume:")), 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 8)
         self.volumeSpin = wx.SpinCtrl(self, min=0, max=100, initial=100)
         row4.Add(self.volumeSpin, 0)
         sizer.Add(row4, 0, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.BOTTOM, 10)
 
-        self.autoTest = wx.CheckBox(self, label="&Auto-speak when changing voice, rate, pitch, or volume")
+        self.autoTest = wx.CheckBox(self, label=_("&Auto-speak when changing voice, rate, pitch, or volume"))
         self.autoTest.SetValue(bool(_cfg_get_bool(f"autoTestOnChange{cfg_prefix}", True)))
         sizer.Add(self.autoTest, 0, wx.LEFT | wx.RIGHT | wx.BOTTOM, 10)
 
         btnRow = wx.BoxSizer(wx.HORIZONTAL)
-        self.testBtn = wx.Button(self, label="&Test")
+        self.testBtn = wx.Button(self, label=_("&Test"))
         btnRow.Add(self.testBtn, 0, wx.RIGHT, 8)
         self.helpBtn = _create_help_button(self)
         btnRow.Add(self.helpBtn, 0, wx.RIGHT, 8)
@@ -402,7 +402,7 @@ class Sapi5OptionsDialog(wx.Dialog):
             self._render_fn(self.SAMPLE_TEXT, tmp, voice_name=voice, rate=rate, volume=volume, pitch=pitch)
             _play_wav(tmp)
         except Exception as e:
-            _error("Test failed:\n" + str(e))
+            _error(_("Test failed:\n") + str(e))
 
     def get_voice_name(self) -> str:
         if not self.voices:

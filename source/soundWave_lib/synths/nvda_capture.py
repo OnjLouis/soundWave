@@ -242,7 +242,7 @@ def _render_with_nvda_generic_capture(
     path: synth-specific renderers can still be faster or more exact.
     """
     if nvwave is None:
-        raise RuntimeError("NVDA audio module is not available; generic capture cannot run.")
+        raise RuntimeError(_("NVDA audio module is not available; generic capture cannot run."))
     cancel_evt = cancel_evt or threading.Event()
     if not out_wav.lower().endswith(".wav"):
         out_wav += ".wav"
@@ -273,12 +273,14 @@ def _render_with_nvda_generic_capture(
         synth = _get_synth_instance(synth_name)
         current_synth_holder["synth"] = synth
         if synth is None or not hasattr(synth, "speak"):
-            raise RuntimeError("Couldn't create NVDA synth instance for %s." % synth_name)
+            raise RuntimeError(_("Couldn't create NVDA synth instance for %s.") % synth_name)
         original_settings = _snapshot_synth_settings(synth)
         if (synth_name or "").lower() == "worldvoice" and not hasattr(synth, "_voiceManager"):
             raise RuntimeError(
-                "WorldVoice did not initialize its voice manager. Its workspace engines appear to be missing "
-                "or failing to load; see the NVDA log for the missing WorldVoice-workspace DLLs."
+                _(
+                    "WorldVoice did not initialize its voice manager. Its workspace engines appear to be missing "
+                    "or failing to load; see the NVDA log for the missing WorldVoice-workspace DLLs."
+                )
             )
         if is_google_tts:
             return google_tts.render_to_wav(text, out_wav, synth, opts=opts, progress=progress, cancel_evt=cancel_evt)
@@ -330,7 +332,7 @@ def _render_with_nvda_generic_capture(
                     synth.cancel()
                 except Exception:
                     pass
-                raise RuntimeError("Cancelled.")
+                raise RuntimeError(_("Cancelled."))
             total_bytes = sum(len(p.pcm) for p in players)
             last_audio = max([p.last_audio_ts or 0 for p in players] or [0])
             if progress is not None:
@@ -351,7 +353,7 @@ def _render_with_nvda_generic_capture(
                 break
             time.sleep(0.05)
         else:
-            raise RuntimeError("Generic NVDA capture timed out.")
+            raise RuntimeError(_("Generic NVDA capture timed out."))
     finally:
         try:
             synthDriverHandler.synthDoneSpeaking.unregister(_on_synth_done)
@@ -376,14 +378,14 @@ def _render_with_nvda_generic_capture(
     active = [p for p in players if p.pcm]
     if not active:
         raise RuntimeError(
-            "Generic NVDA capture produced no audio. This synth may not use NVDA's WavePlayer path."
+            _("Generic NVDA capture produced no audio. This synth may not use NVDA's WavePlayer path.")
         )
     first = active[0]
     expected = (first.channels, first.samplesPerSec, first.bitsPerSample)
     for player in active:
         fmt = (player.channels, player.samplesPerSec, player.bitsPerSample)
         if fmt != expected:
-            raise RuntimeError("Generic NVDA capture saw mixed audio formats between player instances.")
+            raise RuntimeError(_("Generic NVDA capture saw mixed audio formats between player instances."))
 
     with wave.open(out_wav, "wb") as wf:
         wf.setnchannels(first.channels)
@@ -416,12 +418,12 @@ def _render_with_bestspeech_offline(
         out_wav += ".wav"
 
     if ctypes is None:
-        raise RuntimeError("ctypes not available; cannot render BestSpeech.")
+        raise RuntimeError(_("ctypes not available; cannot render BestSpeech."))
 
     try:
         import synthDrivers.bestspeech as bs
     except Exception as e:
-        raise RuntimeError("BestSpeech addon not installed (synthDrivers.bestspeech not found).") from e
+        raise RuntimeError(_("BestSpeech addon not installed (synthDrivers.bestspeech not found).")) from e
 
     drv = bs.SynthDriver()
     cap = _BestSpeechCapturePlayer()
@@ -524,21 +526,21 @@ def _render_with_bestspeech_offline(
                     drv.cancel()
                 except Exception:
                     pass
-                raise RuntimeError("Cancelled.")
+                raise RuntimeError(_("Cancelled."))
             if time.time() >= deadline:
                 try:
                     drv.cancel()
                 except Exception:
                     pass
-                raise RuntimeError("BestSpeech render timed out.")
+                raise RuntimeError(_("BestSpeech render timed out."))
             time.sleep(0.02)
 
         if err_holder["err"] is not None:
-            raise RuntimeError("BestSpeech driver speak() failed.") from err_holder["err"]
+            raise RuntimeError(_("BestSpeech driver speak() failed.")) from err_holder["err"]
 
         pcm = bytes(cap.pcm)
         if not pcm:
-            raise RuntimeError("BestSpeech produced no audio (no callback data).")
+            raise RuntimeError(_("BestSpeech produced no audio (no callback data)."))
 
         # BestSpeech default format: 11025Hz mono 16-bit
         with wave.open(out_wav, "wb") as wf:
@@ -559,7 +561,11 @@ class GenericNvdaOptionsDialog(wx.Dialog):
     SAMPLE_TEXT = "This is a soundWave test."
 
     def __init__(self, parent, synth_id: str, synth_label: str):
-        super().__init__(parent, title=f"soundWave - {synth_label} options", style=wx.DEFAULT_DIALOG_STYLE | wx.RESIZE_BORDER)
+        super().__init__(
+            parent,
+            title=_("soundWave - {synth} options").format(synth=synth_label),
+            style=wx.DEFAULT_DIALOG_STYLE | wx.RESIZE_BORDER,
+        )
         self.synth_id = synth_id
         self.synth_label = synth_label or synth_id or "NVDA synth"
         self.is_google_tts = google_tts.is_google_tts_synth("%s %s" % (self.synth_id, self.synth_label))
@@ -571,11 +577,13 @@ class GenericNvdaOptionsDialog(wx.Dialog):
 
         self.synth = _get_synth_instance(self.synth_id)
         if self.synth is None:
-            raise RuntimeError(f"{self.synth_label} could not be initialized.")
+            raise RuntimeError(_("{synth} could not be initialized.").format(synth=self.synth_label))
         if self.synth_id.lower() == "worldvoice" and not hasattr(self.synth, "_voiceManager"):
             raise RuntimeError(
-                "WorldVoice did not initialize its voice manager. The NVDA log shows missing "
-                "WorldVoice-workspace engine DLLs, so SoundWave cannot render it until WorldVoice itself loads cleanly."
+                _(
+                    "WorldVoice did not initialize its voice manager. The NVDA log shows missing "
+                    "WorldVoice-workspace engine DLLs, so SoundWave cannot render it until WorldVoice itself loads cleanly."
+                )
             )
 
         panel = wx.Panel(self)
@@ -583,29 +591,29 @@ class GenericNvdaOptionsDialog(wx.Dialog):
         grid = wx.FlexGridSizer(rows=0, cols=2, vgap=8, hgap=8)
         grid.AddGrowableCol(1, 1)
 
-        grid.Add(wx.StaticText(panel, label="&Voice:"), 0, wx.ALIGN_CENTER_VERTICAL)
+        grid.Add(wx.StaticText(panel, label=_("&Voice:")), 0, wx.ALIGN_CENTER_VERTICAL)
         self.voiceChoice = wx.Choice(panel)
         grid.Add(self.voiceChoice, 1, wx.EXPAND)
 
-        grid.Add(wx.StaticText(panel, label="Varia&nt:"), 0, wx.ALIGN_CENTER_VERTICAL)
+        grid.Add(wx.StaticText(panel, label=_("Varia&nt:")), 0, wx.ALIGN_CENTER_VERTICAL)
         self.variantChoice = wx.Choice(panel)
         grid.Add(self.variantChoice, 1, wx.EXPAND)
 
-        grid.Add(wx.StaticText(panel, label="&Rate:"), 0, wx.ALIGN_CENTER_VERTICAL)
+        grid.Add(wx.StaticText(panel, label=_("&Rate:")), 0, wx.ALIGN_CENTER_VERTICAL)
         self.rateSpin = wx.SpinCtrl(panel, min=0, max=100, initial=int(_cfg_get(self.cfg_prefix + "_rate", _safe_getattr(self.synth, "rate", 50) or 50)))
         grid.Add(self.rateSpin, 0, wx.EXPAND)
 
-        grid.Add(wx.StaticText(panel, label="&Pitch:"), 0, wx.ALIGN_CENTER_VERTICAL)
+        grid.Add(wx.StaticText(panel, label=_("&Pitch:")), 0, wx.ALIGN_CENTER_VERTICAL)
         self.pitchSpin = wx.SpinCtrl(panel, min=0, max=100, initial=int(_cfg_get(self.cfg_prefix + "_pitch", _safe_getattr(self.synth, "pitch", 50) or 50)))
         grid.Add(self.pitchSpin, 0, wx.EXPAND)
 
-        grid.Add(wx.StaticText(panel, label="Vol&ume:"), 0, wx.ALIGN_CENTER_VERTICAL)
+        grid.Add(wx.StaticText(panel, label=_("Vol&ume:")), 0, wx.ALIGN_CENTER_VERTICAL)
         self.volumeSpin = wx.SpinCtrl(panel, min=0, max=100, initial=int(_cfg_get(self.cfg_prefix + "_volume", _safe_getattr(self.synth, "volume", 100) or 100)))
         grid.Add(self.volumeSpin, 0, wx.EXPAND)
 
         self.eosSpin = None
         if hasattr(self.synth, "eosThreshold"):
-            grid.Add(wx.StaticText(panel, label="&EOS sensitivity:"), 0, wx.ALIGN_CENTER_VERTICAL)
+            grid.Add(wx.StaticText(panel, label=_("&EOS sensitivity:")), 0, wx.ALIGN_CENTER_VERTICAL)
             self.eosSpin = wx.SpinCtrl(
                 panel,
                 min=0,
@@ -619,7 +627,7 @@ class GenericNvdaOptionsDialog(wx.Dialog):
         self.autoSpeakCB = _add_autospeak_checkbox(panel, root, self.cfg_prefix + "_autoTest", default=default_auto_test)
 
         buttons = wx.StdDialogButtonSizer()
-        self.testBtn = wx.Button(panel, label="&Test")
+        self.testBtn = wx.Button(panel, label=_("&Test"))
         self.helpBtn = _create_help_button(panel)
         ok = wx.Button(panel, wx.ID_OK)
         cancel = wx.Button(panel, wx.ID_CANCEL)
@@ -690,7 +698,7 @@ class GenericNvdaOptionsDialog(wx.Dialog):
             saved = str(_cfg_get(self.cfg_prefix + "_voice", _safe_getattr(self.synth, "voice", "") or "") or "")
             selected = 0
             if not self.voices:
-                label = "No installed Google TTS voices found" if self.is_google_tts else "Default"
+                label = _("No installed Google TTS voices found") if self.is_google_tts else _("Default")
                 self._append_choice(self.voiceChoice, label, "")
             for i, vi in enumerate(self.voices):
                 vid = voice_utils.voice_info_text(vi, "id", "ID", "identifier", "name") or str(i)
@@ -716,7 +724,7 @@ class GenericNvdaOptionsDialog(wx.Dialog):
             saved = str(_cfg_get(self.cfg_prefix + "_variant", _safe_getattr(self.synth, "variant", "") or "") or "")
             selected = 0
             if not self.variants:
-                self._append_choice(self.variantChoice, "Default", "")
+                self._append_choice(self.variantChoice, _("Default"), "")
             for i, vi in enumerate(self.variants):
                 vid = voice_utils.voice_info_text(vi, "id", "ID", "identifier", "name") or str(i)
                 label = voice_utils.voice_choice_label(vi, fallback=f"Variant {i + 1}")
@@ -809,7 +817,7 @@ class BestSpeechOptionsDialog(wx.Dialog):
     SAMPLE_TEXT = "This is a soundWave test."
 
     def __init__(self, parent, initial: Optional[dict] = None):
-        super().__init__(parent, title="soundWave - Keynote Gold options")
+        super().__init__(parent, title=_("soundWave - Keynote Gold options"))
         initial = initial or {}
 
         self.voices = _list_bestspeech_voices()
@@ -829,37 +837,37 @@ class BestSpeechOptionsDialog(wx.Dialog):
         sizer = wx.BoxSizer(wx.VERTICAL)
 
         row1 = wx.BoxSizer(wx.HORIZONTAL)
-        row1.Add(wx.StaticText(self, label="&Voice:"), 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 8)
-        self.voiceChoice = wx.Choice(self, choices=self.voices if self.voices else ["(no voices found)"])
+        row1.Add(wx.StaticText(self, label=_("&Voice:")), 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 8)
+        self.voiceChoice = wx.Choice(self, choices=self.voices if self.voices else [_("(no voices found)")])
         row1.Add(self.voiceChoice, 1, wx.EXPAND)
         sizer.Add(row1, 0, wx.EXPAND | wx.ALL, 10)
 
         row2 = wx.BoxSizer(wx.HORIZONTAL)
-        row2.Add(wx.StaticText(self, label="&Speed:"), 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 8)
+        row2.Add(wx.StaticText(self, label=_("&Speed:")), 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 8)
         self.rateSpin = wx.SpinCtrl(self, min=0, max=100, initial=max(0, min(100, initial_rate)))
         row2.Add(self.rateSpin, 0)
         sizer.Add(row2, 0, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.BOTTOM, 10)
 
         row3 = wx.BoxSizer(wx.HORIZONTAL)
-        row3.Add(wx.StaticText(self, label="&Pitch:"), 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 8)
+        row3.Add(wx.StaticText(self, label=_("&Pitch:")), 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 8)
         self.pitchSpin = wx.SpinCtrl(self, min=0, max=100, initial=max(0, min(100, initial_pitch)))
         row3.Add(self.pitchSpin, 0)
         sizer.Add(row3, 0, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.BOTTOM, 10)
 
         row4 = wx.BoxSizer(wx.HORIZONTAL)
-        row4.Add(wx.StaticText(self, label="Vol&ume:"), 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 8)
+        row4.Add(wx.StaticText(self, label=_("Vol&ume:")), 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 8)
         self.volumeSpin = wx.SpinCtrl(self, min=0, max=100, initial=max(0, min(100, initial_volume)))
         row4.Add(self.volumeSpin, 0)
         sizer.Add(row4, 0, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.BOTTOM, 10)
 
-        self.rateBoostChk = wx.CheckBox(self, label="Rate &boost (faster)")
+        self.rateBoostChk = wx.CheckBox(self, label=_("Rate &boost (faster)"))
         self.rateBoostChk.SetValue(bool(initial.get("rateBoost", _cfg_get_bool("bestspeechRateBoost", False))))
         sizer.Add(self.rateBoostChk, 0, wx.LEFT | wx.RIGHT | wx.BOTTOM, 10)
 
         self.autoSpeakCB = _add_autospeak_checkbox(self, sizer, "bestspeechAutoSpeak", default=True)
 
         btnRow = wx.BoxSizer(wx.HORIZONTAL)
-        self.testBtn = wx.Button(self, label="&Test")
+        self.testBtn = wx.Button(self, label=_("&Test"))
         btnRow.Add(self.testBtn, 0, wx.RIGHT, 8)
         self.helpBtn = _create_help_button(self)
         btnRow.Add(self.helpBtn, 0, wx.RIGHT, 8)
@@ -939,7 +947,7 @@ class BestSpeechOptionsDialog(wx.Dialog):
             _defer_delete_dir(tmp_dir, wav_for_duration=tmp_wav, extra_seconds=2.0)
 
         if err:
-            _error(f"Keynote Gold test failed:\n{err}")
+            _error(_("Keynote Gold test failed:\n{error}").format(error=err))
 
     def get_options(self, persist: bool = True) -> dict:
         opts = {

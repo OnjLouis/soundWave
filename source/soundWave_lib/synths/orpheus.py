@@ -22,7 +22,7 @@ class OrpheusOptionsDialog(wx.Dialog):
     SAMPLE_TEXT = "This is a soundWave test."
 
     def __init__(self, parent, synth, initial: Optional[dict] = None):
-        super().__init__(parent, title="soundWave - Orpheus options")
+        super().__init__(parent, title=_("soundWave - Orpheus options"))
         self.synth = synth
         self.initial = initial or {}
 
@@ -32,23 +32,23 @@ class OrpheusOptionsDialog(wx.Dialog):
         grid = wx.FlexGridSizer(rows=0, cols=2, vgap=8, hgap=10)
         grid.AddGrowableCol(1, 1)
 
-        grid.Add(wx.StaticText(pnl, label="&Language:"), 0, wx.ALIGN_CENTER_VERTICAL)
+        grid.Add(wx.StaticText(pnl, label=_("&Language:")), 0, wx.ALIGN_CENTER_VERTICAL)
         self.langChoice = wx.Choice(pnl, choices=[])
         grid.Add(self.langChoice, 1, wx.EXPAND)
 
-        grid.Add(wx.StaticText(pnl, label="&Voice:"), 0, wx.ALIGN_CENTER_VERTICAL)
+        grid.Add(wx.StaticText(pnl, label=_("&Voice:")), 0, wx.ALIGN_CENTER_VERTICAL)
         self.voiceChoice = wx.Choice(pnl, choices=[])
         grid.Add(self.voiceChoice, 1, wx.EXPAND)
 
-        grid.Add(wx.StaticText(pnl, label="&Speed (%):"), 0, wx.ALIGN_CENTER_VERTICAL)
+        grid.Add(wx.StaticText(pnl, label=_("&Speed (%):")), 0, wx.ALIGN_CENTER_VERTICAL)
         self.speedSpin = wx.SpinCtrl(pnl, min=20, max=400, initial=int(self.initial.get("speed", 100) or 100))
         grid.Add(self.speedSpin, 0, wx.ALIGN_LEFT)
 
-        grid.Add(wx.StaticText(pnl, label="&Pitch:"), 0, wx.ALIGN_CENTER_VERTICAL)
+        grid.Add(wx.StaticText(pnl, label=_("&Pitch:")), 0, wx.ALIGN_CENTER_VERTICAL)
         self.pitchSpin = wx.SpinCtrl(pnl, min=0, max=100, initial=int(self.initial.get("pitch", _safe_getattr(self.synth, "pitch", 50) or 50)))
         grid.Add(self.pitchSpin, 0, wx.ALIGN_LEFT)
 
-        grid.Add(wx.StaticText(pnl, label="Vol&ume:"), 0, wx.ALIGN_CENTER_VERTICAL)
+        grid.Add(wx.StaticText(pnl, label=_("Vol&ume:")), 0, wx.ALIGN_CENTER_VERTICAL)
         self.volumeSpin = wx.SpinCtrl(pnl, min=0, max=100, initial=int(self.initial.get("volume", _safe_getattr(self.synth, "volume", _safe_getattr(self.synth, "_volume", 100)) or 100)))
         grid.Add(self.volumeSpin, 0, wx.ALIGN_LEFT)
 
@@ -62,7 +62,7 @@ class OrpheusOptionsDialog(wx.Dialog):
         )
 
         btnRow = wx.BoxSizer(wx.HORIZONTAL)
-        self.testBtn = wx.Button(pnl, label="&Test")
+        self.testBtn = wx.Button(pnl, label=_("&Test"))
         btnRow.Add(self.testBtn, 0, wx.RIGHT, 8)
         self.helpBtn = _create_help_button(pnl)
         btnRow.Add(self.helpBtn, 0, wx.RIGHT, 8)
@@ -160,7 +160,7 @@ class OrpheusOptionsDialog(wx.Dialog):
         except Exception:
             voices = []
         if not voices:
-            self.langChoice.Append("Default", clientData="")
+            self.langChoice.Append(_("Default"), clientData="")
             self.langChoice.SetSelection(0)
             return
         for i, vi in enumerate(voices):
@@ -215,7 +215,7 @@ class OrpheusOptionsDialog(wx.Dialog):
         self._variants = variants or []
 
         if not variants:
-            self.voiceChoice.Append("Default", clientData="")
+            self.voiceChoice.Append(_("Default"), clientData="")
             self.voiceChoice.SetSelection(0)
             return
 
@@ -367,7 +367,7 @@ def _render_with_orpheus_wrapper_capture(text: str, out_wav: str, synth) -> str:
     offline-render hook.
     """
     if not hasattr(synth, "speak") or not hasattr(synth, "_on_audio"):
-        raise RuntimeError("Orpheus wrapper capture is not available in this driver.")
+        raise RuntimeError(_("Orpheus wrapper capture is not available in this driver."))
 
     sample_rate = 22050
     if not out_wav.lower().endswith(".wav"):
@@ -410,7 +410,7 @@ def _render_with_orpheus_wrapper_capture(text: str, out_wav: str, synth) -> str:
         synth._on_audio = _capturing_on_audio
         synth.speak([text or ""])
         if not done_evt.wait(TIMEOUT_SECONDS):
-            raise RuntimeError("Orpheus render timed out waiting for end-of-string marker.")
+            raise RuntimeError(_("Orpheus render timed out waiting for end-of-string marker."))
     finally:
         try:
             synth._on_audio = old_on_audio
@@ -422,20 +422,20 @@ def _render_with_orpheus_wrapper_capture(text: str, out_wav: str, synth) -> str:
             pass
 
     if frames_written <= 0 or not os.path.exists(out_wav):
-        raise RuntimeError("Orpheus render failed: no audio was captured.")
+        raise RuntimeError(_("Orpheus render failed: no audio was captured."))
     return "Orpheus wrapper capture"
 
 
 def _render_with_orpheus_dll_capture(text: str, out_wav: str, synth) -> str:
     if ctypes is None or WINFUNCTYPE is None:
-        raise RuntimeError("ctypes not available; cannot render with Orpheus.")
+        raise RuntimeError(_("ctypes not available; cannot render with Orpheus."))
 
     if not getattr(synth, "lib", None):
-        raise RuntimeError("Orpheus DLL not loaded.")
+        raise RuntimeError(_("Orpheus DLL not loaded."))
     if not hasattr(synth.lib, "TTS_SetAudioMethod"):
-        raise RuntimeError("Orpheus DLL missing TTS_SetAudioMethod; cannot capture audio.")
+        raise RuntimeError(_("Orpheus DLL missing TTS_SetAudioMethod; cannot capture audio."))
     if not hasattr(synth, "speak"):
-        raise RuntimeError("Orpheus driver missing speak(); cannot render.")
+        raise RuntimeError(_("Orpheus driver missing speak(); cannot render."))
 
     sample_rate = 22050
     if not out_wav.lower().endswith(".wav"):
@@ -474,7 +474,7 @@ def _render_with_orpheus_dll_capture(text: str, out_wav: str, synth) -> str:
         synth.lib.TTS_SetAudioMethod(1, cb)
         synth.speak([text or ""])
         if not done_evt.wait(TIMEOUT_SECONDS):
-            raise RuntimeError("Orpheus render timed out waiting for end-of-string marker.")
+            raise RuntimeError(_("Orpheus render timed out waiting for end-of-string marker."))
     finally:
         try:
             wf.close()
@@ -488,7 +488,7 @@ def _render_with_orpheus_dll_capture(text: str, out_wav: str, synth) -> str:
             pass
 
     if frames_written <= 0 or not os.path.exists(out_wav):
-        raise RuntimeError("Orpheus render failed: no audio was captured.")
+        raise RuntimeError(_("Orpheus render failed: no audio was captured."))
     return "Orpheus DLL capture"
 
 

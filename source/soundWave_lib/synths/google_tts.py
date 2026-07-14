@@ -9,6 +9,9 @@ import wave
 
 from logHandler import log
 
+from soundWave_lib import runtime as _runtime
+_runtime.bind(globals())
+
 DEFAULT_AUTO_TEST = True
 ALLOW_AUTO_TEST = True
 ALLOW_MANUAL_TEST = True
@@ -101,12 +104,12 @@ def _resolve_voice_id(synth, requested_voice: str) -> str:
     if requested_voice:
         if requested_voice in voice_ids:
             return requested_voice
-        raise RuntimeError("Selected Google TTS voice is not available: %s" % requested_voice)
+        raise RuntimeError(_("Selected Google TTS voice is not available: %s") % requested_voice)
     if current_voice and current_voice in voice_ids:
         return current_voice
     if voice_ids:
         return voice_ids[0]
-    raise RuntimeError("No Google TTS voices are available.")
+    raise RuntimeError(_("No Google TTS voices are available."))
 
 
 def _chrome_value(synth, method_name: str, value: int, fallback):
@@ -126,7 +129,7 @@ def _build_exact_options(synth, voice_id: str, opts: dict) -> dict:
     try:
         speaker = synth.catalog.speaker_for_voice(voice_id)
     except Exception as e:
-        raise RuntimeError("Selected Google TTS voice is not available: %s" % voice_id) from e
+        raise RuntimeError(_("Selected Google TTS voice is not available: %s") % voice_id) from e
     options = synth._speech_options(rate, pitch, volume, voice_id)  # noqa: SLF001 - synth-specific integration
     options["voiceId"] = speaker.id
     options["voiceName"] = speaker.name
@@ -170,11 +173,11 @@ def render_to_wav(text: str, out_wav: str, synth, opts=None, progress=None, canc
     pcm_parts = []
     voice_id = _resolve_voice_id(synth, requested_voice)
     if cancel_evt.is_set():
-        raise RuntimeError("Cancelled.")
+        raise RuntimeError(_("Cancelled."))
     if progress is not None:
         progress["bytes"] = 0
         progress["buffers"] = 0
-        progress["waitingText"] = "Audio progress: waiting for Google to deliver audio"
+        progress["waitingText"] = _("Audio progress: waiting for Google to deliver audio")
 
     try:
         options = _build_exact_options(synth, voice_id, opts)
@@ -216,20 +219,20 @@ def render_to_wav(text: str, out_wav: str, synth, opts=None, progress=None, canc
                     progress["bytes"] = 0
                     progress["buffers"] = 0
                     progress["last_audio_ts"] = None
-                    progress["waitingText"] = "Audio progress: reconnecting to Google TTS"
+                    progress["waitingText"] = _("Audio progress: reconnecting to Google TTS")
                 _reset_bridge(synth)
                 if cancel_evt.is_set():
-                    raise RuntimeError("Cancelled.") from e
+                    raise RuntimeError(_("Cancelled.")) from e
                 time.sleep(1.0 * attempt)
         else:
-            raise last_error or RuntimeError("Google TTS bridge failed.")
+            raise last_error or RuntimeError(_("Google TTS bridge failed."))
     except Exception as e:
-        raise RuntimeError("Google TTS render failed: %s" % (str(e).strip() or e.__class__.__name__)) from e
+        raise RuntimeError(_("Google TTS render failed: %s") % (str(e).strip() or e.__class__.__name__)) from e
 
     if cancel_evt.is_set():
-        raise RuntimeError("Cancelled.")
+        raise RuntimeError(_("Cancelled."))
     if not pcm_parts:
-        raise RuntimeError("Google TTS produced no audio.")
+        raise RuntimeError(_("Google TTS produced no audio."))
 
     with wave.open(out_wav, "wb") as wf:
         wf.setnchannels(1)

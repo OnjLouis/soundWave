@@ -10,6 +10,9 @@ from __future__ import annotations
 
 import os
 import importlib
+import builtins
+import gettext
+import locale as _py_locale
 import re
 import sys
 import subprocess
@@ -46,8 +49,51 @@ try:
     addonHandler.initTranslation()
 except Exception:
     pass
+
+
+def _load_soundwave_translation():
+    fallback = builtins.__dict__.get("_", lambda s: s)
+    try:
+        if fallback("Choose input source:") != "Choose input source:":
+            return fallback
+    except Exception:
+        pass
+    try:
+        import languageHandler
+        lang = languageHandler.getLanguage()
+    except Exception:
+        lang = ""
+    langs = []
+    def _add_lang(value):
+        value = str(value or "").strip()
+        if not value or value.lower() in ("windows", "default", "system"):
+            return
+        if value not in langs:
+            langs.append(value)
+        base = value.split("_", 1)[0]
+        if base and base not in langs:
+            langs.append(base)
+    _add_lang(lang)
+    if not langs:
+        try:
+            _add_lang(_py_locale.getlocale()[0])
+        except Exception:
+            pass
+    try:
+        addon_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        translation = gettext.translation(
+            "nvda",
+            localedir=os.path.join(addon_root, "locale"),
+            languages=langs,
+            fallback=True,
+        )
+        return translation.gettext
+    except Exception:
+        return fallback
+
+
 try:
-    from gettext import gettext as _
+    _ = _load_soundwave_translation()
 except Exception:
     _ = lambda s: s
 def _normalize_synth_list_item(item):
@@ -172,7 +218,7 @@ def _cfg_get_bool(key: str, default: bool = False) -> bool:
     return s in ("1", "true", "yes", "on")
 
 def _add_autospeak_checkbox(parent, sizer, key: str, default: bool = True):
-    cb = wx.CheckBox(parent, label="&Auto speak when changing settings")
+    cb = wx.CheckBox(parent, label=_("&Auto speak when changing settings"))
     cb.SetValue(_cfg_get_bool(key, default))
     def _on_toggle(evt):
         _cfg_set(key, bool(cb.GetValue()))
@@ -428,12 +474,12 @@ def _manual_path() -> str:
 def _open_manual():
     path = _manual_path()
     if not path:
-        _error("The soundWave manual could not be found.")
+        _error(_("The soundWave manual could not be found."))
         return
     try:
         os.startfile(path)  # type: ignore[attr-defined]
     except Exception as e:
-        _error("The soundWave manual could not be opened:\n%s" % e)
+        _error(_("The soundWave manual could not be opened:\n%s") % e)
 
 
 class _HelpButtonAccessible(getattr(wx, "Accessible", object)):
@@ -448,7 +494,7 @@ class _HelpButtonAccessible(getattr(wx, "Accessible", object)):
         self.window = window
 
     def GetName(self, childId):
-        return (getattr(wx, "ACC_OK", 0), "Help")
+        return (getattr(wx, "ACC_OK", 0), _("Help"))
 
     def GetRole(self, childId):
         return (getattr(wx, "ACC_OK", 0), getattr(wx, "ROLE_SYSTEM_PUSHBUTTON", 0x2B))
@@ -458,11 +504,11 @@ class _HelpButtonAccessible(getattr(wx, "Accessible", object)):
 
 
 def _create_help_button(parent) -> wx.Button:
-    btn = wx.Button(parent, label="&Help")
+    btn = wx.Button(parent, label=_("&Help"))
     btn.Bind(wx.EVT_BUTTON, lambda evt: _open_manual())
     try:
-        btn.SetName("Help")
-        btn.SetToolTip("Open the soundWave manual. Shortcut: Alt+H.")
+        btn.SetName(_("Help"))
+        btn.SetToolTip(_("Open the soundWave manual. Shortcut: Alt+H."))
     except Exception:
         pass
     try:
@@ -561,7 +607,7 @@ def _show_render_complete(parent, message: str, output_paths: List[str]) -> None
     sizer.Add(text, 1, wx.ALL | wx.EXPAND, 10)
     buttons = wx.BoxSizer(wx.HORIZONTAL)
     buttons.AddStretchSpacer(1)
-    open_btn = wx.Button(dlg, label="&Open folder")
+    open_btn = wx.Button(dlg, label=_("&Open folder"))
     ok_btn = wx.Button(dlg, wx.ID_OK)
     buttons.Add(open_btn, 0, wx.RIGHT, 8)
     buttons.Add(ok_btn, 0)
@@ -637,7 +683,7 @@ def _read_text_file(path: str) -> Optional[str]:
                 return f.read()
         except Exception as e:
             last_err = e
-    raise RuntimeError(str(last_err or "unknown read error"))
+    raise RuntimeError(str(last_err or _("unknown read error")))
 
 
 def _pick_input_items(parent) -> List[Dict[str, str]]:
@@ -650,9 +696,9 @@ def _pick_input_items(parent) -> List[Dict[str, str]]:
         try:
             source_dlg = wx.SingleChoiceDialog(
                 parent,
-                "Choose input source:",
+                _("Choose input source:"),
                 ADDON_NAME,
-                ["Use clipboard text", "Open text file", "Open text folder", "Type or paste text"],
+                [_("Use clipboard text"), _("Open text file"), _("Open text folder"), _("Type or paste text")],
             )
             try:
                 res = source_dlg.ShowModal()
@@ -672,9 +718,9 @@ def _pick_input_items(parent) -> List[Dict[str, str]]:
 
         clip = _get_clipboard_text().strip()
         if clip:
-            return [{"text": clip, "base": "Clipboard", "path": ""}]
+            return [{"text": clip, "base": _("Clipboard"), "path": ""}]
         try:
-            gui.messageBox("No text on clipboard.", ADDON_NAME, wx.OK | wx.ICON_INFORMATION)
+            gui.messageBox(_("No text on clipboard."), ADDON_NAME, wx.OK | wx.ICON_INFORMATION)
         except Exception:
             pass
 
@@ -684,9 +730,9 @@ def _pick_input_items(parent) -> List[Dict[str, str]]:
             last_input_dir = os.path.expanduser("~")
         fd = wx.FileDialog(
             parent,
-            message="Open text to render",
+            message=_("Open text to render"),
             defaultDir=os.path.expandvars(os.path.expanduser(last_input_dir)),
-            wildcard="Text files (*.txt)|*.txt|Markdown files (*.md)|*.md|All files (*.*)|*.*",
+            wildcard=_("Text files (*.txt)|*.txt|Markdown files (*.md)|*.md|All files (*.*)|*.*"),
             style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST,
         )
         try:
@@ -705,13 +751,13 @@ def _pick_input_items(parent) -> List[Dict[str, str]]:
         try:
             txt = _read_text_file(in_path)
         except Exception as e:
-            _error(f"Couldn't read input file:\n{e}")
+            _error(_("Couldn't read input file:\n{error}").format(error=e))
             return []
         txt = txt.strip()
         if not txt:
-            _error("The selected text file is empty.")
+            _error(_("The selected text file is empty."))
             return []
-        return [{"text": txt, "base": os.path.splitext(os.path.basename(in_path))[0] or "file", "path": in_path}]
+        return [{"text": txt, "base": os.path.splitext(os.path.basename(in_path))[0] or _("file"), "path": in_path}]
 
     if input_source == 2:
         last_input_dir = str(_cfg_get("lastInputDir", "") or "")
@@ -719,7 +765,7 @@ def _pick_input_items(parent) -> List[Dict[str, str]]:
             last_input_dir = os.path.expanduser("~")
         dlg = wx.DirDialog(
             parent,
-            "Open text folder",
+            _("Open text folder"),
             defaultPath=os.path.expandvars(os.path.expanduser(last_input_dir)),
             style=wx.DD_DEFAULT_STYLE | wx.DD_DIR_MUST_EXIST,
         )
@@ -750,9 +796,9 @@ def _pick_input_items(parent) -> List[Dict[str, str]]:
                 continue
             if not txt:
                 continue
-            items.append({"text": txt, "base": os.path.splitext(name)[0] or "file", "path": path})
+            items.append({"text": txt, "base": os.path.splitext(name)[0] or _("file"), "path": path})
         if not items:
-            _error("The selected folder does not contain any readable text files.")
+            _error(_("The selected folder does not contain any readable text files."))
         return items
 
     # Ask for manual input (multi-line).
@@ -760,7 +806,7 @@ def _pick_input_items(parent) -> List[Dict[str, str]]:
     try:
         dlg = wx.TextEntryDialog(
             parent,
-            "Enter text to render:",
+            _("Enter text to render:"),
             ADDON_NAME,
             value=clip if clip else "",
             style=wx.TE_MULTILINE | wx.OK | wx.CANCEL,
@@ -775,19 +821,19 @@ def _pick_input_items(parent) -> List[Dict[str, str]]:
             except Exception:
                 pass
     except Exception as e:
-        _error(f"Couldn't open input dialog: {e}")
+        _error(_("Couldn't open input dialog: {error}").format(error=e))
         return []
 
     if not txt:
         return []
-    return [{"text": txt, "base": "Typed", "path": ""}]
+    return [{"text": txt, "base": _("Typed"), "path": ""}]
 
 
 def _pick_input_text(parent) -> tuple[str, str]:
     items = _pick_input_items(parent)
     if not items:
         return "", ""
-    return items[0].get("text", ""), items[0].get("base", "Typed")
+    return items[0].get("text", ""), items[0].get("base", _("Typed"))
 
 class _RenderProgressDialog(wx.Dialog):
     """Common render progress dialog used for all synths.
@@ -802,7 +848,7 @@ class _RenderProgressDialog(wx.Dialog):
         sizer = wx.BoxSizer(wx.VERTICAL)
 
         # Summary (non-tabbable heading; details field is the tabbable read-only control)
-        self.summary = wx.StaticText(self, label="Rendering…")
+        self.summary = wx.StaticText(self, label=_("Rendering…"))
         # Slightly larger font for readability
         try:
             f = self.summary.GetFont()
@@ -823,7 +869,7 @@ class _RenderProgressDialog(wx.Dialog):
         # Details (hidden by default). A list lets screen reader users move line by line.
         self.details = wx.ListBox(
             self,
-            choices=["Rendering…"],
+            choices=[_("Rendering…")],
             size=(-1, 120),
         )
         self.details.Hide()
@@ -832,20 +878,20 @@ class _RenderProgressDialog(wx.Dialog):
 
         btnSizer = wx.BoxSizer(wx.HORIZONTAL)
 
-        self.detailsBtn = wx.Button(self, label="Show &details")
+        self.detailsBtn = wx.Button(self, label=_("Show &details"))
         self.detailsBtn.Bind(wx.EVT_BUTTON, self._on_toggle_details)
         btnSizer.Add(self.detailsBtn, 0, wx.ALL, 10)
 
         self.helpBtn = _create_help_button(self)
         btnSizer.Add(self.helpBtn, 0, wx.ALL, 10)
 
-        self.minimizeBtn = wx.Button(self, label="&Minimize")
+        self.minimizeBtn = wx.Button(self, label=_("&Minimize"))
         self.minimizeBtn.Bind(wx.EVT_BUTTON, self._on_minimize)
         btnSizer.Add(self.minimizeBtn, 0, wx.ALL, 10)
 
         btnSizer.AddStretchSpacer(1)
 
-        self.cancelBtn = wx.Button(self, label="&Cancel")
+        self.cancelBtn = wx.Button(self, label=_("&Cancel"))
         self.cancelBtn.Bind(wx.EVT_BUTTON, self._on_cancel)
         btnSizer.Add(self.cancelBtn, 0, wx.ALL, 10)
 
@@ -899,7 +945,7 @@ class _RenderProgressDialog(wx.Dialog):
         # Mark cancelled and request the worker to stop.
         self._cancelled = True
         try:
-            self.set_summary("Cancelling…")
+            self.set_summary(_("Cancelling…"))
         except Exception:
             pass
         try:
@@ -945,9 +991,9 @@ class _RenderProgressDialog(wx.Dialog):
             self.details.Enable()
             # Populate immediately so the first focus landing isn't an empty list.
             if self.details.GetCount() <= 0:
-                self.set_details_lines([str(self.summary.GetLabel() or "Rendering…")])
+                self.set_details_lines([str(self.summary.GetLabel() or _("Rendering…"))])
             self.details.Show()
-            self.detailsBtn.SetLabel("Hide &details")
+            self.detailsBtn.SetLabel(_("Hide &details"))
             try:
                 self.detailsBtn.MoveAfterInTabOrder(self.details)
                 self.helpBtn.MoveAfterInTabOrder(self.detailsBtn)
@@ -963,7 +1009,7 @@ class _RenderProgressDialog(wx.Dialog):
         else:
             self.details.Hide()
             self.details.Disable()
-            self.detailsBtn.SetLabel("Show &details")
+            self.detailsBtn.SetLabel(_("Show &details"))
             try:
                 self.helpBtn.MoveAfterInTabOrder(self.detailsBtn)
                 self.minimizeBtn.MoveAfterInTabOrder(self.helpBtn)
@@ -990,7 +1036,7 @@ class _RenderProgressDialog(wx.Dialog):
         try:
             cleaned = [str(x) for x in (lines or []) if str(x).strip()]
             if not cleaned:
-                cleaned = ["Rendering…"]
+                cleaned = [_("Rendering…")]
             selection = self.details.GetSelection()
             self.details.Set(cleaned)
             if cleaned:
@@ -1135,7 +1181,7 @@ def _format_duration(seconds: Optional[float]) -> str:
     try:
         total = float(seconds)
     except Exception:
-        return "unknown"
+        return _("unknown")
     if total < 0:
         total = 0.0
     if total < 60:
@@ -1252,9 +1298,9 @@ def _output_ext(fmt: str) -> str:
 def _pick_output_path(parent, suggestion_base: str, synth_label: str, voice_label: str = ""):
     available_formats = _available_output_formats()
     has_ffmpeg = len(available_formats) > 1
-    wildcard = "WAV audio (*.wav)|*.wav"
+    wildcard = _("WAV audio (*.wav)|*.wav")
     if has_ffmpeg:
-        wildcard += "|MP3 audio (*.mp3)|*.mp3|FLAC audio (*.flac)|*.flac|M4A audio (*.m4a)|*.m4a"
+        wildcard += "|" + _("MP3 audio (*.mp3)|*.mp3|FLAC audio (*.flac)|*.flac|M4A audio (*.m4a)|*.m4a")
 
     default_dir = _build_template_output_dir(
         "singleFolderPattern",
@@ -1276,7 +1322,7 @@ def _pick_output_path(parent, suggestion_base: str, synth_label: str, voice_labe
 
     fd = wx.FileDialog(
         parent,
-        message="Save audio as…",
+        message=_("Save audio as…"),
         defaultDir=default_dir,
         defaultFile=default_file,
         wildcard=wildcard,
@@ -1316,7 +1362,7 @@ def _pick_output_path(parent, suggestion_base: str, synth_label: str, voice_labe
             out_path += ".wav"
 
     if fmt in ("mp3", "flac", "m4a") and not has_ffmpeg:
-        _error("%s requires ffmpeg on PATH. Please choose WAV." % fmt.upper())
+        _error(_("%s requires ffmpeg on PATH. Please choose WAV.") % fmt.upper())
         return (None, None)
 
     _cfg_set("lastOutputFormat", fmt)
@@ -1331,7 +1377,7 @@ def _pick_batch_output_format(parent) -> Optional[str]:
         return fmt
 
     choices = [fmt.upper() for fmt in available_formats]
-    dlg = wx.SingleChoiceDialog(parent, "Choose output format for all files:", ADDON_NAME, choices)
+    dlg = wx.SingleChoiceDialog(parent, _("Choose output format for all files:"), ADDON_NAME, choices)
     try:
         last = str(_cfg_get("lastBatchOutputFormat", "wav") or "wav").upper()
         if last in choices:
@@ -1422,10 +1468,10 @@ def _list_nvda_synths() -> List[Tuple[str, str]]:
 
 class SynthSelectDialog(wx.Dialog):
     def __init__(self, parent):
-        super().__init__(parent, title="soundWave - Synthesizer")
+        super().__init__(parent, title=_("soundWave - Synthesizer"))
         sizer = wx.BoxSizer(wx.VERTICAL)
 
-        sizer.Add(wx.StaticText(self, label="Choose a &synthesizer to render with:"), 0, wx.ALL, 10)
+        sizer.Add(wx.StaticText(self, label=_("Choose a &synthesizer to render with:")), 0, wx.ALL, 10)
 
         choices: List[str] = []
         self._choice_meta: List[Dict[str, str]] = []
@@ -1495,18 +1541,20 @@ class SynthSelectDialog(wx.Dialog):
 
         # record base dir
         baseRow = wx.BoxSizer(wx.HORIZONTAL)
-        baseRow.Add(wx.StaticText(self, label="Record base &folder:"), 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 8)
+        baseRow.Add(wx.StaticText(self, label=_("Record base &folder:")), 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 8)
         self.baseDir = wx.TextCtrl(self, value=str(_cfg_get("recordBaseDir", "") or ""))
         baseRow.Add(self.baseDir, 1, wx.EXPAND | wx.RIGHT, 8)
-        self.browseBtn = wx.Button(self, label="&Browse…")
+        self.browseBtn = wx.Button(self, label=_("&Browse…"))
         self.browseBtn.Bind(wx.EVT_BUTTON, self._on_browse)
         baseRow.Add(self.browseBtn, 0)
         sizer.Add(baseRow, 0, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.BOTTOM, 10)
 
         sizer.Add(wx.StaticText(
             self,
-            label="Tip: this is the default save folder for renders. Output folders are named by your SoundWave templates.\n"
-                  "Leave blank to use Documents\\SoundWave. You can also set this in NVDA Settings, soundWave."
+            label=_(
+                "Tip: this is the default save folder for renders. Output folders are named by your SoundWave templates.\n"
+                "Leave blank to use Documents\\SoundWave. You can also set this in NVDA Settings, soundWave."
+            )
         ), 0, wx.LEFT | wx.RIGHT | wx.BOTTOM, 10)
 
         
@@ -1540,7 +1588,7 @@ class SynthSelectDialog(wx.Dialog):
             current = str(_cfg_get("recordBaseDir", "") or "") or _get_default_record_base_dir()
         dlg = wx.DirDialog(
             self,
-            "Choose record base folder",
+            _("Choose record base folder"),
             defaultPath=os.path.expandvars(os.path.expanduser(current)),
             style=wx.DD_DEFAULT_STYLE | wx.DD_DIR_MUST_EXIST,
         )
@@ -1599,7 +1647,7 @@ _runtime.publish(globals())
 def _convert_with_ffmpeg(in_wav: str, out_path: str, fmt: str = "mp3"):
     ffmpeg = shutil.which("ffmpeg")
     if not ffmpeg:
-        raise RuntimeError("ffmpeg not found on PATH.")
+        raise RuntimeError(_("ffmpeg not found on PATH."))
     if fmt == "flac":
         args = [ffmpeg, "-y", "-i", in_wav, "-codec:a", "flac", "-compression_level", "8", out_path]
     elif fmt == "m4a":
@@ -1613,7 +1661,7 @@ def _convert_with_ffmpeg(in_wav: str, out_path: str, fmt: str = "mp3"):
     )
     if proc.returncode != 0:
         err = proc.stderr.decode("utf-8", errors="replace").strip()
-        raise RuntimeError(f"ffmpeg failed: {err or 'unknown error'}")
+        raise RuntimeError(_("ffmpeg failed: {error}").format(error=err or _("unknown error")))
 
 
 # ----------------------------
@@ -1742,8 +1790,10 @@ def _append_wav_to_open_writer(source_wav: str, writer, expected_params) -> int:
         expected = (expected_params.nchannels, expected_params.sampwidth, expected_params.framerate, expected_params.comptype)
         if comparable != expected:
             raise RuntimeError(
-                "Renderer produced inconsistent WAV format between chunks "
-                f"({comparable!r} vs {expected!r})."
+                _("Renderer produced inconsistent WAV format between chunks ({actual!r} vs {expected!r}).").format(
+                    actual=comparable,
+                    expected=expected,
+                )
             )
         frames = src.getnframes()
         while True:
@@ -1829,7 +1879,7 @@ def _do_render_impl():
     nvda_name = ""
     if kind == "nvda":
         nvda_name = synth_meta.get("nvdaName", "")
-        synth_label = synth_meta.get("label", "") or nvda_name or "NVDA synth"
+        synth_label = synth_meta.get("label", "") or nvda_name or _("NVDA synth")
 
     # 2) Input text
     input_items = _pick_input_items(parent)
@@ -1888,7 +1938,7 @@ def _do_render_impl():
     elif kind == "sapi5_32":
         od = Sapi5OptionsDialog(
             parent,
-            title="soundWave - SAPI5 32-bit options",
+            title=_("soundWave - SAPI5 32-bit options"),
             voice_list_fn=_list_sapi5_32_voices,
             render_fn=_render_with_sapi5_32,
             cfg_prefix="sapi532",
@@ -1941,7 +1991,10 @@ def _do_render_impl():
         except Exception:
             live = None
         if (live is None) or ((getattr(live, "name", "") or "").lower() != "orpheus"):
-            _error("Orpheus offline capture requires Orpheus to be your current NVDA synthesizer.\n\n" "Please switch NVDA to Orpheus, then open soundWave again.")
+            _error(_(
+                "Orpheus offline capture requires Orpheus to be your current NVDA synthesizer.\n\n"
+                "Please switch NVDA to Orpheus, then open soundWave again."
+            ))
             return
     
         init = {
@@ -2004,7 +2057,9 @@ def _do_render_impl():
                 log.error("soundWave: generic NVDA options failed for %s (%s)" % (synth_label, nvda_name), exc_info=True)
             except Exception:
                 pass
-            msg = str(e).strip() or f"{synth_label or nvda_name or 'This synth'} could not open its options dialog."
+            msg = str(e).strip() or _("{synth} could not open its options dialog.").format(
+                synth=synth_label or nvda_name or _("This synth")
+            )
             _error(msg)
             return
         try:
@@ -2077,7 +2132,7 @@ def _do_render_impl():
         prog.Show()
     except Exception:
         prog = None
-        ui.message("Rendering started.")
+        ui.message(_("Rendering started."))
 
     tmp_dir = tempfile.mkdtemp(prefix="soundWave_")
     tmp_wav = os.path.join(tmp_dir, "render.wav")
@@ -2100,8 +2155,10 @@ def _do_render_impl():
         if (_orpheus_live is None) or ((getattr(_orpheus_live, "name", "") or "").lower() != "orpheus"):
             # We already gate this earlier, but keep it defensive.
             _error(
-                "Orpheus offline capture requires Orpheus to be your current NVDA synthesizer.\n\n"
-                "Please switch NVDA to Orpheus, then open soundWave again."
+                _(
+                    "Orpheus offline capture requires Orpheus to be your current NVDA synthesizer.\n\n"
+                    "Please switch NVDA to Orpheus, then open soundWave again."
+                )
             )
             try:
                 shutil.rmtree(tmp_dir, ignore_errors=True)
@@ -2138,9 +2195,11 @@ def _do_render_impl():
             except Exception:
                 pass
             _error(
-                "Orpheus rendering requires switching NVDA temporarily to a fallback synthesizer, "
-                f"but switching to '{fallback_synth}' failed.\n\n"
-                "Please ensure at least one non-Orpheus NVDA synthesizer is available, then try again."
+                _(
+                    "Orpheus rendering requires switching NVDA temporarily to a fallback synthesizer, "
+                    "but switching to '{fallback_synth}' failed.\n\n"
+                    "Please ensure at least one non-Orpheus NVDA synthesizer is available, then try again."
+                ).format(fallback_synth=fallback_synth)
             )
             try:
                 shutil.rmtree(tmp_dir, ignore_errors=True)
@@ -2168,7 +2227,7 @@ def _do_render_impl():
             if is_google_nvda_render:
                 google_synth = _get_synth_instance(nvda_name)
                 if google_synth is None:
-                    raise RuntimeError("Google TTS For NVDA could not be initialized for rendering.")
+                    raise RuntimeError(_("Google TTS For NVDA could not be initialized for rendering."))
 
             def _render_one(chunk_text: str, chunk_wav: str) -> str:
                 if kind == "sonata":
@@ -2208,15 +2267,17 @@ def _do_render_impl():
 
                 if kind == "orpheus":
                     if _orpheus_live is None:
-                        raise RuntimeError("Orpheus capture couldn't access the live Orpheus instance.")
+                        raise RuntimeError(_("Orpheus capture couldn't access the live Orpheus instance."))
                     return _render_with_orpheus_capture(chunk_text, chunk_wav, _orpheus_live, opts=orpheus_opts)
 
                 if kind == "ibmeci":
                     dll_path = (_cfg_get("ibmeciDllPath", "") or "").strip() or (os.environ.get("SOUNDWAVE_IBMECI_DLL", "") or "").strip() or _find_ibmeci_dll()
                     if not dll_path or not os.path.isfile(dll_path):
                         raise RuntimeError(
-                            "SoundWave could not find the installed Eloquence/IBMTTS speech engine.\n\n"
-                            "Install or update the Eloquence or IBMTTS NVDA add-on, reload NVDA, then try again."
+                            _(
+                                "SoundWave could not find the installed Eloquence/IBMTTS speech engine.\n\n"
+                                "Install or update the Eloquence or IBMTTS NVDA add-on, reload NVDA, then try again."
+                            )
                         )
                     _render_with_ibmeci_dll(
                         chunk_text,
@@ -2323,7 +2384,7 @@ def _do_render_impl():
 
                 for idx, chunk_text in enumerate(text_chunks, start=1):
                     if cancel_evt.is_set():
-                        raise RuntimeError("Cancelled.")
+                        raise RuntimeError(_("Cancelled."))
                     result.progress["jobsCurrent"] = job_index
                     result.progress["chunksCurrent"] = chunks_done + idx
                     result.progress["chunksTotal"] = result.chunks
@@ -2332,7 +2393,7 @@ def _do_render_impl():
                     if mode:
                         result.mode = mode
                     if not os.path.isfile(chunk_wav):
-                        raise FileNotFoundError("Chunk render output was not created: %s" % (chunk_wav,))
+                        raise FileNotFoundError(_("Chunk render output was not created: %s") % (chunk_wav,))
                     with wave.open(chunk_wav, "rb") as chunk_reader:
                         params = chunk_reader.getparams()
                         chunk_bytes = int(chunk_reader.getnframes()) * int(params.nchannels) * int(params.sampwidth)
@@ -2355,7 +2416,7 @@ def _do_render_impl():
                 result.progress["jobsDone"] = job_index
                 _close_current_part()
                 if not part_paths:
-                    raise RuntimeError("Render failed: no audio parts were produced.")
+                    raise RuntimeError(_("Render failed: no audio parts were produced."))
                 total_parts += len(part_paths)
                 if tmp_wav == os.path.join(tmp_dir, "render.wav"):
                     tmp_wav = part_paths[0]
@@ -2363,7 +2424,7 @@ def _do_render_impl():
                 all_durations.extend([d for d in durations if d is not None])
 
                 if cancel_evt.is_set():
-                    raise RuntimeError("Cancelled.")
+                    raise RuntimeError(_("Cancelled."))
 
                 if len(part_paths) == 1:
                     if fmt == "wav":
@@ -2457,8 +2518,10 @@ def _do_render_impl():
 
                 if _get_current_synth_name() != "orpheus":
                     _info(
-                        "Render finished, but soundWave couldn't restore Orpheus as your live synthesizer. "
-                        "You may need to switch it back manually in NVDA's Synthesizer settings."
+                        _(
+                            "Render finished, but soundWave couldn't restore Orpheus as your live synthesizer. "
+                            "You may need to switch it back manually in NVDA's Synthesizer settings."
+                        )
                     )
 
         if prog is not None:
@@ -2468,7 +2531,7 @@ def _do_render_impl():
                 pass
 
         if cancel_evt.is_set() and not result.ok:
-            _info("Cancelled.")
+            _info(_("Cancelled."))
             return
 
         if result.ok:
@@ -2477,20 +2540,20 @@ def _do_render_impl():
                 if len(result.output_paths) == 1:
                     saved = result.output_paths[0]
                 else:
-                    saved = "%d files, starting with: %s" % (len(result.output_paths), result.output_paths[0])
+                    saved = _("%d files, starting with: %s") % (len(result.output_paths), result.output_paths[0])
             msg = [
-                "Render complete.",
-                f"Synth: {result.synth_label}",
-                f"Saved to: {saved}",
-                f"Backend: {result.mode or 'unknown'}",
-                f"Time taken: {_format_duration(result.wall_s)}",
+                _("Render complete."),
+                _("Synth: {synth}").format(synth=result.synth_label),
+                _("Saved to: {path}").format(path=saved),
+                _("Backend: {backend}").format(backend=result.mode or _("unknown")),
+                _("Time taken: {duration}").format(duration=_format_duration(result.wall_s)),
             ]
             if result.chunks and result.chunks > 1:
-                msg.append("Text chunks: %d" % result.chunks)
+                msg.append(_("Text chunks: %d") % result.chunks)
             if result.parts and result.parts > 1:
-                msg.append("Audio files: %d" % result.parts)
+                msg.append(_("Audio files: %d") % result.parts)
             if result.audio_s:
-                msg.append(f"Audio length: {_format_duration(result.audio_s)}")
+                msg.append(_("Audio length: {duration}").format(duration=_format_duration(result.audio_s)))
             if result.ftr_ratio is not None:
                 speed_x = None
                 try:
@@ -2499,12 +2562,12 @@ def _do_render_impl():
                 except Exception:
                     speed_x = None
                 if speed_x is not None:
-                    msg.append('Speed: %.2fx realtime' % (speed_x,))
+                    msg.append(_("Speed: %.2fx realtime") % (speed_x,))
                 else:
-                    msg.append('Speed: (unknown)')
+                    msg.append(_("Speed: (unknown)"))
             _show_render_complete(parent, "\n".join(msg), result.output_paths or [out_path])
         else:
-            _error(str(result.err or "Render failed."))
+            _error(str(result.err or _("Render failed.")))
 
 
     def poll():
@@ -2528,7 +2591,7 @@ def _do_render_impl():
                 _poll_state['forced'] = True
                 try:
                     if result.err is None and not result.ok:
-                        result.err = RuntimeError('Cancelled.')
+                        result.err = RuntimeError(_('Cancelled.'))
                 except Exception:
                     pass
                 try:
@@ -2543,7 +2606,7 @@ def _do_render_impl():
         if (now - started_at) > allowed_seconds:
             try:
                 if not result.ok and result.err is None:
-                    result.err = RuntimeError('Render timed out.')
+                    result.err = RuntimeError(_('Render timed out.'))
             except Exception:
                 pass
             try:
@@ -2558,17 +2621,17 @@ def _do_render_impl():
             if prog is not None:
                 now = time.time()
                 elapsed = max(0.0, now - started_at)
-                label = result.mode or synth_label or 'Rendering'
+                label = result.mode or synth_label or _('Rendering')
 
                 # Human-friendly summary
-                prog.set_summary('%s… Elapsed %s' % (label, _format_duration(elapsed),))
+                prog.set_summary(_('%s… Elapsed %s') % (label, _format_duration(elapsed),))
 
                 # Details (once per second)
                 if (now - float(_last_ui.get('ts', 0.0) or 0.0)) >= 1.0:
                     _last_ui['ts'] = now
                     details = []
-                    details.append('Synth: %s' % (label,))
-                    details.append('Elapsed time: %s' % (_format_duration(elapsed),))
+                    details.append(_('Synth: %s') % (label,))
+                    details.append(_('Elapsed time: %s') % (_format_duration(elapsed),))
 
                     # Renderer-provided telemetry (optional)
                     try:
@@ -2582,7 +2645,7 @@ def _do_render_impl():
                             done_jobs = int(p.get('jobsDone', 0) or 0)
                             current_job = int(p.get('jobsCurrent', done_jobs) or done_jobs)
                             if total_jobs > 1:
-                                details.append('File: %d of %d (%d complete)' % (current_job, total_jobs, done_jobs))
+                                details.append(_('File: %d of %d (%d complete)') % (current_job, total_jobs, done_jobs))
                         except Exception:
                             pass
                         try:
@@ -2590,7 +2653,7 @@ def _do_render_impl():
                             done_chunks = int(p.get('chunksDone', 0) or 0)
                             current_chunk = int(p.get('chunksCurrent', done_chunks) or done_chunks)
                             if total_chunks > 1:
-                                details.append('Text chunk: %d of %d (%d complete)' % (current_chunk, total_chunks, done_chunks))
+                                details.append(_('Text chunk: %d of %d (%d complete)') % (current_chunk, total_chunks, done_chunks))
                         except Exception:
                             pass
 
@@ -2608,22 +2671,22 @@ def _do_render_impl():
                             rendered_s = None
 
                         if rendered_s is not None:
-                            details.append('Audio rendered: %s' % (_format_duration(rendered_s),))
+                            details.append(_('Audio rendered: %s') % (_format_duration(rendered_s),))
                             if elapsed > 0.05:
-                                details.append('Conversion rate: %.2fx realtime' % (rendered_s / elapsed,))
+                                details.append(_('Conversion rate: %.2fx realtime') % (rendered_s / elapsed,))
                         elif byte_count > 0:
-                            details.append('Audio written: %s' % (_format_bytes(byte_count),))
+                            details.append(_('Audio written: %s') % (_format_bytes(byte_count),))
                             if elapsed > 0.05:
-                                details.append('Write rate: %s/s' % (_format_bytes(int(byte_count / elapsed)),))
+                                details.append(_('Write rate: %s/s') % (_format_bytes(int(byte_count / elapsed)),))
                         else:
                             wait_text = str(p.get('waitingText', '') or '').strip()
-                            details.append(wait_text or 'Audio progress: waiting for renderer output')
+                            details.append(wait_text or _('Audio progress: waiting for renderer output'))
 
                         try:
                             last = p.get('last_audio_ts', None)
                             if last:
                                 age = max(0.0, now - float(last))
-                                details.append('Last audio update: %.1f s ago' % (age,))
+                                details.append(_('Last audio update: %.1f s ago') % (age,))
                         except Exception:
                             pass
 
@@ -2639,45 +2702,45 @@ def _do_render_impl():
 
 
 class SoundWaveSettingsPanel(gui.settingsDialogs.SettingsPanel):
-    title = "soundWave"
+    title = _("soundWave")
 
     def makeSettings(self, settingsSizer):
         helper = gui.guiHelper.BoxSizerHelper(self, sizer=settingsSizer)
 
-        self.recordBaseDir = helper.addLabeledControl("Default save &folder:", wx.TextCtrl)
+        self.recordBaseDir = helper.addLabeledControl(_("Default save &folder:"), wx.TextCtrl)
         self.recordBaseDir.SetValue(str(_cfg_get("recordBaseDir", "") or ""))
         helper.addItem(wx.StaticText(
             self,
-            label=(
+            label=_(
                 "Leave blank to use Documents\\SoundWave. SoundWave creates a subfolder "
                 "under this folder using your naming templates. You can also change it for a single "
                 "render on the first SoundWave screen."
             ),
         ))
-        self.browseRecordBaseBtn = helper.addItem(wx.Button(self, label="&Browse..."))
+        self.browseRecordBaseBtn = helper.addItem(wx.Button(self, label=_("&Browse...")))
 
-        self.singleFolderPattern = helper.addLabeledControl("Single render fol&der pattern:", wx.TextCtrl)
+        self.singleFolderPattern = helper.addLabeledControl(_("Single render fol&der pattern:"), wx.TextCtrl)
         self.singleFolderPattern.SetValue(_configured_pattern("singleFolderPattern", DEFAULT_SINGLE_FOLDER_PATTERN))
-        self.singleFilePattern = helper.addLabeledControl("Single file &name pattern:", wx.TextCtrl)
+        self.singleFilePattern = helper.addLabeledControl(_("Single file &name pattern:"), wx.TextCtrl)
         self.singleFilePattern.SetValue(_configured_pattern("singleFilePattern", DEFAULT_SINGLE_FILE_PATTERN))
-        self.batchFolderPattern = helper.addLabeledControl("Batch folde&r pattern:", wx.TextCtrl)
+        self.batchFolderPattern = helper.addLabeledControl(_("Batch folde&r pattern:"), wx.TextCtrl)
         self.batchFolderPattern.SetValue(_configured_pattern("batchFolderPattern", DEFAULT_BATCH_FOLDER_PATTERN))
-        self.batchFilePattern = helper.addLabeledControl("Batch file &pattern:", wx.TextCtrl)
+        self.batchFilePattern = helper.addLabeledControl(_("Batch file &pattern:"), wx.TextCtrl)
         self.batchFilePattern.SetValue(_configured_pattern("batchFilePattern", DEFAULT_BATCH_FILE_PATTERN))
         helper.addItem(wx.StaticText(
             self,
-            label=(
+            label=_(
                 "Available tokens: %source%, %engine%, %voice%, and %number%. "
                 "The number token is mainly for batch file names."
             ),
         ))
         helper.addItem(wx.StaticText(
             self,
-            label="Defaults: folders use %engine% - %voice%; single files use %source%; batch files use %number% - %source%."
+            label=_("Defaults: folders use %engine% - %voice%; single files use %source%; batch files use %number% - %source%.")
         ))
 
         format_choices = [fmt.upper() for fmt in _available_output_formats()]
-        self.defaultOutputFormat = helper.addLabeledControl("Default output forma&t:", wx.Choice, choices=format_choices)
+        self.defaultOutputFormat = helper.addLabeledControl(_("Default output forma&t:"), wx.Choice, choices=format_choices)
         current_fmt = _configured_output_format().upper()
         try:
             self.defaultOutputFormat.SetSelection(format_choices.index(current_fmt))
@@ -2685,21 +2748,21 @@ class SoundWaveSettingsPanel(gui.settingsDialogs.SettingsPanel):
             self.defaultOutputFormat.SetSelection(0)
         helper.addItem(wx.StaticText(
             self,
-            label="MP3, FLAC, and M4A are available when ffmpeg is installed and available on PATH."
+            label=_("MP3, FLAC, and M4A are available when ffmpeg is installed and available on PATH.")
         ))
 
-        self.skipSingleSaveDialog = wx.CheckBox(self, label="Skip single-render Save &As dialog")
+        self.skipSingleSaveDialog = wx.CheckBox(self, label=_("Skip single-render Save &As dialog"))
         self.skipSingleSaveDialog.SetValue(_cfg_get_bool("skipSingleSaveDialog", False))
-        self.skipBatchFormatDialog = wx.CheckBox(self, label="Skip batch output format &choice")
+        self.skipBatchFormatDialog = wx.CheckBox(self, label=_("Skip batch output format &choice"))
         self.skipBatchFormatDialog.SetValue(_cfg_get_bool("skipBatchFormatDialog", False))
         helper.addItem(self.skipSingleSaveDialog)
         helper.addItem(self.skipBatchFormatDialog)
 
-        self.autoOpenFolder = wx.CheckBox(self, label="&Open output folder when the whole render finishes")
+        self.autoOpenFolder = wx.CheckBox(self, label=_("&Open output folder when the whole render finishes"))
         self.autoOpenFolder.SetValue(_cfg_get_bool("autoOpenFolderAfterRender", False))
-        self.autoPlay = wx.CheckBox(self, label="Automatically pla&y rendered audio when rendering finishes")
+        self.autoPlay = wx.CheckBox(self, label=_("Automatically pla&y rendered audio when rendering finishes"))
         self.autoPlay.SetValue(_cfg_get_bool("autoPlayAfterRender", False))
-        self.showSummary = wx.CheckBox(self, label="Show render &summary when rendering finishes")
+        self.showSummary = wx.CheckBox(self, label=_("Show render &summary when rendering finishes"))
         self.showSummary.SetValue(_cfg_get_bool("showCompletionSummary", True))
         helper.addItem(self.autoOpenFolder)
         helper.addItem(self.autoPlay)
@@ -2718,7 +2781,7 @@ class SoundWaveSettingsPanel(gui.settingsDialogs.SettingsPanel):
             current = str(_cfg_get("recordBaseDir", "") or "") or _get_default_record_base_dir()
         dlg = wx.DirDialog(
             self,
-            "Choose default soundWave save folder",
+            _("Choose default soundWave save folder"),
             defaultPath=os.path.expandvars(os.path.expanduser(current)),
             style=wx.DD_DEFAULT_STYLE | wx.DD_DIR_MUST_EXIST,
         )

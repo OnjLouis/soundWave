@@ -140,7 +140,7 @@ def _wait_for_classic_player(
                 synth.cancel()
             except Exception:
                 pass
-            raise RuntimeError("Cancelled.")
+            raise RuntimeError(_("Cancelled."))
         total = int(player.total_bytes)
         if total > start_bytes:
             saw_new_audio = True
@@ -153,7 +153,7 @@ def _wait_for_classic_player(
         if saw_new_audio and player.last_audio_ts and time.time() - player.last_audio_ts >= quiet_seconds:
             return
         time.sleep(0.04)
-    raise RuntimeError("Orpheus Classic capture timed out.")
+    raise RuntimeError(_("Orpheus Classic capture timed out."))
 
 
 def render_with_orpheus_classic_capture(
@@ -177,7 +177,7 @@ def render_with_orpheus_classic_capture(
 
     synth = _get_synth_instance(synth_name)
     if synth is None or not hasattr(synth, "speak"):
-        raise RuntimeError("Couldn't create Orpheus Classic for capture.")
+        raise RuntimeError(_("Couldn't create Orpheus Classic for capture."))
 
     original_player = getattr(synth, "player", None)
     player = _OrpheusClassicCapturePlayer()
@@ -211,7 +211,7 @@ def render_with_orpheus_classic_capture(
             pass
 
     if player.total_bytes <= 0:
-        raise RuntimeError("Orpheus Classic capture produced no audio.")
+        raise RuntimeError(_("Orpheus Classic capture produced no audio."))
 
     with wave.open(out_wav, "wb") as wf:
         wf.setnchannels(player.channels)

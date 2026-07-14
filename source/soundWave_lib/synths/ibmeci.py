@@ -41,7 +41,7 @@ _ECI_LANGS = {
 
 def _eci_enumerate_voices_from_syn(dll_path):
     """Return a list of (voiceId:int, label:str). Includes Default (0) first."""
-    items = [(0, "Default (0)")]
+    items = [(0, _("Default (0)"))]
     try:
         base_dir = os.path.dirname(os.path.abspath(dll_path))
         for fn in os.listdir(base_dir):
@@ -72,7 +72,7 @@ class IbmEciOptionsDialog(wx.Dialog):
     SAMPLE_TEXT = "This is a voice and speed test."
 
     def __init__(self, parent, initial=None):
-        super().__init__(parent, title="soundWave - IBM ECI options")
+        super().__init__(parent, title=_("soundWave - IBM ECI options"))
         self.initial = initial or {}
         if not self.initial.get("dllPath"):
             found_dll = _find_ibmeci_dll()
@@ -88,17 +88,17 @@ class IbmEciOptionsDialog(wx.Dialog):
         grid.AddGrowableCol(1, 1)
 
         # Voice (friendly list from .SYN when available)
-        grid.Add(wx.StaticText(pnl, label="&Voice:"), 0, wx.ALIGN_CENTER_VERTICAL)
+        grid.Add(wx.StaticText(pnl, label=_("&Voice:")), 0, wx.ALIGN_CENTER_VERTICAL)
         self._voiceItems = _eci_enumerate_voices_from_syn(self.initial.get("dllPath", "") or "")
         self.voiceChoice = wx.Choice(pnl, choices=[lbl for (_vid, lbl) in self._voiceItems])
         grid.Add(self.voiceChoice, 1, wx.EXPAND)
 
         # Speed
-        grid.Add(wx.StaticText(pnl, label="&Speed:"), 0, wx.ALIGN_CENTER_VERTICAL)
+        grid.Add(wx.StaticText(pnl, label=_("&Speed:")), 0, wx.ALIGN_CENTER_VERTICAL)
         speedRow = wx.BoxSizer(wx.HORIZONTAL)
         self.speedSpin = wx.SpinCtrl(pnl, min=0, max=250, initial=int(self.initial.get("speed", 110) or 110))
         speedRow.Add(self.speedSpin, 0, wx.RIGHT, 8)
-        speedRow.Add(wx.StaticText(pnl, label="(0–250; default ~110)"), 0, wx.ALIGN_CENTER_VERTICAL)
+        speedRow.Add(wx.StaticText(pnl, label=_("(0-250; default ~110)")), 0, wx.ALIGN_CENTER_VERTICAL)
         grid.Add(speedRow, 0, wx.ALIGN_LEFT)
 
         # Apply initial voice selection (by stored voiceId)
@@ -124,7 +124,7 @@ class IbmEciOptionsDialog(wx.Dialog):
         self.autoSpeakCB = _add_autospeak_checkbox(pnl, root, "autoTestOnChangeIbmEci", default=True)
 
         btnRow = wx.BoxSizer(wx.HORIZONTAL)
-        self.testBtn = wx.Button(pnl, label="&Test")
+        self.testBtn = wx.Button(pnl, label=_("&Test"))
         btnRow.Add(self.testBtn, 0, wx.RIGHT, 8)
         self.helpBtn = _create_help_button(pnl)
         btnRow.Add(self.helpBtn, 0, wx.RIGHT, 8)
@@ -167,7 +167,7 @@ class IbmEciOptionsDialog(wx.Dialog):
     def _on_test(self, evt):
         dll_path = (self.dllPath or "").strip()
         if not dll_path or not os.path.isfile(dll_path):
-            _error("SoundWave could not find the installed Eloquence/IBMTTS speech engine.")
+            _error(_("SoundWave could not find the installed Eloquence/IBMTTS speech engine."))
             return
         try:
             tmp_dir = tempfile.mkdtemp(prefix="soundWave_test_")
@@ -186,7 +186,7 @@ class IbmEciOptionsDialog(wx.Dialog):
             _play_wav(tmp_wav)
             _defer_delete_dir(tmp_dir, tmp_wav)
         except Exception as e:
-            _error(f"Test failed:\n{e}")
+            _error(_("Test failed:\n{error}").format(error=e))
 
     def get_options(self):
         return {
@@ -276,12 +276,12 @@ def _render_with_ibmeci_proxy32(text: str, out_wav: str, dll_path: str, voice_id
     try:
         from synthDrivers._proxyEci import EciDLL
     except Exception as e:
-        raise RuntimeError("IBMTTS 32-bit proxy is not available; install or update the IBMTTS add-on.") from e
+        raise RuntimeError(_("IBMTTS 32-bit proxy is not available; install or update the IBMTTS add-on.")) from e
 
     if not out_wav.lower().endswith(".wav"):
         out_wav += ".wav"
     if not dll_path or not os.path.isfile(dll_path):
-        raise RuntimeError("The Eloquence/IBMTTS speech engine could not be found.")
+        raise RuntimeError(_("The Eloquence/IBMTTS speech engine could not be found."))
 
     samples = 3300
     pcm_rate = 11025
@@ -342,7 +342,7 @@ def _render_with_ibmeci_proxy32(text: str, out_wav: str, dll_path: str, voice_id
         if not handle:
             handle = dll.eciNewEx(0)
         if not handle:
-            raise RuntimeError("eciNewEx failed (no handle).")
+            raise RuntimeError(_("eciNewEx failed (no handle)."))
 
         try:
             req_vid = int(voice_id)
@@ -366,7 +366,7 @@ def _render_with_ibmeci_proxy32(text: str, out_wav: str, dll_path: str, voice_id
         dll.eciSetOutputBuffer(handle, samples)
         buffer_ptr["ptr"] = dll.get_audio_buffer_ptr()
         if not buffer_ptr["ptr"]:
-            raise RuntimeError("IBMTTS proxy did not expose an audio buffer.")
+            raise RuntimeError(_("IBMTTS proxy did not expose an audio buffer."))
 
         try: dll.eciSetParam(handle, 0, 1)
         except Exception: pass
@@ -384,11 +384,11 @@ def _render_with_ibmeci_proxy32(text: str, out_wav: str, dll_path: str, voice_id
             if cancel_evt is not None and cancel_evt.is_set():
                 try: dll.eciStop(handle)
                 except Exception: pass
-                raise RuntimeError("Cancelled.")
+                raise RuntimeError(_("Cancelled."))
             if done_evt.is_set():
                 break
             if time.time() >= startup_deadline:
-                raise RuntimeError("IBM ECI proxy produced no audio.")
+                raise RuntimeError(_("IBM ECI proxy produced no audio."))
             time.sleep(0.02)
 
         deadline = time.time() + float(TIMEOUT_SECONDS)
@@ -398,9 +398,9 @@ def _render_with_ibmeci_proxy32(text: str, out_wav: str, dll_path: str, voice_id
             if cancel_evt is not None and cancel_evt.is_set():
                 try: dll.eciStop(handle)
                 except Exception: pass
-                raise RuntimeError("Cancelled.")
+                raise RuntimeError(_("Cancelled."))
             if time.time() >= deadline:
-                raise RuntimeError("IBM ECI proxy render timed out.")
+                raise RuntimeError(_("IBM ECI proxy render timed out."))
             try:
                 last = progress.get("last_audio_ts") if progress is not None else None
                 if last and time.time() - float(last) > 3.0:
@@ -420,7 +420,7 @@ def _render_with_ibmeci_proxy32(text: str, out_wav: str, dll_path: str, voice_id
             pass
 
     if not os.path.isfile(out_wav) or os.path.getsize(out_wav) <= 44:
-        raise RuntimeError("IBM ECI proxy render failed: no audio was captured.")
+        raise RuntimeError(_("IBM ECI proxy render failed: no audio was captured."))
 
 
 def _render_with_ibmeci_dll(text: str, out_wav: str, dll_path: str, voice_id: int = 0, sample_rate_param: int = 2, speed: int = 110, progress: Optional[dict] = None, cancel_evt: Optional[threading.Event] = None):
@@ -436,7 +436,7 @@ def _render_with_ibmeci_dll(text: str, out_wav: str, dll_path: str, voice_id: in
     if not out_wav.lower().endswith(".wav"):
         out_wav += ".wav"
     if not dll_path or not os.path.isfile(dll_path):
-        raise RuntimeError("The Eloquence/IBMTTS speech engine could not be found.")
+        raise RuntimeError(_("The Eloquence/IBMTTS speech engine could not be found."))
     if _is_32bit_dll(dll_path) and sys.maxsize > 2**32:
         return _render_with_ibmeci_proxy32(
             text=text,
@@ -565,7 +565,7 @@ def _render_with_ibmeci_dll(text: str, out_wav: str, dll_path: str, voice_id: in
                 except Exception:
                     pass
             if not handle:
-                raise RuntimeError("eciNewEx failed (no handle).")
+                raise RuntimeError(_("eciNewEx failed (no handle)."))
 
             # If we had to fall back to voice 0 for initialization, try switching to the requested voice now.
             # Many ECI builds only initialize reliably with voice 0, but *can* switch voices post-init.
@@ -635,7 +635,7 @@ def _render_with_ibmeci_dll(text: str, out_wav: str, dll_path: str, voice_id: in
 
             ok = int(dll.eciSetOutputBuffer(handle, int(samples), pointer(buffer)))
             if not ok:
-                raise RuntimeError("eciSetOutputBuffer failed (no callback/buffer accepted).")
+                raise RuntimeError(_("eciSetOutputBuffer failed (no callback/buffer accepted)."))
 
             # Critical params (IBMTTS)
             try: dll.eciSetParam(handle, 0, 1)  # eciSynthMode
@@ -657,11 +657,11 @@ def _render_with_ibmeci_dll(text: str, out_wav: str, dll_path: str, voice_id: in
                 if cancel_evt is not None and cancel_evt.is_set():
                     try: dll.eciStop(handle)
                     except Exception: pass
-                    raise RuntimeError("Cancelled.")
+                    raise RuntimeError(_("Cancelled."))
                 # hard timeout safeguard
                 if (time.time() - start_time) > TIMEOUT_SECONDS:
                     done_evt.set()
-                    raise RuntimeError("IBM ECI render timed out.")
+                    raise RuntimeError(_("IBM ECI render timed out."))
                 # pump any pending messages (keeps some ECI builds happy)
                 try:
                     while user32.PeekMessageA(byref(msg), None, 0, 0, 1):
@@ -681,7 +681,7 @@ def _render_with_ibmeci_dll(text: str, out_wav: str, dll_path: str, voice_id: in
                 time.sleep(0.01)
 
             if not wrote_any["v"]:
-                raise RuntimeError("IBM ECI produced no audio (no waveform buffers).")
+                raise RuntimeError(_("IBM ECI produced no audio (no waveform buffers)."))
         except Exception as e:
             err_holder["err"] = e
         finally:
@@ -705,11 +705,11 @@ def _render_with_ibmeci_dll(text: str, out_wav: str, dll_path: str, voice_id: in
         if err_holder["err"] is not None:
             raise err_holder["err"]
         if cancel_evt is not None and cancel_evt.is_set():
-            raise RuntimeError("Cancelled.")
+            raise RuntimeError(_("Cancelled."))
         if first_audio_evt.is_set():
             break
         if time.time() >= startup_deadline:
-            raise RuntimeError("IBM ECI produced no audio (no buffers within 2 seconds).")
+            raise RuntimeError(_("IBM ECI produced no audio (no buffers within 2 seconds)."))
         time.sleep(0.02)
 
     # Wait for completion or error (TIMEOUT_SECONDS)
@@ -720,7 +720,7 @@ def _render_with_ibmeci_dll(text: str, out_wav: str, dll_path: str, voice_id: in
         if done_evt.is_set():
             break
         if cancel_evt is not None and cancel_evt.is_set():
-            raise RuntimeError("Cancelled.")
+            raise RuntimeError(_("Cancelled."))
         if time.time() >= deadline:
-            raise RuntimeError("IBM ECI render timed out.")
+            raise RuntimeError(_("IBM ECI render timed out."))
         time.sleep(0.05)

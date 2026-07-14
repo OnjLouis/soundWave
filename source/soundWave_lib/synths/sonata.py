@@ -42,7 +42,7 @@ def _list_sonata_voice_configs() -> List[Tuple[str, str, List[str]]]:
     try:
         from synthDrivers.sonata_neural_voices.tts_system import SonataTextToSpeechSystem
     except Exception as e:
-        raise RuntimeError("Sonata addon not installed (synthDrivers.sonata_neural_voices not found).") from e
+        raise RuntimeError(_("Sonata addon not installed (synthDrivers.sonata_neural_voices not found).")) from e
 
     voices = SonataTextToSpeechSystem.load_piper_voices_from_nvda_config_dir()
     results: List[Tuple[str, str, List[str]]] = []
@@ -75,7 +75,7 @@ def _list_sonata_voice_configs() -> List[Tuple[str, str, List[str]]]:
         results.append((label, cfg_path, speakers))
 
     if not results:
-        raise RuntimeError("No Sonata Piper voice configs were found.")
+        raise RuntimeError(_("No Sonata Piper voice configs were found."))
     return results
 
 
@@ -97,10 +97,10 @@ def _render_with_sonata_offline(
     import globalVars as gv
 
     if not start_grpc_server():
-        raise RuntimeError("Failed to start Sonata gRPC server.")
+        raise RuntimeError(_("Failed to start Sonata gRPC server."))
     port = getattr(gv, "SONATA_GRPC_SERVER_PORT", None)
     if not port:
-        raise RuntimeError("Sonata gRPC server did not provide a port.")
+        raise RuntimeError(_("Sonata gRPC server did not provide a port."))
 
     _ensure_grpc_experimental_shim()
 
@@ -116,7 +116,7 @@ def _render_with_sonata_offline(
         voice_info = service.LoadVoice(msgs.VoicePath(config_path=str(voice_config_path)))
         voice_id = getattr(voice_info, "voice_id", None)
         if not voice_id:
-            raise RuntimeError("Sonata LoadVoice returned no voice_id.")
+            raise RuntimeError(_("Sonata LoadVoice returned no voice_id."))
 
         # Apply speaker + speed
         length_scale = 0.0
@@ -194,40 +194,40 @@ class SonataOptionsDialog(wx.Dialog):
     SAMPLE_TEXT = "This is a soundWave test."
 
     def __init__(self, parent):
-        super().__init__(parent, title="soundWave - Sonata options")
+        super().__init__(parent, title=_("soundWave - Sonata options"))
         self.voices = _list_sonata_voice_configs()
 
         sizer = wx.BoxSizer(wx.VERTICAL)
 
         # Voice
         row1 = wx.BoxSizer(wx.HORIZONTAL)
-        row1.Add(wx.StaticText(self, label="&Voice:"), 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 8)
-        self.voiceChoice = wx.Choice(self, choices=[v[0] for v in self.voices] if self.voices else ["(no voices found)"])
+        row1.Add(wx.StaticText(self, label=_("&Voice:")), 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 8)
+        self.voiceChoice = wx.Choice(self, choices=[v[0] for v in self.voices] if self.voices else [_("(no voices found)")])
         row1.Add(self.voiceChoice, 1, wx.EXPAND)
         sizer.Add(row1, 0, wx.EXPAND | wx.ALL, 10)
 
         # Speaker
         row2 = wx.BoxSizer(wx.HORIZONTAL)
-        row2.Add(wx.StaticText(self, label="S&peaker:"), 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 8)
+        row2.Add(wx.StaticText(self, label=_("S&peaker:")), 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 8)
         self.speakerChoice = wx.Choice(self, choices=["0"])
         row2.Add(self.speakerChoice, 1, wx.EXPAND)
         sizer.Add(row2, 0, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.BOTTOM, 10)
 
         # Speed
         row3 = wx.BoxSizer(wx.HORIZONTAL)
-        row3.Add(wx.StaticText(self, label="&Speed (%):"), 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 8)
+        row3.Add(wx.StaticText(self, label=_("&Speed (%):")), 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 8)
         self.speedSpin = wx.SpinCtrl(self, min=50, max=400, initial=140)
         row3.Add(self.speedSpin, 0)
         sizer.Add(row3, 0, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.BOTTOM, 10)
 
         # Auto-test
-        self.autoTest = wx.CheckBox(self, label="&Auto-speak when changing voice, speaker, or speed")
+        self.autoTest = wx.CheckBox(self, label=_("&Auto-speak when changing voice, speaker, or speed"))
         self.autoTest.SetValue(bool(_cfg_get_bool("autoTestOnChangeSonata", True)))
         sizer.Add(self.autoTest, 0, wx.LEFT | wx.RIGHT | wx.BOTTOM, 10)
 
         # Buttons
         btnRow = wx.BoxSizer(wx.HORIZONTAL)
-        self.testBtn = wx.Button(self, label="&Test")
+        self.testBtn = wx.Button(self, label=_("&Test"))
         btnRow.Add(self.testBtn, 0, wx.RIGHT, 8)
         self.helpBtn = _create_help_button(self)
         btnRow.Add(self.helpBtn, 0, wx.RIGHT, 8)
@@ -326,7 +326,7 @@ class SonataOptionsDialog(wx.Dialog):
             )
             _play_wav(tmp)
         except Exception as e:
-            _error("Test failed:\n" + str(e))
+            _error(_("Test failed:\n") + str(e))
 
     def get_options(self, persist: bool = True) -> Dict[str, object]:
         if not self.voices:

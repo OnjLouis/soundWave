@@ -8,6 +8,9 @@ import threading
 import time
 import wave
 
+from soundWave_lib import runtime as _runtime
+_runtime.bind(globals())
+
 
 def is_pocket_tts_synth(synth_name: str) -> bool:
     name = (synth_name or "").strip().lower()
@@ -98,17 +101,17 @@ def render_to_wav(text: str, out_wav: str, synth, opts=None, progress=None, canc
         deadline = time.time() + 60.0
         while not ready.is_set():
             if cancel_evt.is_set():
-                raise RuntimeError("Cancelled.")
+                raise RuntimeError(_("Cancelled."))
             if time.time() >= deadline:
-                raise RuntimeError("Pocket TTS engine did not become ready.")
+                raise RuntimeError(_("Pocket TTS engine did not become ready."))
             time.sleep(0.05)
 
     engine = getattr(synth, "tts_engine", None)
     voice_path = getattr(synth, "_current_voice_path", None)
     if engine is None:
-        raise RuntimeError("Pocket TTS engine is not loaded.")
+        raise RuntimeError(_("Pocket TTS engine is not loaded."))
     if not voice_path:
-        raise RuntimeError("Pocket TTS has no selected voice file.")
+        raise RuntimeError(_("Pocket TTS has no selected voice file."))
 
     volume_factor = float(getattr(synth, "volume", 80) or 80) / 100.0
     total_bytes = 0
@@ -116,7 +119,7 @@ def render_to_wav(text: str, out_wav: str, synth, opts=None, progress=None, canc
     try:
         import numpy as np
     except Exception as e:
-        raise RuntimeError("Pocket TTS needs numpy to render.") from e
+        raise RuntimeError(_("Pocket TTS needs numpy to render.")) from e
 
     with wave.open(out_wav, "wb") as wf:
         wf.setnchannels(1)
@@ -124,17 +127,17 @@ def render_to_wav(text: str, out_wav: str, synth, opts=None, progress=None, canc
         wf.setframerate(24000)
         segments = [segment for segment in _split_for_pocket(text) if _has_tokens(engine, segment)]
         if not segments:
-            raise RuntimeError("Pocket TTS had no speakable text to render.")
+            raise RuntimeError(_("Pocket TTS had no speakable text to render."))
         if progress is not None:
             progress["chunksTotal"] = max(int(progress.get("chunksTotal", 1) or 1), len(segments))
         for segment_index, segment in enumerate(segments, start=1):
             if cancel_evt.is_set():
-                raise RuntimeError("Cancelled.")
+                raise RuntimeError(_("Cancelled."))
             if progress is not None:
                 progress["chunksCurrent"] = segment_index
             for chunk in engine.stream(text=segment, voice=voice_path, target_buffer_sec=0.2):
                 if cancel_evt.is_set():
-                    raise RuntimeError("Cancelled.")
+                    raise RuntimeError(_("Cancelled."))
                 if chunk is None:
                     continue
                 pcm = np.clip(chunk * volume_factor, -1.0, 1.0)
@@ -154,5 +157,5 @@ def render_to_wav(text: str, out_wav: str, synth, opts=None, progress=None, canc
             if progress is not None:
                 progress["chunksDone"] = segment_index
     if total_bytes <= 0:
-        raise RuntimeError("Pocket TTS produced no audio.")
+        raise RuntimeError(_("Pocket TTS produced no audio."))
     return "Pocket TTS direct"

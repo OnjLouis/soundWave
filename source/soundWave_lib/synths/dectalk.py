@@ -40,14 +40,14 @@ _DECTALK_VOICES: List[Tuple[str, str]] = [
 
 class DectalkOptionsDialog(wx.Dialog):
     def __init__(self, parent, initial: Optional[Dict[str, Any]] = None):
-        super().__init__(parent, title="soundWave - DECtalk options")
+        super().__init__(parent, title=_("soundWave - DECtalk options"))
         initial = initial or {}
 
         sizer = wx.BoxSizer(wx.VERTICAL)
 
         # Voice (primary)
         rowV = wx.BoxSizer(wx.HORIZONTAL)
-        rowV.Add(wx.StaticText(self, label="&Voice:"), 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 8)
+        rowV.Add(wx.StaticText(self, label=_("&Voice:")), 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 8)
         self.voiceChoice = wx.Choice(self, choices=[name for _, name in _DECTALK_VOICES])
         init_voice = str(initial.get("voice", "") or _cfg_get("dectalkVoice", "Paul") or "Paul")
         codes = [c for c, _ in _DECTALK_VOICES]
@@ -60,20 +60,20 @@ class DectalkOptionsDialog(wx.Dialog):
 
         # Rate (primary)
         rowR = wx.BoxSizer(wx.HORIZONTAL)
-        rowR.Add(wx.StaticText(self, label="&Rate:"), 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 8)
+        rowR.Add(wx.StaticText(self, label=_("&Rate:")), 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 8)
         init_rate = int(initial.get("rate", _cfg_get("dectalkRate", 180) or 180) or 180)
         self.rateSpin = wx.SpinCtrl(self, min=75, max=650, initial=init_rate)
         rowR.Add(self.rateSpin, 0)
         sizer.Add(rowR, 0, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.BOTTOM, 10)
 
         # Auto test
-        self.autoTest = wx.CheckBox(self, label="&Auto speak when changing settings")
+        self.autoTest = wx.CheckBox(self, label=_("&Auto speak when changing settings"))
         self.autoTest.SetValue(bool(initial.get("autoTest", _cfg_get_bool("autoTestOnChangeDectalk", True))))
         sizer.Add(self.autoTest, 0, wx.LEFT | wx.RIGHT | wx.BOTTOM, 10)
 
         # Buttons row: Test + OK/Cancel
         btnRow = wx.BoxSizer(wx.HORIZONTAL)
-        self.testBtn = wx.Button(self, label="&Test")
+        self.testBtn = wx.Button(self, label=_("&Test"))
         btnRow.Add(self.testBtn, 0, wx.RIGHT, 8)
         self.helpBtn = _create_help_button(self)
         btnRow.Add(self.helpBtn, 0, wx.RIGHT, 8)
@@ -123,7 +123,7 @@ class DectalkOptionsDialog(wx.Dialog):
             )
             _play_wav_file(tmp_wav)
         except Exception as e:
-            _error(f"DECtalk test failed:\n{e}")
+            _error(_("DECtalk test failed:\n{error}").format(error=e))
         finally:
             try:
                 shutil.rmtree(tmp_dir, ignore_errors=True)
@@ -232,7 +232,7 @@ def _render_with_dectalk_offline(
         dll_path = ""
 
     if not dll_path or not os.path.isfile(dll_path):
-        raise RuntimeError("DECtalk addon not installed or dectalk.dll not found.")
+        raise RuntimeError(_("DECtalk addon not installed or dectalk.dll not found."))
 
     dll_dir = os.path.dirname(os.path.abspath(dll_path))
     dectalk = cdll.LoadLibrary(dll_path)
@@ -313,7 +313,7 @@ def _render_with_dectalk_offline(
     wc.lpfnWndProc = ctypes.cast(wndproc, c_void_p)
     atom = windll.user32.RegisterClassExW(byref(wc))
     if not atom:
-        raise RuntimeError("DECtalk: could not register message window class.")
+        raise RuntimeError(_("DECtalk: could not register message window class."))
 
     hwnd = windll.user32.CreateWindowExW(
         0,
@@ -326,7 +326,7 @@ def _render_with_dectalk_offline(
         None,
     )
     if not hwnd:
-        raise RuntimeError("DECtalk: could not create message window.")
+        raise RuntimeError(_("DECtalk: could not create message window."))
 
     # DO_NOT_USE_AUDIO_DEVICE = 0x80000000
     dectalk.TextToSpeechStartup(hwnd, byref(handle), -1, 0x80000000)
@@ -392,7 +392,7 @@ def _render_with_dectalk_offline(
         pass
 
     if cancel_evt.is_set():
-        raise RuntimeError("Cancelled.")
+        raise RuntimeError(_("Cancelled."))
 
     # Write WAV
     with wave.open(out_wav, "wb") as wf:

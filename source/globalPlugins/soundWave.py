@@ -6,6 +6,12 @@ from __future__ import annotations
 import os
 import sys
 
+try:
+	import addonHandler
+	addonHandler.initTranslation()
+except Exception:
+	pass
+
 _ADDON_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if _ADDON_ROOT not in sys.path:
 	sys.path.insert(0, _ADDON_ROOT)
