@@ -1470,6 +1470,7 @@ from soundWave_lib.synths.nvda_capture import (
     GenericNvdaOptionsDialog,
 )
 from soundWave_lib.synths import google_tts
+from soundWave_lib.synths import prose2000
 from soundWave_lib.synths.orpheus_classic import (
     is_orpheus_classic_synth,
     render_with_orpheus_classic_capture,
@@ -2372,6 +2373,14 @@ def _do_render_impl():
 
                 if kind == "nvda":
                     joined = f"{nvda_name} {synth_label}".lower()
+                    if prose2000.is_prose2000_synth(nvda_name, synth_label):
+                        return prose2000.render_to_wav(
+                            chunk_text,
+                            chunk_wav,
+                            cancel_evt=cancel_evt,
+                            progress=result.progress,
+                            opts=nvda_opts,
+                        )
                     if google_synth is not None:
                         return google_tts.render_to_wav(
                             chunk_text,

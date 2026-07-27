@@ -228,6 +228,10 @@ Most settings dialogs include:
       <td>Available when the Orpheus Classic add-on is installed. soundWave uses a dedicated capture path for this older synthesizer so longer pauses and punctuation do not produce truncated output.</td>
     </tr>
     <tr>
+      <td><strong>Prose 2000</strong></td>
+      <td>Available when the Prose 2000 add-on is installed. soundWave renders through an independent Prose host instead of intercepting NVDA's global audio output. Rate, Rate Boost, and volume are applied without changing the active NVDA synthesizer.</td>
+    </tr>
+    <tr>
       <td><strong>DECtalk and Keynote Gold</strong></td>
       <td>Available when the required add-on is installed and discoverable. Keynote Gold exposes voice, speed, pitch, volume, and rate boost in its render dialog.</td>
     </tr>
@@ -251,6 +255,13 @@ soundWave uses NVDA's add-on update channel for store-compatible updates.
 </p>
 
 <h2>Changes</h2>
+
+<h3>1.2.1</h3>
+<ul>
+  <li>Added a dedicated Prose 2000 rendering backend using its isolated native host.</li>
+  <li>Made Prose voice testing and final rendering independent of soundWave's generic NVDA audio interception, avoiding conflicts with other audio add-ons.</li>
+  <li>Added Prose Rate Boost support alongside rate and volume in its soundWave options.</li>
+</ul>
 
 <h3>1.2.0</h3>
 <ul>

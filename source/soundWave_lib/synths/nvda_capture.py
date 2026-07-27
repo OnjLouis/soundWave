@@ -25,6 +25,7 @@ _runtime.bind(globals())
 from soundWave_lib import voice_utils
 from soundWave_lib.synths import google_tts
 from soundWave_lib.synths import pocket_tts
+from soundWave_lib.synths import prose2000
 
 # Keynote Gold / BestSpeech offline rendering + options
 # ----------------------------
@@ -569,6 +570,7 @@ class GenericNvdaOptionsDialog(wx.Dialog):
         self.synth_id = synth_id
         self.synth_label = synth_label or synth_id or "NVDA synth"
         self.is_google_tts = google_tts.is_google_tts_synth("%s %s" % (self.synth_id, self.synth_label))
+        self.is_prose2000 = prose2000.is_prose2000_synth(self.synth_id, self.synth_label)
         self.cfg_prefix = "genericNvda_" + _safe_config_key(self.synth_id)
         self.synth = None
         self.voices: List[object] = []
@@ -602,6 +604,13 @@ class GenericNvdaOptionsDialog(wx.Dialog):
         grid.Add(wx.StaticText(panel, label=_("&Rate:")), 0, wx.ALIGN_CENTER_VERTICAL)
         self.rateSpin = wx.SpinCtrl(panel, min=0, max=100, initial=int(_cfg_get(self.cfg_prefix + "_rate", _safe_getattr(self.synth, "rate", 50) or 50)))
         grid.Add(self.rateSpin, 0, wx.EXPAND)
+
+        self.rateBoostChk = None
+        if hasattr(self.synth, "rateBoost"):
+            grid.Add(wx.StaticText(panel, label=_("Rate &boost:")), 0, wx.ALIGN_CENTER_VERTICAL)
+            self.rateBoostChk = wx.CheckBox(panel)
+            self.rateBoostChk.SetValue(bool(_cfg_get_bool(self.cfg_prefix + "_rateBoost", _safe_getattr(self.synth, "rateBoost", False))))
+            grid.Add(self.rateBoostChk, 0, wx.EXPAND)
 
         grid.Add(wx.StaticText(panel, label=_("&Pitch:")), 0, wx.ALIGN_CENTER_VERTICAL)
         self.pitchSpin = wx.SpinCtrl(panel, min=0, max=100, initial=int(_cfg_get(self.cfg_prefix + "_pitch", _safe_getattr(self.synth, "pitch", 50) or 50)))
@@ -650,6 +659,8 @@ class GenericNvdaOptionsDialog(wx.Dialog):
         self.voiceChoice.Bind(wx.EVT_CHOICE, self._on_voice_changed)
         self.variantChoice.Bind(wx.EVT_CHOICE, self._maybe_auto_test)
         self.rateSpin.Bind(wx.EVT_SPINCTRL, self._maybe_auto_test)
+        if self.rateBoostChk is not None:
+            self.rateBoostChk.Bind(wx.EVT_CHECKBOX, self._maybe_auto_test)
         self.pitchSpin.Bind(wx.EVT_SPINCTRL, self._maybe_auto_test)
         self.volumeSpin.Bind(wx.EVT_SPINCTRL, self._maybe_auto_test)
         if self.eosSpin is not None:
@@ -758,7 +769,15 @@ class GenericNvdaOptionsDialog(wx.Dialog):
         tmp_wav = os.path.join(tmp_dir, "test.wav")
         try:
             opts = self.get_options(persist=False)
-            if self.is_google_tts:
+            if self.is_prose2000:
+                prose2000.render_to_wav(
+                    self.SAMPLE_TEXT,
+                    tmp_wav,
+                    cancel_evt=threading.Event(),
+                    progress={},
+                    opts=opts,
+                )
+            elif self.is_google_tts:
                 if not google_tts.ALLOW_MANUAL_TEST:
                     ui.message(_("Test is not available for this synthesizer."))
                     return
@@ -802,10 +821,14 @@ class GenericNvdaOptionsDialog(wx.Dialog):
         }
         if self.eosSpin is not None:
             opts["eosThreshold"] = max(0, min(100, int(self.eosSpin.GetValue())))
+        if self.rateBoostChk is not None:
+            opts["rateBoost"] = bool(self.rateBoostChk.GetValue())
         if persist:
             _cfg_set(self.cfg_prefix + "_voice", opts["voice"])
             _cfg_set(self.cfg_prefix + "_variant", opts["variant"])
             _cfg_set(self.cfg_prefix + "_rate", int(opts["rate"]))
+            if "rateBoost" in opts:
+                _cfg_set(self.cfg_prefix + "_rateBoost", bool(opts["rateBoost"]))
             _cfg_set(self.cfg_prefix + "_pitch", int(opts["pitch"]))
             _cfg_set(self.cfg_prefix + "_volume", int(opts["volume"]))
             if "eosThreshold" in opts:

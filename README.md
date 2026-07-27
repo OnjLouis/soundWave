@@ -28,6 +28,7 @@ soundWave is an NVDA add-on that renders text to an audio file using installed s
 
 ## Changes
 
+- 1.2.1: Added safe, direct Prose 2000 rendering through its isolated host. Voice testing and final rendering no longer use soundWave's generic NVDA audio interception for Prose, preventing audio-hook conflicts and preserving Prose rate, Rate Boost, and volume settings.
 - 1.2.0: Added optional post-render Sonic-style pitch processing, Polish and Slovak interface localization, Polish and Slovak manuals, and an output-folder write check before rendering starts. Closes issues #7 and #8. Based on PR #9 and PR #10.
 - 1.1.2: Added a dedicated Orpheus Classic capture path. SoundWave now renders Orpheus Classic through its normal NVDA driver flow while capturing the generated audio directly, which avoids very short/truncated output from the generic NVDA capture path.
 - 1.1.1: Improved long Google TTS renders by reusing one bridge instance, using smaller Google chunks, and retrying recoverable DevTools bridge failures. Added progress minimization/restoration and friendlier long-duration reporting. Restored generic NVDA synth settings after capture to reduce voice/language state leaks. Closes issue #5.
