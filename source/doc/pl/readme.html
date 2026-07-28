@@ -79,6 +79,7 @@ Otwórz ustawienia NVDA i wybierz kategorię <strong>soundWave</strong>, aby ust
   <li><strong>Domyślny folder zapisu:</strong> bazowy folder nagrań używany w pierwszym oknie soundWave. Pozostawienie pola pustego używa folderu <strong>Dokumenty\SoundWave</strong>, dzięki czemu wyrenderowane pliki trafiają w miejsce łatwe do odnalezienia.</li>
   <li><strong>Nazywanie folderów i plików:</strong> osobne szablony kontrolują foldery pojedynczego renderowania, pojedyncze pliki, foldery wsadowe i pliki wsadowe. Poniższe tabele pokazują ustawienia domyślne, znaczniki i przykłady.</li>
   <li><strong>Domyślny format wyjściowy:</strong> wybierz WAV albo MP3, FLAC lub M4A, gdy dostępny jest ffmpeg. Opcjonalne pola wyboru pozwalają pominąć okno Zapisz jako dla pojedynczego renderowania oraz wybór formatu dla trybu wsadowego.</li>
+  <li><strong>Końcowa zmiana wysokości dźwięku:</strong> opcjonalnie zmienia wysokość dźwięku po wyrenderowaniu audio przez syntezator. <strong>Wysokość w skali Sonic</strong> ma zakres od 0 do 100, w którym 50 nie wprowadza zmian. Niższe wartości obniżają wysokość gotowego pliku, a wyższe ją podnoszą. Pełny zakres odpowiada w przybliżeniu od -12 do +12 półtonów i wymaga ffmpeg z obsługą rubberband.</li>
   <li><strong>Po renderowaniu:</strong> wybierz, czy soundWave ma otworzyć folder wyjściowy po zakończeniu całego renderowania, odtworzyć plik audio w domyślnym odtwarzaczu albo pokazać podsumowanie renderowania. Automatyczne odtwarzanie w trybie wsadowym otwiera wyrenderowane pliki jako listę odtwarzania. Automatyczne otwieranie folderu nie otwiera ponownie folderu, który soundWave już otworzył w bieżącej sesji NVDA.</li>
 </ul>
 
@@ -227,8 +228,12 @@ Większość okien ustawień zawiera:
       <td>Dostępny, gdy zainstalowany jest dodatek Orpheus Classic. soundWave używa dedykowanej ścieżki przechwytywania dla tego starszego syntezatora, dzięki czemu dłuższe pauzy i znaki interpunkcyjne nie powodują ucinania wyjścia.</td>
     </tr>
     <tr>
+      <td><strong>Prose 2000</strong></td>
+      <td>Dostępny, gdy zainstalowany jest dodatek Prose 2000. soundWave renderuje za pomocą niezależnego hosta Prose zamiast przechwytywać globalne wyjście audio NVDA. Tempo, podkręcanie szybkości i głośność są stosowane bez zmiany aktywnego syntezatora NVDA.</td>
+    </tr>
+    <tr>
       <td><strong>DECtalk i Keynote Gold</strong></td>
-      <td>Dostępne, gdy wymagany dodatek jest zainstalowany i możliwy do wykrycia. Keynote Gold udostępnia w oknie renderowania głos, szybkość, wysokość, głośność i przyspieszenie tempa.</td>
+      <td>Dostępne, gdy wymagany dodatek jest zainstalowany i możliwy do wykrycia. Keynote Gold udostępnia w oknie renderowania głos, szybkość, wysokość, głośność i podkręcanie szybkości.</td>
     </tr>
     <tr>
       <td><strong>Inne syntezatory NVDA</strong></td>
@@ -250,6 +255,30 @@ soundWave używa kanału aktualizacji dodatków NVDA zgodnego z dystrybucją prz
 </p>
 
 <h2>Zmiany</h2>
+
+<h3>1.2.2</h3>
+<ul>
+  <li>Zaktualizowano polskie i słowackie tłumaczenia interfejsu oraz podręczniki na podstawie <a href="https://github.com/OnjLouis/soundWave/issues/11">zgłoszenia #11</a> autorstwa Kazimierza Parzycha i DJ Graco.</li>
+  <li>Dodano automatyczne generowanie aktualnego szablonu tłumaczeń <code>soundWave.pot</code> dla każdego wydania GitHub.</li>
+  <li>Zamknięto <a href="https://github.com/OnjLouis/soundWave/issues/11">zgłoszenie #11</a>.</li>
+</ul>
+
+<h3>1.2.1</h3>
+<ul>
+  <li>Dodano dedykowany mechanizm renderowania Prose 2000 korzystający z jego odizolowanego natywnego hosta.</li>
+  <li>Testowanie głosu Prose i końcowe renderowanie uniezależniono od ogólnego przechwytywania dźwięku NVDA przez soundWave, co zapobiega konfliktom z innymi dodatkami audio.</li>
+  <li>Dodano obsługę przyspieszenia tempa Prose obok tempa i głośności w jego opcjach soundWave.</li>
+</ul>
+
+<h3>1.2.0</h3>
+<ul>
+  <li>Dodano opcjonalne przetwarzanie wysokości dźwięku po renderowaniu. Jest ono stosowane do ukończonego pliku WAV przed utworzeniem końcowego wyniku WAV, MP3, FLAC lub M4A, dzięki czemu istniejące ścieżki renderowania syntezatorów pozostają bez zmian. Ustawienie jest domyślnie wyłączone, korzysta ze skali wysokości Sonic od 0 do 100, a pełny zakres odpowiada w przybliżeniu od -12 do +12 półtonów.</li>
+  <li>Dodano polską i słowacką lokalizację interfejsu na podstawie <a href="https://github.com/OnjLouis/soundWave/pull/10">#10</a> autorstwa Kazimierza Parzycha i DJ Graco.</li>
+  <li>Dodano polski i słowacki podręcznik na podstawie <a href="https://github.com/OnjLouis/soundWave/pull/9">#9</a> autorstwa Kazimierza Parzycha.</li>
+  <li>Dodano sprawdzanie możliwości zapisu w folderze wyjściowym przed rozpoczęciem renderowania, dzięki czemu niedostępne lub uszkodzone foldery szybko powodują czytelny błąd soundWave zamiast pozwalać na renderowanie, które zakończyłoby się niepowodzeniem dopiero podczas końcowej konwersji.</li>
+  <li>Zamknięto <a href="https://github.com/OnjLouis/soundWave/issues/7">#7</a>.</li>
+  <li>Zamknięto <a href="https://github.com/OnjLouis/soundWave/issues/8">#8</a>.</li>
+</ul>
 
 <h3>1.1.2</h3>
 <ul>

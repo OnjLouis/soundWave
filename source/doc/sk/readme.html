@@ -79,6 +79,7 @@ Otvorte nastavenia NVDA a vyberte kategóriu <strong>soundWave</strong>, aby ste
   <li><strong>Predvolený priečinok uloženia:</strong> základný priečinok nahrávok používaný v prvom dialógu soundWave. Ak ho ponecháte prázdny, použije sa <strong>Dokumenty\SoundWave</strong>, takže vyrenderované súbory zostanú na mieste, ktoré väčšina používateľov ľahko nájde.</li>
   <li><strong>Pomenovanie priečinkov a súborov:</strong> samostatné šablóny riadia priečinky jedného renderovania, jednotlivé súbory, dávkové priečinky a dávkové súbory. Tabuľky nižšie ukazujú predvolené hodnoty, značky a príklady.</li>
   <li><strong>Predvolený výstupný formát:</strong> vyberte WAV alebo MP3, FLAC či M4A, keď je dostupný ffmpeg. Voliteľné začiarkavacie políčka umožňujú preskočiť dialóg Uložiť ako pre jedno renderovanie a výber formátu pre dávku.</li>
+  <li><strong>Dodatočné spracovanie výšky:</strong> voliteľne použije zmenu výšky v štýle Sonic po tom, ako syntetizátor vyrenderuje zvuk. <strong>Výška Sonic</strong> používa škálu od 0 do 100, pričom hodnota 50 znamená bez zmeny. Nižšie hodnoty znižujú výšku výsledného súboru a vyššie ju zvyšujú. Celý rozsah zodpovedá približne -12 až +12 poltónom a vyžaduje ffmpeg s podporou rubberband.</li>
   <li><strong>Po renderovaní:</strong> vyberte, či má soundWave po dokončení celého renderovania otvoriť výstupný priečinok, otvoriť zvuk v predvolenom prehrávači médií alebo zobraziť súhrn renderovania. Automatické prehratie dávky otvorí vyrenderované súbory ako zoznam prehrávania. Automatické otvorenie priečinka znovu neotvorí priečinok, ktorý už soundWave otvoril v aktuálnej relácii NVDA.</li>
 </ul>
 
@@ -227,6 +228,10 @@ Väčšina dialógov nastavení obsahuje:
       <td>Dostupný, keď je nainštalovaný doplnok Orpheus Classic. soundWave používa pre tento starší syntetizér vyhradenú zachytávaciu cestu, aby dlhšie pauzy a interpunkcia nespôsobovali skrátený výstup.</td>
     </tr>
     <tr>
+      <td><strong>Prose 2000</strong></td>
+      <td>Dostupný, keď je nainštalovaný doplnok Prose 2000. soundWave renderuje cez nezávislého hostiteľa Prose namiesto zachytávania globálneho zvukového výstupu NVDA. Tempo, zosilnenie tempa a hlasitosť sa použijú bez zmeny aktívneho syntetizátora NVDA.</td>
+    </tr>
+    <tr>
       <td><strong>DECtalk a Keynote Gold</strong></td>
       <td>Dostupné, keď je požadovaný doplnok nainštalovaný a zistiteľný. Keynote Gold v dialógu renderovania sprístupňuje hlas, rýchlosť, výšku, hlasitosť a zrýchlenie tempa.</td>
     </tr>
@@ -250,6 +255,30 @@ soundWave používa aktualizačný kanál doplnkov NVDA kompatibilný s distrib�
 </p>
 
 <h2>Zmeny</h2>
+
+<h3>1.2.2</h3>
+<ul>
+  <li>Aktualizované poľské a slovenské preklady rozhrania a príručky na základe <a href="https://github.com/OnjLouis/soundWave/issues/11">hlásenia #11</a> od Kazimierza Parzycha a DJ Graca.</li>
+  <li>Pridané automatické generovanie aktuálnej prekladovej šablóny <code>soundWave.pot</code> pre každé vydanie na GitHube.</li>
+  <li>Uzatvára <a href="https://github.com/OnjLouis/soundWave/issues/11">hlásenie #11</a>.</li>
+</ul>
+
+<h3>1.2.1</h3>
+<ul>
+  <li>Pridaný samostatný mechanizmus renderovania Prose 2000 využívajúci jeho izolovaného natívneho hostiteľa.</li>
+  <li>Testovanie hlasu Prose a výsledné renderovanie boli oddelené od všeobecného zachytávania zvuku NVDA v soundWave, čím sa predchádza konfliktom s inými zvukovými doplnkami.</li>
+  <li>V možnostiach Prose v soundWave bola popri tempe a hlasitosti pridaná podpora zosilnenia tempa.</li>
+</ul>
+
+<h3>1.2.0</h3>
+<ul>
+  <li>Pridané voliteľné spracovanie výšky po renderovaní. Používa sa na dokončený zvuk WAV pred vytvorením konečného výstupu WAV, MP3, FLAC alebo M4A, takže existujúce cesty renderovania syntetizátorov zostávajú nezmenené. Nastavenie je predvolene vypnuté, používa škálu výšky Sonic od 0 do 100 a celý rozsah zodpovedá približne -12 až +12 poltónom.</li>
+  <li>Pridaná poľská a slovenská lokalizácia rozhrania na základe <a href="https://github.com/OnjLouis/soundWave/pull/10">#10</a> od Kazimierza Parzycha a DJ Graca.</li>
+  <li>Pridaná poľská a slovenská príručka na základe <a href="https://github.com/OnjLouis/soundWave/pull/9">#9</a> od Kazimierza Parzycha.</li>
+  <li>Pred začiatkom renderovania bola pridaná kontrola možnosti zápisu do výstupného priečinka, takže nedostupné alebo poškodené priečinky rýchlo vyvolajú zrozumiteľnú chybu soundWave namiesto toho, aby renderovanie najprv prebehlo a zlyhalo až pri konečnej konverzii.</li>
+  <li>Uzatvára <a href="https://github.com/OnjLouis/soundWave/issues/7">#7</a>.</li>
+  <li>Uzatvára <a href="https://github.com/OnjLouis/soundWave/issues/8">#8</a>.</li>
+</ul>
 
 <h3>1.1.2</h3>
 <ul>

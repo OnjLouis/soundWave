@@ -1,0 +1,35 @@
+name: Translation template
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: write
+
+jobs:
+  generate-pot:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the released source
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: ${{ github.event.release.tag_name }}
+
+      - name: Install the pinned translation tool
+        run: python3 -m pip install --require-hashes -r translation-requirements.txt
+
+      - name: Generate the translation template
+        run: >-
+          pybabel extract
+          -F babel.cfg
+          --sort-by-file
+          --project=soundWave
+          --version="${{ github.event.release.tag_name }}"
+          -o soundWave.pot
+          .
+
+      - name: Attach the template to the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release upload "${{ github.event.release.tag_name }}" soundWave.pot --clobber
