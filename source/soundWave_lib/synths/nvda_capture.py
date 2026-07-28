@@ -593,13 +593,20 @@ class GenericNvdaOptionsDialog(wx.Dialog):
         grid = wx.FlexGridSizer(rows=0, cols=2, vgap=8, hgap=8)
         grid.AddGrowableCol(1, 1)
 
-        grid.Add(wx.StaticText(panel, label=_("&Voice:")), 0, wx.ALIGN_CENTER_VERTICAL)
+        self.voiceLabel = wx.StaticText(panel, label=_("&Voice:"))
         self.voiceChoice = wx.Choice(panel)
-        grid.Add(self.voiceChoice, 1, wx.EXPAND)
-
-        grid.Add(wx.StaticText(panel, label=_("Varia&nt:")), 0, wx.ALIGN_CENTER_VERTICAL)
+        self.variantLabel = wx.StaticText(panel, label=_("Varia&nt:"))
         self.variantChoice = wx.Choice(panel)
-        grid.Add(self.variantChoice, 1, wx.EXPAND)
+        if self.is_prose2000:
+            self.voiceLabel.Hide()
+            self.voiceChoice.Hide()
+            self.variantLabel.Hide()
+            self.variantChoice.Hide()
+        else:
+            grid.Add(self.voiceLabel, 0, wx.ALIGN_CENTER_VERTICAL)
+            grid.Add(self.voiceChoice, 1, wx.EXPAND)
+            grid.Add(self.variantLabel, 0, wx.ALIGN_CENTER_VERTICAL)
+            grid.Add(self.variantChoice, 1, wx.EXPAND)
 
         grid.Add(wx.StaticText(panel, label=_("&Rate:")), 0, wx.ALIGN_CENTER_VERTICAL)
         self.rateSpin = wx.SpinCtrl(panel, min=0, max=100, initial=int(_cfg_get(self.cfg_prefix + "_rate", _safe_getattr(self.synth, "rate", 50) or 50)))

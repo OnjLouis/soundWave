@@ -42,10 +42,28 @@ def render_to_wav(
         out_wav += ".wav"
 
     rate = max(0, min(100, int(opts.get("rate", 50) or 50)))
+    pitch = max(0, min(100, int(opts.get("pitch", 50) or 50)))
     volume = max(0, min(100, int(opts.get("volume", 100) or 100)))
     rate_boost = bool(opts.get("rateBoost", False))
     host = driver._ProseHost()
-    processor = driver._AudioProcessor(rate, rate_boost, volume)
+    processor = None
+    native_controls = all(
+        hasattr(driver.SynthDriver, name)
+        for name in ("_mapNativeRate", "_mapNativePitch", "_mapNativeVolume")
+    )
+    if native_controls:
+        control_prefix = (
+            f"\x1b[{driver.SynthDriver._mapNativeRate(rate)}r"
+            "\x1b[0V"
+            f"\x1b[{driver.SynthDriver._mapNativePitch(pitch)}p"
+            f"\x1b[{driver.SynthDriver._mapNativeVolume(volume)}a"
+        )
+        cleaned = control_prefix + cleaned
+    else:
+        processor_type = getattr(driver, "_AudioProcessor", None)
+        if processor_type is None:
+            raise RuntimeError(_("The Prose 2000 host or firmware files are unavailable."))
+        processor = processor_type(rate, rate_boost, volume)
     pcm = bytearray()
     generation = 1
     last_progress = time.monotonic()
@@ -69,7 +87,7 @@ def render_to_wav(
             if message_generation != generation:
                 continue
             if message_type == driver._AUDIO:
-                audio = processor.process(payload)
+                audio = processor.process(payload) if processor is not None else payload
                 if audio:
                     pcm.extend(audio)
                     if progress is not None:
@@ -79,7 +97,8 @@ def render_to_wav(
                         progress["channels"] = 1
                         progress["sampwidth"] = 2
             elif message_type == driver._DONE:
-                pcm.extend(processor.finish())
+                if processor is not None:
+                    pcm.extend(processor.finish())
                 break
             elif message_type == driver._CANCELLED:
                 raise RuntimeError(_("Cancelled."))
@@ -96,4 +115,4 @@ def render_to_wav(
         output.setsampwidth(2)
         output.setframerate(10000)
         output.writeframes(pcm)
-    return "Prose 2000 host capture"
+    return "Prose 2000 native host capture" if native_controls else "Prose 2000 host capture"
