@@ -28,6 +28,7 @@ soundWave is an NVDA add-on that renders text to an audio file using installed s
 
 ## Changes
 
+- 1.2.4: Added language selection for Keynote Gold/BestSpeech and generic NVDA synthesizers that expose a language setting. Pocket TTS render options now include its native 1 to 10 Flow steps quality control. Long Pocket TTS renders recover safely from the model's known zero-length transformer-state failure by retrying only the affected segment in smaller pieces, without retaining partial audio.
 - 1.2.3: Updated Prose 2000 rendering to use the synth's native firmware Rate, Pitch and Volume controls. Removed inert Voice and Variant choices from the Prose options dialog while retaining compatibility with older Prose builds.
 - 1.2.2: Updated the Polish and Slovak interface translations and manuals from issue #11. Added a release workflow that generates and attaches a current translation template (`soundWave.pot`) for translators. Closes issue #11.
 - 1.2.1: Added safe, direct Prose 2000 rendering through its isolated host. Voice testing and final rendering no longer use soundWave's generic NVDA audio interception for Prose, preventing audio-hook conflicts and preserving Prose rate, Rate Boost, and volume settings.

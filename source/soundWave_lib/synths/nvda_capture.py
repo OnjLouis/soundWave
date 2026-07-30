@@ -59,6 +59,34 @@ def _list_bestspeech_voices() -> List[str]:
         ]
 
 
+def _list_bestspeech_languages():
+    """Return installed BestSpeech language ids and display names."""
+    try:
+        import synthDrivers.bestspeech as bs
+        base_path = os.path.dirname(bs.__file__)
+        result = []
+        for language_id, details in (getattr(bs, "languages", {}) or {}).items():
+            label, dll_name = str(details[0]), str(details[1])
+            if os.path.isfile(os.path.join(base_path, dll_name)):
+                result.append((str(language_id), label))
+        if result:
+            return result
+    except Exception:
+        pass
+    return [("classic", _("Default"))]
+
+
+def _wait_bestspeech_idle(module, cancel_evt, timeout: float = 60.0) -> None:
+    deadline = time.time() + timeout
+    queue_obj = getattr(module, "bgQueue", None)
+    while queue_obj is not None and int(getattr(queue_obj, "unfinished_tasks", 0) or 0) > 0:
+        if cancel_evt.is_set():
+            raise RuntimeError(_("Cancelled."))
+        if time.time() >= deadline:
+            raise RuntimeError(_("BestSpeech did not finish changing language."))
+        time.sleep(0.02)
+
+
 def _get_bestspeech_voice_defaults(voice: str = "fred") -> Dict[str, int]:
     """Read Keynote Gold defaults after the selected voice applies its preset."""
     defaults = {"rate": 90, "pitch": 50, "volume": 80}
@@ -89,9 +117,10 @@ def _get_bestspeech_voice_defaults(voice: str = "fred") -> Dict[str, int]:
 class _BestSpeechCapturePlayer:
     """A minimal nvwave.WavePlayer-like object that captures PCM instead of playing it."""
 
-    def __init__(self):
+    def __init__(self, sample_rate: int = 11025):
         self.pcm = bytearray()
         self._on_done = None
+        self.sample_rate = max(1, int(sample_rate or 11025))
 
     def feed(self, data, size, onDone=None):
         try:
@@ -129,6 +158,9 @@ class _BestSpeechCapturePlayer:
         return
 
     def pause(self, switch):
+        return
+
+    def close(self):
         return
 
 
@@ -216,7 +248,36 @@ def _snapshot_synth_settings(synth) -> Dict[str, Any]:
                 snapshot[attr] = getattr(synth, attr)
         except Exception:
             pass
+    language_id, _languages = _discover_language_setting(synth)
+    if language_id and language_id not in snapshot:
+        try:
+            snapshot[language_id] = getattr(synth, language_id)
+        except Exception:
+            pass
     return snapshot
+
+
+def _discover_language_setting(synth):
+    """Return the synth setting id and values for an exposed language selector."""
+    candidates = []
+    try:
+        for setting in getattr(synth, "supportedSettings", ()) or ():
+            setting_id = str(getattr(setting, "id", "") or "")
+            if setting_id and (setting_id.lower() == "language" or setting_id.lower().endswith("language")):
+                candidates.append(setting_id)
+    except Exception:
+        pass
+    if "language" not in candidates:
+        candidates.append("language")
+    for setting_id in candidates:
+        available_name = "available" + setting_id.capitalize() + "s"
+        try:
+            values = voice_utils.normalise_voice_infos(getattr(synth, available_name))
+        except Exception:
+            values = []
+        if values:
+            return setting_id, values
+    return "", []
 
 
 def _restore_synth_settings(synth, snapshot: Dict[str, Any]) -> None:
@@ -288,6 +349,13 @@ def _render_with_nvda_generic_capture(
         if is_pocket_tts:
             return pocket_tts.render_to_wav(text, out_wav, synth, opts=opts, progress=progress, cancel_evt=cancel_evt)
         if opts:
+            try:
+                language_setting = str(opts.get("languageSettingId", "") or "")
+                language = str(opts.get("language", "") or "")
+                if language_setting and language and hasattr(synth, language_setting):
+                    setattr(synth, language_setting, language)
+            except Exception:
+                pass
             try:
                 voice = str(opts.get("voice", "") or "")
                 if voice and hasattr(synth, "voice"):
@@ -406,14 +474,11 @@ def _render_with_bestspeech_offline(
     pitch: int = 50,
     volume: int = 100,
     rate_boost: bool = False,
+    language: str = "classic",
     cancel_evt: Optional[threading.Event] = None,
     progress: Optional[Dict[str, Any]] = None,
 ) -> str:
-    """Render BestSpeech/Keynote Gold to a WAV by calling the synth driver's own _speakBg.
-
-    This is the most reliable path because it matches what the addon does in normal NVDA speech,
-    but swaps the WavePlayer with a capture-only implementation.
-    """
+    """Render through BestSpeech's speech path while replacing only its audio player."""
     cancel_evt = cancel_evt or threading.Event()
     if not out_wav.lower().endswith(".wav"):
         out_wav += ".wav"
@@ -426,29 +491,45 @@ def _render_with_bestspeech_offline(
     except Exception as e:
         raise RuntimeError(_("BestSpeech addon not installed (synthDrivers.bestspeech not found).")) from e
 
-    drv = bs.SynthDriver()
-    cap = _BestSpeechCapturePlayer()
+    class _CaptureSynthDriver(bs.SynthDriver):
+        def _createPlayer(self, sampleRate):
+            self.player = _BestSpeechCapturePlayer(sample_rate=sampleRate or 11025)
+
+        def _stopEngine(self):
+            helper = getattr(self, "_helper", None)
+            streams = []
+            if helper is not None:
+                streams = [
+                    stream
+                    for stream in (
+                        getattr(helper, "stdin", None),
+                        getattr(helper, "stdout", None),
+                        getattr(helper, "stderr", None),
+                    )
+                    if stream is not None
+                ]
+            try:
+                return super()._stopEngine()
+            finally:
+                for stream in streams:
+                    try:
+                        stream.close()
+                    except Exception:
+                        pass
+
+    drv = _CaptureSynthDriver()
     done_evt = threading.Event()
 
-    # Wrap cap.feed so we can track "done"
-    orig_feed = cap.feed
-
-    def _feed(data, size, onDone=None):
-        if cancel_evt.is_set():
-            return
-        if onDone is not None:
-            # mark done when the driver signals completion
-            def _done_wrapper():
-                try:
-                    onDone()
-                finally:
-                    done_evt.set()
-            return orig_feed(data, size, onDone=_done_wrapper)
-        return orig_feed(data, size, onDone=None)
-
-    cap.feed = _feed  # type: ignore
-
     try:
+        try:
+            if language and hasattr(drv, "bstlanguage"):
+                drv.bstlanguage = str(language)
+                _wait_bestspeech_idle(bs, cancel_evt)
+        except RuntimeError:
+            raise
+        except Exception:
+            pass
+
         # Apply options (voice id is what the addon expects)
         try:
             drv.voice = str(voice or "fred")
@@ -475,50 +556,25 @@ def _render_with_bestspeech_offline(
             except Exception:
                 pass
 
-        # Swap player
-        try:
-            drv.player = cap
-        except Exception:
-            pass
+        cap = drv.player
+        if not isinstance(cap, _BestSpeechCapturePlayer):
+            raise RuntimeError(_("BestSpeech did not initialize its capture player."))
+        orig_feed = cap.feed
 
-        # Build text exactly like the driver does (including its control sequences)
-        lst = ["~n10,0]" if getattr(drv, "_abbreviations", True) else "~n10,1]",
-               "~~1,0]" if getattr(drv, "_phrasePrediction", True) else "~~1,1]"]
-        lst.append(text or "")
-        t = " ".join(lst)
-        try:
-            if getattr(drv, "_numberProcessing", False):
-                t = drv._formatNumbers(t)
-        except Exception:
-            pass
-        # Use the addon's voice preset table directly so voice selection always affects *all* parameters.
-        preset = {}
-        try:
-            preset = dict(getattr(bs, "voices", {}) or {}).get(str(voice or "fred"), {}) or {}
-        except Exception:
-            preset = {}
-        v_headsize = preset.get("headsize", getattr(drv, "headsize", 1))
-        v_excitation = preset.get("excitation", getattr(drv, "_excitation", 3))
-        v_inflection = preset.get("inflection", getattr(drv, "_inflection", 110))
-        v_unvoiced = preset.get("unvoicedVolume", getattr(drv, "_unvoicedVolume", 0))
-        v_pitch = getattr(drv, "_pitch", preset.get("pitch", 130))
+        def _feed(data, size, onDone=None):
+            if cancel_evt.is_set():
+                return
+            if onDone is not None:
+                def _done_wrapper():
+                    try:
+                        onDone()
+                    finally:
+                        done_evt.set()
+                return orig_feed(data, size, onDone=_done_wrapper)
+            return orig_feed(data, size, onDone=None)
 
-        t = f"~r{getattr(drv, '_rate', 175)}]~e{v_excitation}]~v{v_headsize}]~f{v_pitch}]~g{getattr(drv, '_volume', 100)}]~u{v_unvoiced}]~h{v_inflection}]{t} ~|"
-
-        idx = []
-        # Run driver speak routine in a worker thread so we can time out/cancel safely
-        err_holder = {"err": None}
-
-        def _run():
-            try:
-                drv._speakBg(t, idx)
-            except Exception as e:
-                err_holder["err"] = e
-            finally:
-                done_evt.set()
-
-        th = threading.Thread(target=_run, daemon=True)
-        th.start()
+        cap.feed = _feed  # type: ignore
+        drv.speak([text or ""])
 
         deadline = time.time() + float(TIMEOUT_SECONDS)
         while not done_evt.is_set():
@@ -536,18 +592,14 @@ def _render_with_bestspeech_offline(
                 raise RuntimeError(_("BestSpeech render timed out."))
             time.sleep(0.02)
 
-        if err_holder["err"] is not None:
-            raise RuntimeError(_("BestSpeech driver speak() failed.")) from err_holder["err"]
-
         pcm = bytes(cap.pcm)
         if not pcm:
             raise RuntimeError(_("BestSpeech produced no audio (no callback data)."))
 
-        # BestSpeech default format: 11025Hz mono 16-bit
         with wave.open(out_wav, "wb") as wf:
             wf.setnchannels(1)
             wf.setsampwidth(2)
-            wf.setframerate(11025)
+            wf.setframerate(cap.sample_rate)
             wf.writeframes(pcm)
 
         return "BestSpeech"
@@ -575,6 +627,8 @@ class GenericNvdaOptionsDialog(wx.Dialog):
         self.synth = None
         self.voices: List[object] = []
         self.variants: List[object] = []
+        self.languages: List[object] = []
+        self.languageSettingId = ""
         self._populating = False
 
         self.synth = _get_synth_instance(self.synth_id)
@@ -595,6 +649,8 @@ class GenericNvdaOptionsDialog(wx.Dialog):
 
         self.voiceLabel = wx.StaticText(panel, label=_("&Voice:"))
         self.voiceChoice = wx.Choice(panel)
+        self.languageLabel = wx.StaticText(panel, label=_("&Language:"))
+        self.languageChoice = wx.Choice(panel)
         self.variantLabel = wx.StaticText(panel, label=_("Varia&nt:"))
         self.variantChoice = wx.Choice(panel)
         if self.is_prose2000:
@@ -605,6 +661,13 @@ class GenericNvdaOptionsDialog(wx.Dialog):
         else:
             grid.Add(self.voiceLabel, 0, wx.ALIGN_CENTER_VERTICAL)
             grid.Add(self.voiceChoice, 1, wx.EXPAND)
+            self.languageSettingId, self.languages = _discover_language_setting(self.synth)
+            if self.languages:
+                grid.Add(self.languageLabel, 0, wx.ALIGN_CENTER_VERTICAL)
+                grid.Add(self.languageChoice, 1, wx.EXPAND)
+            else:
+                self.languageLabel.Hide()
+                self.languageChoice.Hide()
             grid.Add(self.variantLabel, 0, wx.ALIGN_CENTER_VERTICAL)
             grid.Add(self.variantChoice, 1, wx.EXPAND)
 
@@ -638,6 +701,17 @@ class GenericNvdaOptionsDialog(wx.Dialog):
             )
             grid.Add(self.eosSpin, 0, wx.EXPAND)
 
+        self.flowStepsSpin = None
+        if hasattr(self.synth, "lsdSteps"):
+            grid.Add(wx.StaticText(panel, label=_("&Flow steps:")), 0, wx.ALIGN_CENTER_VERTICAL)
+            self.flowStepsSpin = wx.SpinCtrl(
+                panel,
+                min=1,
+                max=10,
+                initial=int(_cfg_get(self.cfg_prefix + "_lsdSteps", _safe_getattr(self.synth, "lsdSteps", 10) or 10)),
+            )
+            grid.Add(self.flowStepsSpin, 0, wx.EXPAND)
+
         root.Add(grid, 1, wx.ALL | wx.EXPAND, 10)
         default_auto_test = google_tts.DEFAULT_AUTO_TEST if self.is_google_tts else True
         self.autoSpeakCB = _add_autospeak_checkbox(panel, root, self.cfg_prefix + "_autoTest", default=default_auto_test)
@@ -660,9 +734,11 @@ class GenericNvdaOptionsDialog(wx.Dialog):
         self.SetSizerAndFit(outer)
         self.SetMinSize((460, self.GetSize().height))
 
+        self._populate_languages()
         self._populate_voices()
         self._populate_variants()
 
+        self.languageChoice.Bind(wx.EVT_CHOICE, self._on_language_changed)
         self.voiceChoice.Bind(wx.EVT_CHOICE, self._on_voice_changed)
         self.variantChoice.Bind(wx.EVT_CHOICE, self._maybe_auto_test)
         self.rateSpin.Bind(wx.EVT_SPINCTRL, self._maybe_auto_test)
@@ -672,12 +748,16 @@ class GenericNvdaOptionsDialog(wx.Dialog):
         self.volumeSpin.Bind(wx.EVT_SPINCTRL, self._maybe_auto_test)
         if self.eosSpin is not None:
             self.eosSpin.Bind(wx.EVT_SPINCTRL, self._maybe_auto_test)
+        if self.flowStepsSpin is not None:
+            self.flowStepsSpin.Bind(wx.EVT_SPINCTRL, self._maybe_auto_test)
         self.testBtn.Bind(wx.EVT_BUTTON, self._on_test)
         _bind_numeric_page_keys(self.rateSpin, 0, 100, page_step=10, callback=self._maybe_auto_test)
         _bind_numeric_page_keys(self.pitchSpin, 0, 100, page_step=10, callback=self._maybe_auto_test)
         _bind_numeric_page_keys(self.volumeSpin, 0, 100, page_step=10, callback=self._maybe_auto_test)
         if self.eosSpin is not None:
             _bind_numeric_page_keys(self.eosSpin, 0, 100, page_step=10, callback=self._maybe_auto_test)
+        if self.flowStepsSpin is not None:
+            _bind_numeric_page_keys(self.flowStepsSpin, 1, 10, page_step=2, callback=self._maybe_auto_test)
 
     def Destroy(self):
         try:
@@ -728,6 +808,36 @@ class GenericNvdaOptionsDialog(wx.Dialog):
         finally:
             self._populating = False
 
+    def _populate_languages(self):
+        self._populating = True
+        try:
+            self.languageChoice.Clear()
+            if not self.languages or not self.languageSettingId:
+                return
+            saved = str(
+                _cfg_get(
+                    self.cfg_prefix + "_language",
+                    _safe_getattr(self.synth, self.languageSettingId, "") or "",
+                )
+                or ""
+            )
+            selected = 0
+            for i, info in enumerate(self.languages):
+                value = voice_utils.voice_info_text(info, "id", "ID", "identifier", "name") or str(i)
+                label = voice_utils.voice_choice_label(info, fallback=value)
+                self._append_choice(self.languageChoice, label, value)
+                if saved and value == saved:
+                    selected = i
+            self.languageChoice.SetSelection(selected if self.languageChoice.GetCount() else wx.NOT_FOUND)
+            language = self._choice_value(self.languageChoice)
+            if language:
+                try:
+                    setattr(self.synth, self.languageSettingId, language)
+                except Exception:
+                    pass
+        finally:
+            self._populating = False
+
     def _populate_variants(self):
         self._populating = True
         try:
@@ -754,6 +864,17 @@ class GenericNvdaOptionsDialog(wx.Dialog):
             self._populating = False
 
     def _on_voice_changed(self, evt=None):
+        self._populate_variants()
+        self._maybe_auto_test(evt)
+
+    def _on_language_changed(self, evt=None):
+        language = self._choice_value(self.languageChoice)
+        if language and self.languageSettingId:
+            try:
+                setattr(self.synth, self.languageSettingId, language)
+            except Exception:
+                pass
+        self._populate_voices()
         self._populate_variants()
         self._maybe_auto_test(evt)
 
@@ -819,6 +940,9 @@ class GenericNvdaOptionsDialog(wx.Dialog):
         opts = {
             "voice": self._choice_value(self.voiceChoice),
             "voiceLabel": _choice_label(self.voiceChoice),
+            "languageSettingId": self.languageSettingId,
+            "language": self._choice_value(self.languageChoice),
+            "languageLabel": _choice_label(self.languageChoice),
             "variant": self._choice_value(self.variantChoice),
             "variantLabel": _choice_label(self.variantChoice),
             "rate": int(self.rateSpin.GetValue()),
@@ -828,10 +952,14 @@ class GenericNvdaOptionsDialog(wx.Dialog):
         }
         if self.eosSpin is not None:
             opts["eosThreshold"] = max(0, min(100, int(self.eosSpin.GetValue())))
+        if self.flowStepsSpin is not None:
+            opts["lsdSteps"] = max(1, min(10, int(self.flowStepsSpin.GetValue())))
         if self.rateBoostChk is not None:
             opts["rateBoost"] = bool(self.rateBoostChk.GetValue())
         if persist:
             _cfg_set(self.cfg_prefix + "_voice", opts["voice"])
+            _cfg_set(self.cfg_prefix + "_languageSettingId", opts["languageSettingId"])
+            _cfg_set(self.cfg_prefix + "_language", opts["language"])
             _cfg_set(self.cfg_prefix + "_variant", opts["variant"])
             _cfg_set(self.cfg_prefix + "_rate", int(opts["rate"]))
             if "rateBoost" in opts:
@@ -840,6 +968,8 @@ class GenericNvdaOptionsDialog(wx.Dialog):
             _cfg_set(self.cfg_prefix + "_volume", int(opts["volume"]))
             if "eosThreshold" in opts:
                 _cfg_set(self.cfg_prefix + "_eosThreshold", int(opts["eosThreshold"]))
+            if "lsdSteps" in opts:
+                _cfg_set(self.cfg_prefix + "_lsdSteps", int(opts["lsdSteps"]))
             _cfg_set(self.cfg_prefix + "_autoTest", bool(opts["autoTest"]))
         return opts
 
@@ -850,7 +980,9 @@ class BestSpeechOptionsDialog(wx.Dialog):
         super().__init__(parent, title=_("soundWave - Keynote Gold options"))
         initial = initial or {}
 
+        self.languages = _list_bestspeech_languages()
         self.voices = _list_bestspeech_voices()
+        saved_language = str(initial.get("language", _cfg_get("bestspeechLanguage", "classic") or "classic") or "classic")
         saved_voice = str(initial.get("voice", _cfg_get("bestspeechVoice", "") or "") or "")
         if not saved_voice and self.voices:
             saved_voice = self.voices[0]
@@ -865,6 +997,12 @@ class BestSpeechOptionsDialog(wx.Dialog):
             initial_volume = int(initial.get("volume", voice_defaults.get("volume", 80)) or voice_defaults.get("volume", 80))
 
         sizer = wx.BoxSizer(wx.VERTICAL)
+
+        language_row = wx.BoxSizer(wx.HORIZONTAL)
+        language_row.Add(wx.StaticText(self, label=_("&Language:")), 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 8)
+        self.languageChoice = wx.Choice(self, choices=[label for _value, label in self.languages])
+        language_row.Add(self.languageChoice, 1, wx.EXPAND)
+        sizer.Add(language_row, 0, wx.EXPAND | wx.ALL, 10)
 
         row1 = wx.BoxSizer(wx.HORIZONTAL)
         row1.Add(wx.StaticText(self, label=_("&Voice:")), 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 8)
@@ -915,6 +1053,8 @@ class BestSpeechOptionsDialog(wx.Dialog):
                 self.voiceChoice.SetSelection(self.voices.index(saved_voice))
             else:
                 self.voiceChoice.SetSelection(0)
+        language_values = [value for value, _label in self.languages]
+        self.languageChoice.SetSelection(language_values.index(saved_language) if saved_language in language_values else 0)
 
         # Focus voice list for accessibility
         try:
@@ -938,6 +1078,7 @@ class BestSpeechOptionsDialog(wx.Dialog):
             except Exception:
                 pass
 
+        self.languageChoice.Bind(wx.EVT_CHOICE, _maybe_auto)
         self.voiceChoice.Bind(wx.EVT_CHOICE, _maybe_auto)
         self.rateSpin.Bind(wx.EVT_SPINCTRL, _maybe_auto)
         self.pitchSpin.Bind(wx.EVT_SPINCTRL, _maybe_auto)
@@ -955,6 +1096,12 @@ class BestSpeechOptionsDialog(wx.Dialog):
             i = 0
         return str(self.voiceChoice.GetString(i))
 
+    def _get_language(self) -> str:
+        index = self.languageChoice.GetSelection()
+        if index == wx.NOT_FOUND or index >= len(self.languages):
+            index = 0
+        return str(self.languages[index][0])
+
     def _on_test(self, evt):
         tmp_dir = tempfile.mkdtemp(prefix="soundWave_bestspeech_test_")
         tmp_wav = os.path.join(tmp_dir, "test.wav")
@@ -968,6 +1115,7 @@ class BestSpeechOptionsDialog(wx.Dialog):
                 pitch=int(self.pitchSpin.GetValue()),
                 volume=int(self.volumeSpin.GetValue()),
                 rate_boost=bool(self.rateBoostChk.GetValue()),
+                language=self._get_language(),
             )
             _play_wav(tmp_wav)
         except Exception as e:
@@ -983,6 +1131,8 @@ class BestSpeechOptionsDialog(wx.Dialog):
         opts = {
             "voice": self._get_voice(),
             "voiceLabel": self._get_voice(),
+            "language": self._get_language(),
+            "languageLabel": _choice_label(self.languageChoice),
             "rate": int(self.rateSpin.GetValue()),
             "pitch": max(0, min(100, int(self.pitchSpin.GetValue()))),
             "volume": max(0, min(100, int(self.volumeSpin.GetValue()))),
@@ -991,6 +1141,7 @@ class BestSpeechOptionsDialog(wx.Dialog):
         }
         if persist:
             _cfg_set("bestspeechVoice", str(opts["voice"] or ""))
+            _cfg_set("bestspeechLanguage", str(opts["language"] or "classic"))
             _cfg_set("bestspeechRate", int(opts["rate"]))
             _cfg_set("bestspeechPitch", int(opts["pitch"]))
             _cfg_set("bestspeechVolume", int(opts["volume"]))

@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import io
 import re
 import threading
 import time
@@ -72,6 +73,73 @@ def _has_tokens(engine, text: str) -> bool:
         return bool((text or "").strip())
 
 
+def _is_transformer_state_error(error: Exception) -> bool:
+    message = str(error or "")
+    return "Reshape" in message and ("Input shape:{1,0" in message or "input_shape_size == size" in message)
+
+
+def _split_failed_segment(segment: str) -> list[str]:
+    target = max(48, min(180, len(segment) // 2))
+    pieces = _split_for_pocket(segment, max_chars=target)
+    if len(pieces) > 1 and all(len(piece) < len(segment) for piece in pieces):
+        return pieces
+    words = segment.split()
+    if len(words) < 2:
+        return []
+    middle = len(words) // 2
+    return [" ".join(words[:middle]), " ".join(words[middle:])]
+
+
+def _render_segment_bytes(engine, segment: str, voice_path, volume_factor: float, np, cancel_evt, depth: int = 0):
+    """Finish a segment before committing it so a failed model run can be retried safely."""
+    output = io.BytesIO()
+    buffers = 0
+    try:
+        for chunk in engine.stream(
+            text=segment,
+            voice=voice_path,
+            target_buffer_sec=0.2,
+            cancel_event=cancel_evt,
+        ):
+            if cancel_evt.is_set():
+                raise RuntimeError(_("Cancelled."))
+            if chunk is None:
+                continue
+            pcm = np.clip(chunk * volume_factor, -1.0, 1.0)
+            data = (pcm * 32767).astype(np.int16).tobytes()
+            if data:
+                output.write(data)
+                buffers += 1
+        return output.getvalue(), buffers
+    except Exception as error:
+        if depth >= 3 or not _is_transformer_state_error(error):
+            raise
+        try:
+            cache = getattr(engine, "_voice_state_cache", None)
+            if cache is not None:
+                cache.clear()
+        except Exception:
+            pass
+        pieces = [piece for piece in _split_failed_segment(segment) if _has_tokens(engine, piece)]
+        if len(pieces) < 2:
+            raise
+        combined = io.BytesIO()
+        combined_buffers = 0
+        for piece in pieces:
+            data, piece_buffers = _render_segment_bytes(
+                engine,
+                piece,
+                voice_path,
+                volume_factor,
+                np,
+                cancel_evt,
+                depth=depth + 1,
+            )
+            combined.write(data)
+            combined_buffers += piece_buffers
+        return combined.getvalue(), combined_buffers
+
+
 def render_to_wav(text: str, out_wav: str, synth, opts=None, progress=None, cancel_evt=None) -> str:
     """Render Pocket TTS directly from its ONNX stream API."""
     cancel_evt = cancel_evt or threading.Event()
@@ -93,6 +161,8 @@ def render_to_wav(text: str, out_wav: str, synth, opts=None, progress=None, canc
     try:
         if "eosThreshold" in opts and hasattr(synth, "eosThreshold"):
             synth.eosThreshold = max(0, min(100, int(opts.get("eosThreshold", 50) or 50)))
+        if "lsdSteps" in opts and hasattr(synth, "lsdSteps"):
+            synth.lsdSteps = max(1, min(10, int(opts.get("lsdSteps", 10) or 10)))
     except Exception:
         pass
 
@@ -135,25 +205,25 @@ def render_to_wav(text: str, out_wav: str, synth, opts=None, progress=None, canc
                 raise RuntimeError(_("Cancelled."))
             if progress is not None:
                 progress["chunksCurrent"] = segment_index
-            for chunk in engine.stream(text=segment, voice=voice_path, target_buffer_sec=0.2):
-                if cancel_evt.is_set():
-                    raise RuntimeError(_("Cancelled."))
-                if chunk is None:
-                    continue
-                pcm = np.clip(chunk * volume_factor, -1.0, 1.0)
-                data = (pcm * 32767).astype(np.int16).tobytes()
-                if not data:
-                    continue
+            data, segment_buffers = _render_segment_bytes(
+                engine,
+                segment,
+                voice_path,
+                volume_factor,
+                np,
+                cancel_evt,
+            )
+            if data:
                 wf.writeframes(data)
                 total_bytes += len(data)
-                buffers += 1
-                if progress is not None:
-                    progress["bytes"] = total_bytes
-                    progress["buffers"] = buffers
-                    progress["last_audio_ts"] = time.time()
-                    progress["pcm_rate"] = 24000
-                    progress["channels"] = 1
-                    progress["sampwidth"] = 2
+                buffers += segment_buffers
+            if progress is not None:
+                progress["bytes"] = total_bytes
+                progress["buffers"] = buffers
+                progress["last_audio_ts"] = time.time() if data else progress.get("last_audio_ts")
+                progress["pcm_rate"] = 24000
+                progress["channels"] = 1
+                progress["sampwidth"] = 2
             if progress is not None:
                 progress["chunksDone"] = segment_index
     if total_bytes <= 0:

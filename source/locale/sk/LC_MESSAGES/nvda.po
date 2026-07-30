@@ -1,7 +1,7 @@
 
 msgid ""
 msgstr ""
-"Project-Id-Version: soundWave 1.2.1\n"
+"Project-Id-Version: soundWave 1.2.4\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-07-27 20:28+0000\n"
 "PO-Revision-Date: 2026-07-27 22:31+0200\n"
@@ -764,9 +764,16 @@ msgstr "Všeobecné zachytávanie NVDA zistilo zmiešané audio formáty medzi i
 msgid "ctypes not available; cannot render BestSpeech."
 msgstr "ctypes nie je dostupné; nemožno renderovať BestSpeech."
 
-#: soundWave_lib/synths/nvda_capture.py:427
+#: soundWave_lib/synths/nvda_capture.py
+msgid "BestSpeech did not finish changing language."
+msgstr "BestSpeech nedokončil zmenu jazyka."
+
 msgid "BestSpeech addon not installed (synthDrivers.bestspeech not found)."
 msgstr "Doplnok BestSpeech nie je nainštalovaný (synthDrivers.bestspeech sa nenašiel)."
+
+#: soundWave_lib/synths/nvda_capture.py
+msgid "BestSpeech did not initialize its capture player."
+msgstr "BestSpeech neinicializoval prehrávač zachytávania."
 
 #: soundWave_lib/synths/nvda_capture.py:536
 msgid "BestSpeech render timed out."
@@ -819,6 +826,10 @@ msgstr "Hlasit&osť:"
 #: soundWave_lib/synths/nvda_capture.py:625
 msgid "&EOS sensitivity:"
 msgstr "Citlivosť &EOS:"
+
+#: soundWave_lib/synths/nvda_capture.py
+msgid "&Flow steps:"
+msgstr "&Kroky toku:"
 
 #: soundWave_lib/synths/nvda_capture.py:712
 msgid "No installed Google TTS voices found"

@@ -205,7 +205,7 @@ Większość okien ustawień zawiera:
     </tr>
     <tr>
       <td><strong>Pocket TTS</strong></td>
-      <td>Wymaga dodatku Pocket TTS. soundWave renderuje w mniejszych segmentach, gdy jest to potrzebne, aby dłuższy tekst rzadziej trafiał na ograniczenia modelu. Okno opcji zawiera czułość końca zdania Pocket TTS, jeśli zainstalowany syntezator ją udostępnia.</td>
+      <td>Wymaga dodatku Pocket TTS. soundWave renderuje w mniejszych segmentach, gdy jest to potrzebne, aby dłuższy tekst rzadziej trafiał na ograniczenia modelu. Jeśli model zgłosi znany błąd stanu transformera o zerowej długości, soundWave bezpiecznie ponawia tylko ten segment w mniejszych częściach, nie zachowując częściowego dźwięku. Okno opcji zawiera ustawienia czułości końca zdania i kroków przepływu Pocket TTS, jeśli zainstalowany syntezator je udostępnia. Kroki przepływu określają liczbę przebiegów udoskonalania modelu od 1 do 10; 10 jest domyślną wartością pełnej jakości, a niższe wartości mogą renderować szybciej, lecz mowa może być mniej stabilna.</td>
     </tr>
     <tr>
       <td><strong>Supertonic</strong></td>
@@ -233,11 +233,11 @@ Większość okien ustawień zawiera:
     </tr>
     <tr>
       <td><strong>DECtalk i Keynote Gold</strong></td>
-      <td>Dostępne, gdy wymagany dodatek jest zainstalowany i możliwy do wykrycia. Keynote Gold udostępnia w oknie renderowania głos, szybkość, wysokość, głośność i podkręcanie szybkości.</td>
+      <td>Dostępne, gdy wymagany dodatek jest zainstalowany i możliwy do wykrycia. Keynote Gold udostępnia w oknie renderowania język, głos, szybkość, wysokość, głośność i podkręcanie szybkości. Kodowanie, częstotliwość próbkowania, obsługa liczb i ustawienia silnika właściwe dla języka pochodzą z zainstalowanego dodatku BestSpeech.</td>
     </tr>
     <tr>
       <td><strong>Inne syntezatory NVDA</strong></td>
-      <td>soundWave może renderować wiele innych zainstalowanych syntezatorów NVDA, jeśli używają normalnej ścieżki wyjścia audio NVDA. Ogólne okno opcji stosuje głos, wariant, tempo, wysokość i głośność tam, gdzie wybrany syntezator udostępnia te ustawienia.</td>
+      <td>soundWave może renderować wiele innych zainstalowanych syntezatorów NVDA, jeśli używają normalnej ścieżki wyjścia audio NVDA. Ogólne okno opcji stosuje język, głos, wariant, tempo, wysokość i głośność tam, gdzie wybrany syntezator udostępnia te ustawienia. Syntezatory, w których język jest całkowicie określony przez wybrany głos, nie pokazują zbędnego wyboru języka.</td>
     </tr>
   </tbody>
 </table>
@@ -255,6 +255,15 @@ soundWave używa kanału aktualizacji dodatków NVDA zgodnego z dystrybucją prz
 </p>
 
 <h2>Zmiany</h2>
+
+<h3>1.2.4</h3>
+<ul>
+  <li>Dodano wybór języka dla Keynote Gold/BestSpeech oraz ogólnych syntezatorów NVDA, które udostępniają ustawienie języka.</li>
+  <li>Dodano natywne ustawienie jakości Pocket TTS Kroki przepływu w zakresie od 1 do 10 do opcji renderowania.</li>
+  <li>Renderowanie BestSpeech korzysta teraz z własnej, świadomej języka ścieżki mowy zainstalowanego sterownika, w tym z jego kodowania, częstotliwości próbkowania, obsługi liczb i ustawień silnika.</li>
+  <li>Długie renderowanie Pocket TTS bezpiecznie odzyskuje działanie po znanym błędzie stanu transformera o zerowej długości, ponawiając tylko dotknięty segment w mniejszych częściach i nie zachowując częściowego dźwięku.</li>
+  <li>Zaktualizowano polski i słowacki katalog interfejsu oraz podręczniki wraz ze zmianami angielskimi.</li>
+</ul>
 
 <h3>1.2.3</h3>
 <ul>

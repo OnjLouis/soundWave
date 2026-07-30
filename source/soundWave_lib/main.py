@@ -2340,6 +2340,7 @@ def _do_render_impl():
                         pitch=int((bs_opts or {}).get("pitch", 50) or 50),
                         volume=int((bs_opts or {}).get("volume", 100) or 100),
                         rate_boost=bool((bs_opts or {}).get("rateBoost", False)),
+                        language=str((bs_opts or {}).get("language", "classic") or "classic"),
                         cancel_evt=cancel_evt,
                         progress=result.progress,
                     )

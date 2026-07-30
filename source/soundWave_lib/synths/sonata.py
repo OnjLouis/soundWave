@@ -152,9 +152,6 @@ def _render_with_sonata_offline(
         wf.setframerate(sr)
 
         mode = "SynthesizeUtterance"
-        chunks = 0
-        total = 0
-        first = True
         try:
             utter = msgs.Utterance(voice_id=str(voice_id), text=text or "")
             try:
@@ -170,14 +167,6 @@ def _render_with_sonata_offline(
                 if not b:
                     continue
                 wf.writeframes(b)
-                chunks += 1
-                total += len(b)
-                if first:
-                    head = bytes(b[:16]).hex()
-                    log.debug(f"soundWave: sonata first chunk bytes={len(b)} head={head}")
-                    first = False
-
-            log.debug(f"soundWave: sonata mode={mode} chunks={chunks} totalBytes={total}")
         finally:
             try:
                 wf.close()

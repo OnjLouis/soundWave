@@ -205,7 +205,7 @@ Most settings dialogs include:
     </tr>
     <tr>
       <td><strong>Pocket TTS</strong></td>
-      <td>Requires the Pocket TTS add-on. soundWave renders in smaller segments when needed so longer text is less likely to hit model limits. The options dialog includes Pocket TTS's end-of-sentence sensitivity setting when the installed synth exposes it.</td>
+      <td>Requires the Pocket TTS add-on. soundWave renders in smaller segments when needed so longer text is less likely to hit model limits. If the model encounters its known zero-length transformer-state failure, soundWave safely retries only that segment in smaller pieces without retaining partial audio. The options dialog includes Pocket TTS's end-of-sentence sensitivity and Flow steps settings when the installed synth exposes them. Flow steps controls the number of model-refinement passes from 1 to 10; 10 is the full-quality default, while lower values may render faster with less stable speech.</td>
     </tr>
     <tr>
       <td><strong>Supertonic</strong></td>
@@ -233,11 +233,11 @@ Most settings dialogs include:
     </tr>
     <tr>
       <td><strong>DECtalk and Keynote Gold</strong></td>
-      <td>Available when the required add-on is installed and discoverable. Keynote Gold exposes voice, speed, pitch, volume, and rate boost in its render dialog.</td>
+      <td>Available when the required add-on is installed and discoverable. Keynote Gold exposes language, voice, speed, pitch, volume, and rate boost in its render dialog. Language-specific encoding, sample rate, number handling, and engine controls come from the installed BestSpeech add-on.</td>
     </tr>
     <tr>
       <td><strong>Other NVDA synthesizers</strong></td>
-      <td>soundWave can render many other installed NVDA synthesizers when they use NVDA's normal audio output path. The generic dialog applies voice, variant, rate, pitch, and volume where the selected synthesizer exposes those settings.</td>
+      <td>soundWave can render many other installed NVDA synthesizers when they use NVDA's normal audio output path. The generic dialog applies language, voice, variant, rate, pitch, and volume where the selected synthesizer exposes those settings. Synthesizers that encode language entirely in their voice choice do not show a redundant language selector.</td>
     </tr>
   </tbody>
 </table>
@@ -255,6 +255,15 @@ soundWave uses NVDA's add-on update channel for store-compatible updates.
 </p>
 
 <h2>Changes</h2>
+
+<h3>1.2.4</h3>
+<ul>
+  <li>Added language selection for Keynote Gold/BestSpeech and generic NVDA synthesizers that expose a language setting.</li>
+  <li>Added Pocket TTS's native 1 to 10 Flow steps quality control to its render options.</li>
+  <li>Changed BestSpeech rendering to use the installed driver's own language-aware speech path, including its encoding, sample rate, number handling, and engine-specific controls.</li>
+  <li>Made long Pocket TTS renders recover safely from the model's known zero-length transformer-state failure by retrying only the affected segment in smaller pieces without retaining partial audio.</li>
+  <li>Updated the Polish and Slovak interface catalogues and manuals alongside the English changes.</li>
+</ul>
 
 <h3>1.2.3</h3>
 <ul>

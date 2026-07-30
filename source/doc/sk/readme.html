@@ -205,7 +205,7 @@ Väčšina dialógov nastavení obsahuje:
     </tr>
     <tr>
       <td><strong>Pocket TTS</strong></td>
-      <td>Vyžaduje doplnok Pocket TTS. soundWave podľa potreby renderuje v menších segmentoch, aby dlhší text menej často narazil na limity modelu. Dialóg možností obsahuje citlivosť konca vety Pocket TTS, ak ju nainštalovaný syntetizér sprístupňuje.</td>
+      <td>Vyžaduje doplnok Pocket TTS. soundWave podľa potreby renderuje v menších segmentoch, aby dlhší text menej často narazil na limity modelu. Ak model narazí na známu chybu stavu transformera s nulovou dĺžkou, soundWave bezpečne zopakuje iba daný segment v menších častiach bez zachovania čiastočného zvuku. Dialóg možností obsahuje nastavenia citlivosti konca vety a krokov toku Pocket TTS, ak ich nainštalovaný syntetizér sprístupňuje. Kroky toku určujú počet prechodov spresnenia modelu od 1 do 10; 10 je predvolená hodnota plnej kvality, zatiaľ čo nižšie hodnoty môžu renderovať rýchlejšie s menej stabilnou rečou.</td>
     </tr>
     <tr>
       <td><strong>Supertonic</strong></td>
@@ -233,11 +233,11 @@ Väčšina dialógov nastavení obsahuje:
     </tr>
     <tr>
       <td><strong>DECtalk a Keynote Gold</strong></td>
-      <td>Dostupné, keď je požadovaný doplnok nainštalovaný a zistiteľný. Keynote Gold v dialógu renderovania sprístupňuje hlas, rýchlosť, výšku, hlasitosť a zrýchlenie tempa.</td>
+      <td>Dostupné, keď je požadovaný doplnok nainštalovaný a zistiteľný. Keynote Gold v dialógu renderovania sprístupňuje jazyk, hlas, rýchlosť, výšku, hlasitosť a zrýchlenie tempa. Kódovanie, vzorkovacia frekvencia, spracovanie čísel a nastavenia enginu špecifické pre jazyk poskytuje nainštalovaný doplnok BestSpeech.</td>
     </tr>
     <tr>
       <td><strong>Iné syntetizátory NVDA</strong></td>
-      <td>soundWave dokáže renderovať mnoho ďalších nainštalovaných syntetizátorov NVDA, keď používajú bežnú zvukovú výstupnú cestu NVDA. Všeobecný dialóg použije hlas, variant, tempo, výšku a hlasitosť tam, kde ich vybraný syntetizér sprístupňuje.</td>
+      <td>soundWave dokáže renderovať mnoho ďalších nainštalovaných syntetizátorov NVDA, keď používajú bežnú zvukovú výstupnú cestu NVDA. Všeobecný dialóg použije jazyk, hlas, variant, tempo, výšku a hlasitosť tam, kde ich vybraný syntetizér sprístupňuje. Syntetizátory, v ktorých je jazyk úplne určený výberom hlasu, nezobrazujú nadbytočný výber jazyka.</td>
     </tr>
   </tbody>
 </table>
@@ -255,6 +255,15 @@ soundWave používa aktualizačný kanál doplnkov NVDA kompatibilný s distrib�
 </p>
 
 <h2>Zmeny</h2>
+
+<h3>1.2.4</h3>
+<ul>
+  <li>Pridaný výber jazyka pre Keynote Gold/BestSpeech a všeobecné syntetizátory NVDA, ktoré sprístupňujú nastavenie jazyka.</li>
+  <li>Do možností renderovania bolo pridané natívne nastavenie kvality Kroky toku Pocket TTS v rozsahu od 1 do 10.</li>
+  <li>Renderovanie BestSpeech teraz používa vlastnú jazykovo uvedomelú rečovú cestu nainštalovaného ovládača vrátane jeho kódovania, vzorkovacej frekvencie, spracovania čísel a nastavení enginu.</li>
+  <li>Dlhé renderovanie Pocket TTS sa bezpečne zotaví zo známej chyby stavu transformera s nulovou dĺžkou tak, že zopakuje iba dotknutý segment v menších častiach bez zachovania čiastočného zvuku.</li>
+  <li>Poľský a slovenský katalóg rozhrania a príručky boli aktualizované spolu s anglickými zmenami.</li>
+</ul>
 
 <h3>1.2.3</h3>
 <ul>
