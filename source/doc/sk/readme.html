@@ -67,6 +67,7 @@ Dlhé trvania sa zobrazujú v minútach alebo hodinách, nie iba ako počet sek�
 Pri dlhých renderoch použite tlačidlo <strong>Minimalizovať</strong> alebo skratku <span class="kbd">Alt</span>+<span class="kbd">M</span>, aby ste skryli dialóg priebehu.
 Renderovanie pokračuje na pozadí a skrytý dialóg nezostáva v zozname <span class="kbd">Alt</span>+<span class="kbd">Tab</span>.
 Opätovným stlačením príkazu soundWave, <span class="kbd">NVDA</span>+<span class="kbd">Ctrl</span>+<span class="kbd">=</span>, vrátite aktívny dialóg priebehu.
+Ak je už otvorený iný dialóg soundWave, rovnaký príkaz ho prenesie do popredia namiesto otvorenia ďalšieho procesu renderovania.
 </p>
 
 <h2>Nastavenia</h2>
@@ -255,6 +256,14 @@ soundWave používa aktualizačný kanál doplnkov NVDA kompatibilný s distrib�
 </p>
 
 <h2>Zmeny</h2>
+
+<h3>1.2.5</h3>
+<ul>
+  <li>Opravený konflikt názvu prekladu, ktorý bránil otvoreniu dialógu možností Sonata.</li>
+  <li>Zabránené hromadeniu viacerých procesov renderovania a dialógov súhrnu soundWave.</li>
+  <li>Príkaz soundWave teraz prenesie existujúci dialóg do popredia, keď je už proces otvorený.</li>
+  <li>Súhrn renderovania sa teraz vráti do popredia po automatickom otvorení výstupného priečinka.</li>
+</ul>
 
 <h3>1.2.4</h3>
 <ul>

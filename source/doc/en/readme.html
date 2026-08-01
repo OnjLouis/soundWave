@@ -67,6 +67,7 @@ Long durations are shown as minutes or hours rather than raw seconds.
 For long renders, use <strong>Minimize</strong> or press <span class="kbd">Alt</span>+<span class="kbd">M</span> to hide the progress dialog.
 The render continues in the background and the hidden dialog is kept out of <span class="kbd">Alt</span>+<span class="kbd">Tab</span>.
 Press the soundWave command again, <span class="kbd">NVDA</span>+<span class="kbd">Ctrl</span>+<span class="kbd">=</span>, to bring the progress dialog back.
+If any other soundWave dialog is already open, the same command brings that dialog forward instead of opening another render workflow.
 </p>
 
 <h2>Settings</h2>
@@ -255,6 +256,14 @@ soundWave uses NVDA's add-on update channel for store-compatible updates.
 </p>
 
 <h2>Changes</h2>
+
+<h3>1.2.5</h3>
+<ul>
+  <li>Fixed a translation-name conflict that prevented the Sonata options dialog from opening.</li>
+  <li>Prevented multiple soundWave render workflows and completion dialogs from stacking.</li>
+  <li>Changed the soundWave command to bring the existing dialog forward when a workflow is already open.</li>
+  <li>Changed the completion summary to return to the foreground after automatically opening the output folder.</li>
+</ul>
 
 <h3>1.2.4</h3>
 <ul>

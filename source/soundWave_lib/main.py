@@ -11,6 +11,7 @@ from __future__ import annotations
 import os
 import importlib
 import builtins
+import ctypes
 import gettext
 import locale as _py_locale
 import re
@@ -332,6 +333,8 @@ DEFAULT_SONIC_PITCH = 50
 SONIC_PITCH_MAX_SEMITONES = 12.0
 _AUTO_OPENED_FOLDERS = set()
 _ACTIVE_RENDER_PROGRESS = None
+_ACTIVE_SOUNDWAVE_DIALOG = None
+_SOUNDWAVE_WORKFLOW_ACTIVE = False
 
 
 def _get_current_synth_name() -> str:
@@ -420,11 +423,33 @@ def _safe_getattr(obj, name: str, default=None):
 # ----------------------------
 # UI helpers
 # ----------------------------
+def _bring_window_forward(window) -> bool:
+    if window is None:
+        return False
+    try:
+        if not window:
+            return False
+        if hasattr(window, "IsIconized") and window.IsIconized():
+            window.Restore()
+        if not window.IsShown():
+            window.Show()
+        window.Raise()
+        hwnd = int(window.GetHandle() or 0)
+        if hwnd:
+            ctypes.windll.user32.SetForegroundWindow(ctypes.c_void_p(hwnd))
+        return True
+    except Exception:
+        return False
+
+
 def _show_modal(dlg: wx.Dialog) -> int:
     """Reliable dialog pattern across NVDA builds."""
+    global _ACTIVE_SOUNDWAVE_DIALOG
     res = wx.ID_CANCEL
     mf = getattr(gui, "mainFrame", None)
     _install_enter_to_ok(dlg)
+    previous_dialog = _ACTIVE_SOUNDWAVE_DIALOG
+    _ACTIVE_SOUNDWAVE_DIALOG = dlg
     try:
         if mf:
             try:
@@ -432,6 +457,8 @@ def _show_modal(dlg: wx.Dialog) -> int:
             except Exception:
                 pass
         try:
+            wx.CallAfter(_bring_window_forward, dlg)
+            wx.CallLater(150, _bring_window_forward, dlg)
             res = dlg.ShowModal()
         except RuntimeError:
             res = wx.ID_CANCEL
@@ -443,6 +470,9 @@ def _show_modal(dlg: wx.Dialog) -> int:
                     pass
     except Exception:
         res = wx.ID_CANCEL
+    finally:
+        if _ACTIVE_SOUNDWAVE_DIALOG is dlg:
+            _ACTIVE_SOUNDWAVE_DIALOG = previous_dialog
     return res
 
 
@@ -1895,23 +1925,28 @@ def _wav_duration_seconds(path: str) -> Optional[float]:
     return None
 
 
-def _restore_active_render_progress() -> bool:
-    global _ACTIVE_RENDER_PROGRESS
+def _restore_active_soundwave_window() -> bool:
+    global _ACTIVE_RENDER_PROGRESS, _ACTIVE_SOUNDWAVE_DIALOG
     dlg = _ACTIVE_RENDER_PROGRESS
-    if dlg is None:
-        return False
-    try:
-        if not dlg:
+    if dlg is not None:
+        try:
+            if dlg:
+                dlg.restore_progress()
+                return True
             _ACTIVE_RENDER_PROGRESS = None
-            return False
-    except Exception:
-        pass
-    try:
-        dlg.restore_progress()
+        except Exception:
+            _ACTIVE_RENDER_PROGRESS = None
+
+    dlg = _ACTIVE_SOUNDWAVE_DIALOG
+    if dlg is not None:
+        if _bring_window_forward(dlg):
+            return True
+        _ACTIVE_SOUNDWAVE_DIALOG = None
+
+    if _SOUNDWAVE_WORKFLOW_ACTIVE:
+        ui.message(_("SoundWave is already open."))
         return True
-    except Exception:
-        _ACTIVE_RENDER_PROGRESS = None
-        return False
+    return False
 
 
 def _atomic_replace(src_path: str, dest_path: str):
@@ -1933,9 +1968,22 @@ def _atomic_replace(src_path: str, dest_path: str):
 _runtime.publish(globals())
 
 def _do_render_impl():
-    global _ACTIVE_RENDER_PROGRESS
-    if _restore_active_render_progress():
+    global _SOUNDWAVE_WORKFLOW_ACTIVE
+    if _restore_active_soundwave_window():
         return
+    _SOUNDWAVE_WORKFLOW_ACTIVE = True
+    try:
+        _start_render_workflow()
+    except Exception as e:
+        log.error("soundWave: render workflow failed: %s" % e, exc_info=True)
+        _error(str(e) or _("SoundWave could not open the render workflow."))
+    finally:
+        if _ACTIVE_RENDER_PROGRESS is None and _ACTIVE_SOUNDWAVE_DIALOG is None:
+            _SOUNDWAVE_WORKFLOW_ACTIVE = False
+
+
+def _start_render_workflow():
+    global _ACTIVE_RENDER_PROGRESS
     parent = getattr(gui, "mainFrame", None) or wx.GetApp().GetTopWindow()
 
     # 1) Choose synth + base record dir
@@ -1988,6 +2036,7 @@ def _do_render_impl():
         try:
             od = SonataOptionsDialog(parent)
         except Exception as e:
+            log.error("soundWave: Sonata options failed: %s" % e, exc_info=True)
             _error(str(e))
             return
         try:
@@ -2570,7 +2619,7 @@ def _do_render_impl():
     t.start()
 
     def finish():
-        global _ACTIVE_RENDER_PROGRESS
+        global _ACTIVE_RENDER_PROGRESS, _SOUNDWAVE_WORKFLOW_ACTIVE
         if _finish_state.get('done'):
             return
         _finish_state['done'] = True
@@ -2621,44 +2670,47 @@ def _do_render_impl():
             except Exception:
                 pass
 
-        if cancel_evt.is_set() and not result.ok:
-            _info(_("Cancelled."))
-            return
+        try:
+            if cancel_evt.is_set() and not result.ok:
+                _info(_("Cancelled."))
+                return
 
-        if result.ok:
-            saved = out_path
-            if result.output_paths:
-                if len(result.output_paths) == 1:
-                    saved = result.output_paths[0]
-                else:
-                    saved = _("%d files, starting with: %s") % (len(result.output_paths), result.output_paths[0])
-            msg = [
-                _("Render complete."),
-                _("Synth: {synth}").format(synth=result.synth_label),
-                _("Saved to: {path}").format(path=saved),
-                _("Backend: {backend}").format(backend=result.mode or _("unknown")),
-                _("Time taken: {duration}").format(duration=_format_duration(result.wall_s)),
-            ]
-            if result.chunks and result.chunks > 1:
-                msg.append(_("Text chunks: %d") % result.chunks)
-            if result.parts and result.parts > 1:
-                msg.append(_("Audio files: %d") % result.parts)
-            if result.audio_s:
-                msg.append(_("Audio length: {duration}").format(duration=_format_duration(result.audio_s)))
-            if result.ftr_ratio is not None:
-                speed_x = None
-                try:
-                    if result.audio_s and result.wall_s:
-                        speed_x = float(result.audio_s) / float(result.wall_s)
-                except Exception:
+            if result.ok:
+                saved = out_path
+                if result.output_paths:
+                    if len(result.output_paths) == 1:
+                        saved = result.output_paths[0]
+                    else:
+                        saved = _("%d files, starting with: %s") % (len(result.output_paths), result.output_paths[0])
+                msg = [
+                    _("Render complete."),
+                    _("Synth: {synth}").format(synth=result.synth_label),
+                    _("Saved to: {path}").format(path=saved),
+                    _("Backend: {backend}").format(backend=result.mode or _("unknown")),
+                    _("Time taken: {duration}").format(duration=_format_duration(result.wall_s)),
+                ]
+                if result.chunks and result.chunks > 1:
+                    msg.append(_("Text chunks: %d") % result.chunks)
+                if result.parts and result.parts > 1:
+                    msg.append(_("Audio files: %d") % result.parts)
+                if result.audio_s:
+                    msg.append(_("Audio length: {duration}").format(duration=_format_duration(result.audio_s)))
+                if result.ftr_ratio is not None:
                     speed_x = None
-                if speed_x is not None:
-                    msg.append(_("Speed: %.2fx realtime") % (speed_x,))
-                else:
-                    msg.append(_("Speed: (unknown)"))
-            _show_render_complete(parent, "\n".join(msg), result.output_paths or [out_path])
-        else:
-            _error(str(result.err or _("Render failed.")))
+                    try:
+                        if result.audio_s and result.wall_s:
+                            speed_x = float(result.audio_s) / float(result.wall_s)
+                    except Exception:
+                        speed_x = None
+                    if speed_x is not None:
+                        msg.append(_("Speed: %.2fx realtime") % (speed_x,))
+                    else:
+                        msg.append(_("Speed: (unknown)"))
+                _show_render_complete(parent, "\n".join(msg), result.output_paths or [out_path])
+            else:
+                _error(str(result.err or _("Render failed.")))
+        finally:
+            _SOUNDWAVE_WORKFLOW_ACTIVE = False
 
 
     def poll():

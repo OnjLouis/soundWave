@@ -241,7 +241,7 @@ class SonataOptionsDialog(wx.Dialog):
             saved_cfg = _cfg_get("sonataVoiceConfigPath", None)
             idx = 0
             if saved_cfg:
-                for i, (_, cfg, _) in enumerate(self.voices):
+                for i, (_label, cfg, _speakers) in enumerate(self.voices):
                     if cfg == saved_cfg:
                         idx = i
                         break
@@ -315,6 +315,7 @@ class SonataOptionsDialog(wx.Dialog):
             )
             _play_wav(tmp)
         except Exception as e:
+            log.exception("soundWave: Sonata voice test failed")
             _error(_("Test failed:\n") + str(e))
 
     def get_options(self, persist: bool = True) -> Dict[str, object]:

@@ -1,7 +1,7 @@
 
 msgid ""
 msgstr ""
-"Project-Id-Version: soundWave 1.2.4\n"
+"Project-Id-Version: soundWave 1.2.5\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-07-27 20:28+0000\n"
 "PO-Revision-Date: 2026-07-27 22:31+0200\n"
@@ -1024,3 +1024,11 @@ msgstr "&Mówca:"
 #: soundWave_lib/synths/sonata.py:224
 msgid "&Auto-speak when changing voice, speaker, or speed"
 msgstr "&Automatycznie odtwarzaj mowę przy zmianie głosu, mówcy lub szybkości"
+
+#: soundWave_lib/main.py:1948
+msgid "SoundWave is already open."
+msgstr "SoundWave jest już otwarty."
+
+#: soundWave_lib/main.py:1977
+msgid "SoundWave could not open the render workflow."
+msgstr "Nie udało się otworzyć procesu renderowania w SoundWave."
