@@ -904,6 +904,7 @@ class _RenderProgressDialog(wx.Dialog):
     def __init__(self, parent, title: str = "soundWave"):
         super().__init__(parent, title=title, style=wx.DEFAULT_DIALOG_STYLE | wx.RESIZE_BORDER)
         self._cancelled = False
+        self._finishing = False
         self._detailsShown = bool(_cfg_get_bool("renderDetailsShown", False))
 
         sizer = wx.BoxSizer(wx.VERTICAL)
@@ -964,9 +965,11 @@ class _RenderProgressDialog(wx.Dialog):
             self._apply_details_visibility(set_focus=False)
         self.Fit()
 
-        # Allow ESC to cancel
+        # Escape and the window close control hide progress. Rendering is only
+        # cancelled through the explicitly labelled Cancel button.
         try:
             self.Bind(wx.EVT_CHAR_HOOK, self._on_char_hook)
+            self.Bind(wx.EVT_CLOSE, self._on_close)
         except Exception:
             pass
 
@@ -989,8 +992,7 @@ class _RenderProgressDialog(wx.Dialog):
                 _open_manual()
                 return
             if key == wx.WXK_ESCAPE:
-                # Mirror Cancel button behavior
-                self._on_cancel(None)
+                self.hide_progress()
                 return
             if key == ord("M") and evt.GetModifiers() == wx.MOD_ALT:
                 self._on_minimize(None)
@@ -1020,10 +1022,21 @@ class _RenderProgressDialog(wx.Dialog):
             self.cancelBtn.Disable()
         except Exception:
             pass
-        # Do not trap the user in the progress dialog: close the UI promptly.
-        # The worker may still be unwinding in the background, but the dialog exits.
-        self._closing = True
-        wx.CallAfter(self.Destroy)
+        # Keep the dialog alive while the worker unwinds so the polling loop can
+        # complete its normal cleanup and clear the active workflow state.
+
+    def _on_close(self, evt):
+        if self._finishing:
+            try:
+                evt.Skip()
+            except Exception:
+                pass
+            return
+        self.hide_progress()
+        try:
+            evt.Veto()
+        except Exception:
+            pass
 
     def _on_minimize(self, evt):
         self.hide_progress()
@@ -2591,10 +2604,16 @@ def _start_render_workflow():
             if result.audio_s and result.audio_s > 0:
                 result.ftr_ratio = result.wall_s / result.audio_s
 
+            if cancel_evt.is_set():
+                raise RuntimeError(_("Cancelled."))
             result.ok = True
 
         except Exception as e:
-            result.err = e
+            # Preserve a more specific error set by the UI watchdog. The
+            # renderer will normally notice its cancellation immediately and
+            # raise "Cancelled", which must not hide the actual timeout.
+            if result.err is None:
+                result.err = e
             log.error("soundWave: render failed: %s" % e, exc_info=True)
         finally:
             if google_synth is not None:
@@ -2613,7 +2632,13 @@ def _start_render_workflow():
 
     started_at = time.time()
     _last_ui = {'ts': 0.0}
-    _poll_state = {'cancel_ts': None, 'forced': False}
+    _poll_state = {
+        'cancel_ts': None,
+        'forced': False,
+        'timed_out': False,
+        'last_progress': None,
+        'last_progress_ts': started_at,
+    }
     _finish_state = {'done': False}
     t = threading.Thread(target=worker, daemon=True)
     t.start()
@@ -2666,12 +2691,16 @@ def _start_render_workflow():
 
         if prog is not None:
             try:
+                prog._finishing = True
                 prog.Destroy()
             except Exception:
                 pass
 
         try:
             if cancel_evt.is_set() and not result.ok:
+                if _poll_state.get('timed_out'):
+                    _error(str(result.err or _('Render timed out.')))
+                    return
                 _info(_("Cancelled."))
                 return
 
@@ -2714,12 +2743,6 @@ def _start_render_workflow():
 
 
     def poll():
-        # Stop polling if the progress dialog is closing/closed.
-        try:
-            if prog is not None and getattr(prog, '_closing', False):
-                return
-        except Exception:
-            return
         # Mirror UI cancel state into the shared cancel event.
         if prog is not None and prog.cancelled:
             cancel_evt.set()
@@ -2744,20 +2767,38 @@ def _start_render_workflow():
                 wx.CallAfter(finish)
                 return
 
-        # Hard watchdog: don't allow the progress UI to hang forever.
-        allowed_seconds = float(TIMEOUT_SECONDS or 300) * float(max(1, int(getattr(result, "chunks", 1) or 1)))
-        if (now - started_at) > allowed_seconds:
+        # Watch for stalled work, not long work. Some local neural engines can
+        # legitimately need more than five minutes for one render. Treat any
+        # change in their telemetry as activity and only time out after the
+        # renderer has made no measurable progress for the full timeout.
+        try:
+            progress = result.progress if isinstance(result.progress, dict) else None
+            if progress:
+                progress_signature = (
+                    int(progress.get('bytes', 0) or 0),
+                    int(progress.get('buffers', 0) or 0),
+                    int(progress.get('chunksDone', 0) or 0),
+                    int(progress.get('jobsDone', 0) or 0),
+                )
+                if progress_signature != _poll_state.get('last_progress'):
+                    _poll_state['last_progress'] = progress_signature
+                    _poll_state['last_progress_ts'] = now
+                last_audio_ts = float(progress.get('last_audio_ts', 0) or 0)
+                if last_audio_ts > float(_poll_state.get('last_progress_ts', started_at) or started_at):
+                    _poll_state['last_progress_ts'] = last_audio_ts
+        except Exception:
+            pass
+
+        idle_seconds = now - float(_poll_state.get('last_progress_ts', started_at) or started_at)
+        if idle_seconds > float(TIMEOUT_SECONDS or 300) and not _poll_state.get('timed_out'):
+            _poll_state['timed_out'] = True
+            _poll_state['cancel_ts'] = now
+            result.err = RuntimeError(_('Render stopped after five minutes without progress.'))
+            cancel_evt.set()
             try:
-                if not result.ok and result.err is None:
-                    result.err = RuntimeError(_('Render timed out.'))
+                log.error('soundWave: render made no progress for five minutes; cancelling worker')
             except Exception:
                 pass
-            try:
-                log.error('soundWave: render timed out (UI watchdog); forcing dialog closed')
-            except Exception:
-                pass
-            wx.CallAfter(finish)
-            return
 
         if t.is_alive():
             # Update UI at ~5Hz for responsiveness, but only refresh the details text ~1Hz.

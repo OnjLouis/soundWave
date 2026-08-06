@@ -1,9 +1,9 @@
 
 msgid ""
 msgstr ""
-"Project-Id-Version: soundWave 1.2.5\n"
+"Project-Id-Version: soundWave 1.2.6\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-07-27 20:28+0000\n"
+"POT-Creation-Date: 2026-08-06 14:27+0100\n"
 "PO-Revision-Date: 2026-07-27 22:31+0200\n"
 "Last-Translator: Kazimierz Parzych, DJ Graco\n"
 "Language: pl\n"
@@ -1032,3 +1032,15 @@ msgstr "SoundWave jest już otwarty."
 #: soundWave_lib/main.py:1977
 msgid "SoundWave could not open the render workflow."
 msgstr "Nie udało się otworzyć procesu renderowania w SoundWave."
+
+#: soundWave_lib/main.py:2796
+msgid "Render stopped after five minutes without progress."
+msgstr "Renderowanie zatrzymano po pięciu minutach bez postępu."
+
+#: soundWave_lib/synths/pocket_tts.py:126
+msgid ""
+"Pocket TTS could not render one short section of the text, even after "
+"splitting it into smaller parts."
+msgstr ""
+"Pocket TTS nie mógł wyrenderować jednej krótkiej części tekstu nawet po "
+"podzieleniu jej na mniejsze fragmenty."

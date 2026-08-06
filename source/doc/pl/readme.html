@@ -64,9 +64,10 @@ Długie czasy są pokazywane jako minuty albo godziny, a nie tylko jako liczba s
 </p>
 
 <p>
-Przy długich renderach użyj przycisku <strong>Minimalizuj</strong> albo skrótu <span class="kbd">Alt</span>+<span class="kbd">M</span>, aby ukryć okno postępu.
+Przy długich renderach użyj przycisku <strong>Minimalizuj</strong>, skrótu <span class="kbd">Alt</span>+<span class="kbd">M</span> albo klawisza <span class="kbd">Escape</span>, aby ukryć okno postępu.
 Renderowanie będzie działać w tle, a ukryte okno nie będzie przeszkadzać na liście <span class="kbd">Alt</span>+<span class="kbd">Tab</span>.
 Naciśnij ponownie polecenie soundWave, <span class="kbd">NVDA</span>+<span class="kbd">Ctrl</span>+<span class="kbd">=</span>, aby przywrócić aktywne okno postępu.
+Renderowanie jest anulowane tylko po aktywowaniu przycisku <strong>Anuluj</strong>.
 Jeśli inne okno soundWave jest już otwarte, to samo polecenie przeniesie je na pierwszy plan zamiast otwierać kolejny proces renderowania.
 </p>
 
@@ -256,6 +257,15 @@ soundWave używa kanału aktualizacji dodatków NVDA zgodnego z dystrybucją prz
 </p>
 
 <h2>Zmiany</h2>
+
+<h3>1.2.6</h3>
+<ul>
+  <li>Klawisz <span class="kbd">Escape</span> i przycisk zamknięcia okna postępu ukrywają teraz aktywne renderowanie zamiast je anulować. Renderowanie anuluje wyłącznie przycisk <strong>Anuluj</strong>.</li>
+  <li>Naprawiono czyszczenie stanu po anulowaniu, dzięki czemu soundWave nie pozostaje błędnie oznaczony jako już otwarty.</li>
+  <li>Mechanizm nadzorujący zatrzymuje teraz zadanie dopiero po pięciu minutach bez mierzalnego postępu, zamiast ograniczać całkowity czas renderowania.</li>
+  <li>Ulepszono odzyskiwanie Pocket TTS przez adaptacyjne dzielenie trudnych fragmentów modelu, aż będzie można je bezpiecznie wyrenderować.</li>
+  <li>Podczas testów wydania pomyślnie ukończono renderowanie 2990 znaków w Pocket TTS, trwające nieco ponad siedem minut.</li>
+</ul>
 
 <h3>1.2.5</h3>
 <ul>

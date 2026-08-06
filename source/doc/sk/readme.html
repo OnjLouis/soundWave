@@ -64,9 +64,10 @@ Dlhé trvania sa zobrazujú v minútach alebo hodinách, nie iba ako počet sek�
 </p>
 
 <p>
-Pri dlhých renderoch použite tlačidlo <strong>Minimalizovať</strong> alebo skratku <span class="kbd">Alt</span>+<span class="kbd">M</span>, aby ste skryli dialóg priebehu.
+Pri dlhých renderoch použite tlačidlo <strong>Minimalizovať</strong>, skratku <span class="kbd">Alt</span>+<span class="kbd">M</span> alebo kláves <span class="kbd">Escape</span>, aby ste skryli dialóg priebehu.
 Renderovanie pokračuje na pozadí a skrytý dialóg nezostáva v zozname <span class="kbd">Alt</span>+<span class="kbd">Tab</span>.
 Opätovným stlačením príkazu soundWave, <span class="kbd">NVDA</span>+<span class="kbd">Ctrl</span>+<span class="kbd">=</span>, vrátite aktívny dialóg priebehu.
+Renderovanie sa zruší iba aktivovaním tlačidla <strong>Zrušiť</strong>.
 Ak je už otvorený iný dialóg soundWave, rovnaký príkaz ho prenesie do popredia namiesto otvorenia ďalšieho procesu renderovania.
 </p>
 
@@ -256,6 +257,15 @@ soundWave používa aktualizačný kanál doplnkov NVDA kompatibilný s distrib�
 </p>
 
 <h2>Zmeny</h2>
+
+<h3>1.2.6</h3>
+<ul>
+  <li>Kláves <span class="kbd">Escape</span> a tlačidlo zatvorenia okna priebehu teraz skryjú aktívne renderovanie namiesto jeho zrušenia. Renderovanie zruší iba tlačidlo <strong>Zrušiť</strong>.</li>
+  <li>Opravené čistenie stavu po zrušení, takže soundWave už nezostane nesprávne označený ako otvorený.</li>
+  <li>Kontrola renderovania teraz zastaví úlohu až po piatich minútach bez merateľného pokroku namiesto obmedzenia celkového času renderovania.</li>
+  <li>Vylepšené zotavenie Pocket TTS pomocou adaptívneho delenia náročných fragmentov modelu, kým ich nie je možné bezpečne vyrenderovať.</li>
+  <li>Počas testovania vydania bolo úspešne dokončené renderovanie 2990 znakov pomocou Pocket TTS, ktoré trvalo o niečo viac ako sedem minút.</li>
+</ul>
 
 <h3>1.2.5</h3>
 <ul>

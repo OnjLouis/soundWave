@@ -64,9 +64,10 @@ Long durations are shown as minutes or hours rather than raw seconds.
 </p>
 
 <p>
-For long renders, use <strong>Minimize</strong> or press <span class="kbd">Alt</span>+<span class="kbd">M</span> to hide the progress dialog.
+For long renders, use <strong>Minimize</strong>, press <span class="kbd">Alt</span>+<span class="kbd">M</span>, or press <span class="kbd">Escape</span> to hide the progress dialog.
 The render continues in the background and the hidden dialog is kept out of <span class="kbd">Alt</span>+<span class="kbd">Tab</span>.
 Press the soundWave command again, <span class="kbd">NVDA</span>+<span class="kbd">Ctrl</span>+<span class="kbd">=</span>, to bring the progress dialog back.
+Rendering is cancelled only when you activate the <strong>Cancel</strong> button.
 If any other soundWave dialog is already open, the same command brings that dialog forward instead of opening another render workflow.
 </p>
 
@@ -256,6 +257,15 @@ soundWave uses NVDA's add-on update channel for store-compatible updates.
 </p>
 
 <h2>Changes</h2>
+
+<h3>1.2.6</h3>
+<ul>
+  <li>Changed <span class="kbd">Escape</span> and the progress window close control to hide an active render instead of cancelling it. Only the <strong>Cancel</strong> button now cancels rendering.</li>
+  <li>Fixed cancellation cleanup so soundWave does not remain incorrectly marked as already open.</li>
+  <li>Changed the render watchdog to stop a job only after five minutes without measurable progress, rather than limiting the total render duration.</li>
+  <li>Improved Pocket TTS recovery by adaptively splitting difficult model fragments until they can be rendered safely.</li>
+  <li>Successfully tested a 2,990-character Pocket TTS render lasting just over seven minutes.</li>
+</ul>
 
 <h3>1.2.5</h3>
 <ul>

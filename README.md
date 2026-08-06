@@ -28,6 +28,7 @@ soundWave is an NVDA add-on that renders text to an audio file using installed s
 
 ## Changes
 
+- 1.2.6: Changed Escape and the progress window close control to hide an active render instead of cancelling it; only the Cancel button now cancels. Fixed cancellation cleanup so SoundWave does not remain incorrectly marked as already open. Long renders now time out only after five minutes without measurable progress, and Pocket TTS can recover from difficult model fragments through deeper adaptive splitting. A 2,990-character Pocket TTS render completed successfully in just over seven minutes during release testing.
 - 1.2.5: Fixed the Sonata options dialog so Sonata capture opens and renders again. SoundWave now keeps one render workflow open at a time, raises the existing dialog when its command is pressed again, and brings the completion summary forward after automatically opening the output folder.
 - 1.2.4: Added language selection for Keynote Gold/BestSpeech and generic NVDA synthesizers that expose a language setting. Pocket TTS render options now include its native 1 to 10 Flow steps quality control. Long Pocket TTS renders recover safely from the model's known zero-length transformer-state failure by retrying only the affected segment in smaller pieces, without retaining partial audio.
 - 1.2.3: Updated Prose 2000 rendering to use the synth's native firmware Rate, Pitch and Volume controls. Removed inert Voice and Variant choices from the Prose options dialog while retaining compatibility with older Prose builds.

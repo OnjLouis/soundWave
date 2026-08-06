@@ -112,7 +112,7 @@ def _render_segment_bytes(engine, segment: str, voice_path, volume_factor: float
                 buffers += 1
         return output.getvalue(), buffers
     except Exception as error:
-        if depth >= 3 or not _is_transformer_state_error(error):
+        if not _is_transformer_state_error(error):
             raise
         try:
             cache = getattr(engine, "_voice_state_cache", None)
@@ -121,8 +121,10 @@ def _render_segment_bytes(engine, segment: str, voice_path, volume_factor: float
         except Exception:
             pass
         pieces = [piece for piece in _split_failed_segment(segment) if _has_tokens(engine, piece)]
-        if len(pieces) < 2:
-            raise
+        if len(pieces) < 2 or depth >= 12:
+            raise RuntimeError(
+                _("Pocket TTS could not render one short section of the text, even after splitting it into smaller parts.")
+            ) from error
         combined = io.BytesIO()
         combined_buffers = 0
         for piece in pieces:
