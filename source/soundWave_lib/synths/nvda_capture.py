@@ -257,6 +257,33 @@ def _snapshot_synth_settings(synth) -> Dict[str, Any]:
     return snapshot
 
 
+def _supported_setting_ids(synth) -> Optional[set]:
+    """Return advertised setting IDs, or None when the driver has no usable metadata."""
+    try:
+        settings = getattr(synth, "supportedSettings")
+    except Exception:
+        return None
+    if settings is None:
+        return None
+    try:
+        return {
+            str(getattr(setting, "id", "") or "")
+            for setting in settings
+            if str(getattr(setting, "id", "") or "")
+        }
+    except Exception:
+        return None
+
+
+def _supports_setting(synth, setting_id: str) -> bool:
+    """Check an optional synth setting without leaking proxy property errors."""
+    setting_ids = _supported_setting_ids(synth)
+    if setting_ids is not None:
+        return setting_id in setting_ids
+    sentinel = object()
+    return _safe_getattr(synth, setting_id, sentinel) is not sentinel
+
+
 def _discover_language_setting(synth):
     """Return the synth setting id and values for an exposed language selector."""
     candidates = []
@@ -676,7 +703,7 @@ class GenericNvdaOptionsDialog(wx.Dialog):
         grid.Add(self.rateSpin, 0, wx.EXPAND)
 
         self.rateBoostChk = None
-        if hasattr(self.synth, "rateBoost"):
+        if _supports_setting(self.synth, "rateBoost"):
             grid.Add(wx.StaticText(panel, label=_("Rate &boost:")), 0, wx.ALIGN_CENTER_VERTICAL)
             self.rateBoostChk = wx.CheckBox(panel)
             self.rateBoostChk.SetValue(bool(_cfg_get_bool(self.cfg_prefix + "_rateBoost", _safe_getattr(self.synth, "rateBoost", False))))
@@ -691,7 +718,7 @@ class GenericNvdaOptionsDialog(wx.Dialog):
         grid.Add(self.volumeSpin, 0, wx.EXPAND)
 
         self.eosSpin = None
-        if hasattr(self.synth, "eosThreshold"):
+        if _supports_setting(self.synth, "eosThreshold"):
             grid.Add(wx.StaticText(panel, label=_("&EOS sensitivity:")), 0, wx.ALIGN_CENTER_VERTICAL)
             self.eosSpin = wx.SpinCtrl(
                 panel,
@@ -702,7 +729,7 @@ class GenericNvdaOptionsDialog(wx.Dialog):
             grid.Add(self.eosSpin, 0, wx.EXPAND)
 
         self.flowStepsSpin = None
-        if hasattr(self.synth, "lsdSteps"):
+        if _supports_setting(self.synth, "lsdSteps"):
             grid.Add(wx.StaticText(panel, label=_("&Flow steps:")), 0, wx.ALIGN_CENTER_VERTICAL)
             self.flowStepsSpin = wx.SpinCtrl(
                 panel,
