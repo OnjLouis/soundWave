@@ -27,6 +27,28 @@ from soundWave_lib.synths import google_tts
 from soundWave_lib.synths import pocket_tts
 from soundWave_lib.synths import prose2000
 
+_NOKIA_TEXT_TRANSLATION = str.maketrans({
+    "\u00a0": " ",
+    "\u200b": "",
+    "\u2018": "'",
+    "\u2019": "'",
+    "\u201c": '"',
+    "\u201d": '"',
+    "\u2013": "-",
+    "\u2014": "-",
+    "\u2022": " bullet ",
+    "\u2026": "...",
+    "\u25cf": " bullet ",
+    "\u25e6": " bullet ",
+})
+
+
+def _prepare_generic_capture_text(text: str, synth_name: str) -> str:
+    compact_name = "".join(ch for ch in str(synth_name or "").casefold() if ch.isalnum())
+    if compact_name in {"nokiatts", "nokiaklatt"}:
+        return str(text or "").translate(_NOKIA_TEXT_TRANSLATION)
+    return str(text or "")
+
 # Keynote Gold / BestSpeech offline rendering + options
 # ----------------------------
 
@@ -224,7 +246,7 @@ class _GenericCaptureWavePlayer:
         self.done_evt.set()
 
 
-def _make_capture_wave_player_factory(players: List[_GenericCaptureWavePlayer]):
+def _make_capture_wave_player_factory(players: List[_GenericCaptureWavePlayer], original_wave_player=None):
     def _factory(*args, **kwargs):
         channels = kwargs.pop("channels", args[0] if len(args) > 0 else 1)
         samplesPerSec = kwargs.pop("samplesPerSec", args[1] if len(args) > 1 else 22050)
@@ -237,6 +259,11 @@ def _make_capture_wave_player_factory(players: List[_GenericCaptureWavePlayer]):
         )
         players.append(player)
         return player
+    # Existing real players can finish on native callback threads while the
+    # factory is installed. NVDA's callback resolves this module-level class
+    # registry dynamically, so preserve it on the temporary replacement.
+    if original_wave_player is not None and hasattr(original_wave_player, "_instances"):
+        _factory._instances = original_wave_player._instances
     return _factory
 
 
@@ -345,6 +372,7 @@ def _render_with_nvda_generic_capture(
     is_google_tts = google_tts.is_google_tts_synth(synth_name)
     is_pocket_tts = pocket_tts.is_pocket_tts_synth(synth_name)
     original_settings: Dict[str, Any] = {}
+    target_players: List[_GenericCaptureWavePlayer] = []
 
     def _on_synth_done(synth=None, **kwargs):
         nonlocal saw_done_notification
@@ -356,10 +384,14 @@ def _render_with_nvda_generic_capture(
 
     current_synth_holder = {"synth": None}
     try:
-        capture_factory = _make_capture_wave_player_factory(players)
+        capture_factory = _make_capture_wave_player_factory(players, old_wave_player)
         if not is_google_tts and not is_pocket_tts:
             nvwave.WavePlayer = capture_factory
         synth = _get_synth_instance(synth_name)
+        # Most NVDA drivers create their player during construction. Keep
+        # that exact set so unrelated NVDA speech or add-on sounds created
+        # during a long render cannot contaminate the captured format.
+        target_players = list(players)
         current_synth_holder["synth"] = synth
         if synth is None or not hasattr(synth, "speak"):
             raise RuntimeError(_("Couldn't create NVDA synth instance for %s.") % synth_name)
@@ -418,7 +450,8 @@ def _render_with_nvda_generic_capture(
             synthDriverHandler.synthDoneSpeaking.register(_on_synth_done)
         except Exception:
             pass
-        synth.speak([text or ""])
+        capture_text = _prepare_generic_capture_text(text, synth_name)
+        synth.speak([capture_text])
 
         fallback_quiet_seconds = max(8.0, min(30.0, len(text or "") / 1000.0))
         deadline = time.time() + float(TIMEOUT_SECONDS)
@@ -429,15 +462,16 @@ def _render_with_nvda_generic_capture(
                 except Exception:
                     pass
                 raise RuntimeError(_("Cancelled."))
-            total_bytes = sum(len(p.pcm) for p in players)
-            last_audio = max([p.last_audio_ts or 0 for p in players] or [0])
+            capture_players = target_players or players
+            total_bytes = sum(len(p.pcm) for p in capture_players)
+            last_audio = max([p.last_audio_ts or 0 for p in capture_players] or [0])
             if progress is not None:
                 progress["bytes"] = total_bytes
                 progress["last_audio_ts"] = last_audio or None
-                if players:
-                    progress["pcm_rate"] = int(players[0].samplesPerSec)
-                    progress["channels"] = int(players[0].channels)
-                    progress["sampwidth"] = int(players[0].bitsPerSample // 8)
+                if capture_players:
+                    progress["pcm_rate"] = int(capture_players[0].samplesPerSec)
+                    progress["channels"] = int(capture_players[0].channels)
+                    progress["sampwidth"] = int(capture_players[0].bitsPerSample // 8)
             if total_bytes > 0 and done_evt.is_set():
                 break
             if total_bytes == 0 and done_evt.is_set():
@@ -471,7 +505,7 @@ def _render_with_nvda_generic_capture(
             except Exception:
                 pass
 
-    active = [p for p in players if p.pcm]
+    active = [p for p in (target_players or players) if p.pcm]
     if not active:
         raise RuntimeError(
             _("Generic NVDA capture produced no audio. This synth may not use NVDA's WavePlayer path.")

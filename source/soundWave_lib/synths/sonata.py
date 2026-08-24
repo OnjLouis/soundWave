@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import annotations
 
+import importlib
 import json
 import os
 import pathlib
@@ -17,12 +18,35 @@ from logHandler import log
 from soundWave_lib import runtime as _runtime
 _runtime.bind(globals())
 
+_SONATA_BACKENDS = (
+    ("dengjen_neural_voices", "DengjenTextToSpeechSystem", "Dengjen Neural Voices"),
+    ("sonata_neural_voices", "SonataTextToSpeechSystem", "Sonata"),
+)
+
+
+def _get_sonata_backend():
+    for module_name, system_class, display_name in _SONATA_BACKENDS:
+        try:
+            importlib.import_module(f"synthDrivers.{module_name}")
+            return module_name, system_class, display_name
+        except Exception:
+            continue
+    return None
+
+
 def _has_sonata() -> bool:
-    try:
-        import synthDrivers.sonata_neural_voices  # noqa: F401
-        return True
-    except Exception:
-        return False
+    return _get_sonata_backend() is not None
+
+
+def _sonata_display_name() -> str:
+    backend = _get_sonata_backend()
+    return backend[2] if backend else "Sonata"
+
+
+def _voice_config_identity(path: str) -> Tuple[str, str]:
+    """Identify a voice across the Sonata-to-Dengjen data-directory rename."""
+    config_path = pathlib.Path(os.fspath(path or ""))
+    return config_path.parent.name.casefold(), config_path.name.casefold()
 
 
 # Sonata options / discovery
@@ -39,12 +63,17 @@ def _list_sonata_voice_configs() -> List[Tuple[str, str, List[str]]]:
     Returns a list of (label, config_path, speaker_keys).
     Uses Sonata's voice discovery to locate voices in NVDA config.
     """
+    backend = _get_sonata_backend()
+    if backend is None:
+        raise RuntimeError(_("Sonata or Dengjen Neural Voices is not installed."))
+    module_name, system_class, _display_name = backend
     try:
-        from synthDrivers.sonata_neural_voices.tts_system import SonataTextToSpeechSystem
+        tts_module = importlib.import_module(f"synthDrivers.{module_name}.tts_system")
+        text_to_speech_system = getattr(tts_module, system_class)
     except Exception as e:
-        raise RuntimeError(_("Sonata addon not installed (synthDrivers.sonata_neural_voices not found).")) from e
+        raise RuntimeError(_("The installed Sonata-compatible voice engine could not be loaded.")) from e
 
-    voices = SonataTextToSpeechSystem.load_piper_voices_from_nvda_config_dir()
+    voices = text_to_speech_system.load_piper_voices_from_nvda_config_dir()
     results: List[Tuple[str, str, List[str]]] = []
 
     for v in voices:
@@ -75,7 +104,7 @@ def _list_sonata_voice_configs() -> List[Tuple[str, str, List[str]]]:
         results.append((label, cfg_path, speakers))
 
     if not results:
-        raise RuntimeError(_("No Sonata Piper voice configs were found."))
+        raise RuntimeError(_("No Sonata-compatible Piper voice configs were found."))
     return results
 
 
@@ -92,22 +121,30 @@ def _render_with_sonata_offline(
     Renders via Sonata's own gRPC server. This does not touch NVDA's live speech output.
     Returns the RPC mode used.
     """
-    from synthDrivers.sonata_neural_voices.grpc_client import start_grpc_server
-    from synthDrivers.sonata_neural_voices.helpers import import_bundled_library
+    backend = _get_sonata_backend()
+    if backend is None:
+        raise RuntimeError(_("Sonata or Dengjen Neural Voices is not installed."))
+    module_name, _system_class, display_name = backend
+    grpc_client = importlib.import_module(f"synthDrivers.{module_name}.grpc_client")
+    helpers = importlib.import_module(f"synthDrivers.{module_name}.helpers")
     import globalVars as gv
 
-    if not start_grpc_server():
-        raise RuntimeError(_("Failed to start Sonata gRPC server."))
-    port = getattr(gv, "SONATA_GRPC_SERVER_PORT", None)
+    if not grpc_client.start_grpc_server():
+        raise RuntimeError(_("Failed to start the Sonata-compatible gRPC server."))
+    port = getattr(grpc_client, "SONATA_GRPC_SERVER_PORT", None) or getattr(gv, "SONATA_GRPC_SERVER_PORT", None)
     if not port:
-        raise RuntimeError(_("Sonata gRPC server did not provide a port."))
+        raise RuntimeError(_("The Sonata-compatible gRPC server did not provide a port."))
 
     _ensure_grpc_experimental_shim()
 
-    with import_bundled_library():
-        from synthDrivers.sonata_neural_voices.lib import grpc as grpc  # bundled
-        from synthDrivers.sonata_neural_voices.grpc_client.grpc_protos import sonata_grpc_pb2 as msgs
-        from synthDrivers.sonata_neural_voices.grpc_client.grpc_protos import sonata_grpc_pb2_grpc as stubs
+    with helpers.import_bundled_library():
+        grpc = importlib.import_module(f"synthDrivers.{module_name}.lib.grpc")
+        msgs = importlib.import_module(
+            f"synthDrivers.{module_name}.grpc_client.grpc_protos.sonata_grpc_pb2"
+        )
+        stubs = importlib.import_module(
+            f"synthDrivers.{module_name}.grpc_client.grpc_protos.sonata_grpc_pb2_grpc"
+        )
 
         channel = grpc.insecure_channel(f"localhost:{port}")
         service = stubs.sonata_grpcStub(channel)
@@ -177,13 +214,13 @@ def _render_with_sonata_offline(
             except Exception:
                 pass
 
-        return mode
+        return f"{display_name} {mode}"
 
 class SonataOptionsDialog(wx.Dialog):
     SAMPLE_TEXT = "This is a soundWave test."
 
     def __init__(self, parent):
-        super().__init__(parent, title=_("soundWave - Sonata options"))
+        super().__init__(parent, title=_("soundWave - %s options") % _sonata_display_name())
         self.voices = _list_sonata_voice_configs()
 
         sizer = wx.BoxSizer(wx.VERTICAL)
@@ -241,8 +278,9 @@ class SonataOptionsDialog(wx.Dialog):
             saved_cfg = _cfg_get("sonataVoiceConfigPath", None)
             idx = 0
             if saved_cfg:
+                saved_identity = _voice_config_identity(saved_cfg)
                 for i, (_label, cfg, _speakers) in enumerate(self.voices):
-                    if cfg == saved_cfg:
+                    if cfg == saved_cfg or _voice_config_identity(cfg) == saved_identity:
                         idx = i
                         break
             self.voiceChoice.SetSelection(idx)

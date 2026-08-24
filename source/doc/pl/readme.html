@@ -100,7 +100,7 @@ Możesz usuwać znaczniki, przenosić je, dodawać własne słowa albo zmieniać
     <tr>
       <td>Wzorzec folderu pojedynczego renderowania</td>
       <td><code>%engine% - %voice%</code></td>
-      <td><code>Sonata - Kirsten Two En Medium</code></td>
+      <td><code>Dengjen Neural Voices - Kirsten Two En Medium</code></td>
       <td>Folder proponowany przez okno Zapisz jako dla schowka, wpisanego tekstu albo jednego pliku tekstowego.</td>
     </tr>
     <tr>
@@ -163,7 +163,7 @@ Możesz usuwać znaczniki, przenosić je, dodawać własne słowa albo zmieniać
     <tr>
       <td><code>%engine%</code></td>
       <td>Nazwa syntezatora.</td>
-      <td><code>Orpheus</code>, <code>Sonata</code>, <code>SAPI5</code> albo <code>Pocket TTS</code></td>
+      <td><code>Orpheus</code>, <code>Dengjen Neural Voices</code>, <code>SAPI5</code> albo <code>Pocket TTS</code></td>
     </tr>
     <tr>
       <td><code>%voice%</code></td>
@@ -214,8 +214,16 @@ Większość okien ustawień zawiera:
       <td>Wymaga dodatku Supertonic. soundWave używa mniejszych fragmentów renderowania dla Supertonic, aby dłuższe wejście mogło zostać wyrenderowane bez przekroczenia limitu rozmiaru wejścia modelu.</td>
     </tr>
     <tr>
-      <td><strong>Sonata</strong></td>
-      <td>Wymaga dodatku Sonata Neural Voices oraz dostępnych plików konfiguracji głosów.</td>
+      <td><strong>Dengjen Neural Voices i Sonata</strong></td>
+      <td>Używa bezpośredniego renderera offline dodatku Dengjen Neural Voices albo starszego dodatku Sonata Neural Voices, gdy Dengjen nie jest zainstalowany. Dotychczasowy wybór głosu Sonata jest zachowywany, gdy ten sam głos został przeniesiony do folderu danych Dengjen.</td>
+    </tr>
+    <tr>
+      <td><strong>Samsung Galaxy Voices i Samsung TV Voices</strong></td>
+      <td>Długi tekst jest wysyłany w mniejszych fragmentach uwzględniających granice zdań, a następnie łączony w jeden plik. Ogólne przechwytywanie zapisuje tylko wybrany syntezator renderujący, więc zwykła mowa NVDA nie trafia do zapisanego dźwięku.</td>
+    </tr>
+    <tr>
+      <td><strong>Nokia TTS</strong></td>
+      <td>Długi tekst jest wysyłany w mniejszych fragmentach odpowiednich dla emulowanego silnika. Typowe znaki inteligentnej interpunkcji i punktory są przed syntezą zamieniane na bezpieczne odpowiedniki do wymówienia.</td>
     </tr>
     <tr>
       <td><strong>Eloquence i IBMTTS</strong></td>
@@ -257,6 +265,14 @@ soundWave używa kanału aktualizacji dodatków NVDA zgodnego z dystrybucją prz
 </p>
 
 <h2>Zmiany</h2>
+
+<h3>1.2.8</h3>
+<ul>
+  <li>Dodano bezpośrednią obsługę Dengjen Neural Voices, zachowując zgodność z Sonata i zapamiętany wybór głosu.</li>
+  <li>Ulepszono renderowanie długich tekstów za pomocą Samsung Galaxy Voices i Samsung TV Voices przez dzielenie ich na niezawodne fragmenty dostosowane do silnika.</li>
+  <li>Ulepszono renderowanie Nokia TTS dzięki mniejszym fragmentom oraz bezpiecznej obsłudze typograficznych znaków interpunkcyjnych i punktorów.</li>
+  <li>Ograniczono ogólne przechwytywanie dźwięku NVDA do wybranego syntezatora renderującego. Zwykła mowa i dźwięki NVDA nie mogą już trafiać do plików wyjściowych ani powodować błędów mieszanych formatów.</li>
+</ul>
 
 <h3>1.2.7</h3>
 <ul>

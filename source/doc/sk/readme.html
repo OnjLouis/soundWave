@@ -100,7 +100,7 @@ Značky môžete odstrániť, presunúť, pridať vlastné slová alebo zmeniť 
     <tr>
       <td>Vzor priečinka jedného renderovania</td>
       <td><code>%engine% - %voice%</code></td>
-      <td><code>Sonata - Kirsten Two En Medium</code></td>
+      <td><code>Dengjen Neural Voices - Kirsten Two En Medium</code></td>
       <td>Priečinok ponúknutý dialógom Uložiť ako pre schránku, ručne zadaný text alebo jeden textový súbor.</td>
     </tr>
     <tr>
@@ -163,7 +163,7 @@ Značky môžete odstrániť, presunúť, pridať vlastné slová alebo zmeniť 
     <tr>
       <td><code>%engine%</code></td>
       <td>Názov syntetizéra.</td>
-      <td><code>Orpheus</code>, <code>Sonata</code>, <code>SAPI5</code> alebo <code>Pocket TTS</code></td>
+      <td><code>Orpheus</code>, <code>Dengjen Neural Voices</code>, <code>SAPI5</code> alebo <code>Pocket TTS</code></td>
     </tr>
     <tr>
       <td><code>%voice%</code></td>
@@ -214,8 +214,16 @@ Väčšina dialógov nastavení obsahuje:
       <td>Vyžaduje doplnok Supertonic. soundWave používa pre Supertonic menšie časti renderovania, aby sa dlhší vstup dal vyrenderovať bez prekročenia limitu veľkosti vstupu modelu.</td>
     </tr>
     <tr>
-      <td><strong>Sonata</strong></td>
-      <td>Vyžaduje doplnok Sonata Neural Voices a dostupné konfiguračné súbory hlasov.</td>
+      <td><strong>Dengjen Neural Voices a Sonata</strong></td>
+      <td>Používa priamy offline renderer doplnku Dengjen Neural Voices alebo staršieho doplnku Sonata Neural Voices, keď Dengjen nie je nainštalovaný. Existujúci výber hlasu Sonata sa zachová, keď bol rovnaký hlas presunutý do dátového priečinka Dengjen.</td>
+    </tr>
+    <tr>
+      <td><strong>Samsung Galaxy Voices a Samsung TV Voices</strong></td>
+      <td>Dlhý text sa odosiela v menších častiach rešpektujúcich hranice viet a následne sa spojí do jedného výstupu. Všeobecné zachytávanie nahráva iba vybraný renderovací syntetizér, takže bežná reč NVDA sa nepridá do uloženého zvuku.</td>
+    </tr>
+    <tr>
+      <td><strong>Nokia TTS</strong></td>
+      <td>Dlhý text sa odosiela v menších častiach vhodných pre emulovaný engine. Bežná typografická interpunkcia a odrážky sa pred syntézou prevedú na bezpečné vysloviteľné ekvivalenty.</td>
     </tr>
     <tr>
       <td><strong>Eloquence a IBMTTS</strong></td>
@@ -257,6 +265,14 @@ soundWave používa aktualizačný kanál doplnkov NVDA kompatibilný s distrib�
 </p>
 
 <h2>Zmeny</h2>
+
+<h3>1.2.8</h3>
+<ul>
+  <li>Pridaná priama podpora Dengjen Neural Voices so zachovaním kompatibility so Sonata a zapamätaného výberu hlasu.</li>
+  <li>Vylepšené renderovanie dlhých textov pomocou Samsung Galaxy Voices a Samsung TV Voices ich rozdelením na spoľahlivé časti prispôsobené enginu.</li>
+  <li>Vylepšené renderovanie Nokia TTS pomocou menších častí a bezpečného spracovania typografickej interpunkcie a odrážok.</li>
+  <li>Všeobecné zachytávanie zvuku NVDA je obmedzené na vybraný renderovací syntetizátor. Bežná reč a zvuky NVDA sa už nemôžu dostať do výstupných súborov ani spôsobiť chyby zmiešaných formátov.</li>
+</ul>
 
 <h3>1.2.7</h3>
 <ul>

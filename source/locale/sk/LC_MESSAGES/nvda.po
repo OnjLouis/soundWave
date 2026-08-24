@@ -6,9 +6,9 @@
 #, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: soundWave 1.2.7\n"
+"Project-Id-Version: soundWave 1.2.8\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-08-13 08:33+0100\n"
+"POT-Creation-Date: 2026-08-24 23:26+0100\n"
 "PO-Revision-Date: 2026-07-27 22:31+0200\n"
 "Last-Translator: Kazimierz Parzych\n"
 "Language: sk\n"
@@ -1017,29 +1017,33 @@ msgstr "&Automaticky hovoriť pri zmene hlasu, tempa, výšky alebo hlasitosti"
 msgid "Test failed:\n"
 msgstr "Test zlyhal:\n"
 
-#: source/soundWave_lib/synths/sonata.py:45
-msgid "Sonata addon not installed (synthDrivers.sonata_neural_voices not found)."
-msgstr "Doplnok Sonata nie je nainštalovaný (synthDrivers.sonata_neural_voices sa nenašiel)."
+#: source/soundWave_lib/synths/sonata.py
+msgid "Sonata or Dengjen Neural Voices is not installed."
+msgstr "Doplnok Sonata ani Dengjen Neural Voices nie je nainštalovaný."
 
-#: source/soundWave_lib/synths/sonata.py:78
-msgid "No Sonata Piper voice configs were found."
-msgstr "Nenašli sa žiadne konfigurácie hlasov Sonata Piper."
+#: source/soundWave_lib/synths/sonata.py
+msgid "The installed Sonata-compatible voice engine could not be loaded."
+msgstr "Nainštalovaný hlasový engine kompatibilný so Sonata sa nepodarilo načítať."
 
-#: source/soundWave_lib/synths/sonata.py:100
-msgid "Failed to start Sonata gRPC server."
-msgstr "Nepodarilo sa spustiť gRPC server Sonata."
+#: source/soundWave_lib/synths/sonata.py
+msgid "No Sonata-compatible Piper voice configs were found."
+msgstr "Nenašli sa žiadne konfigurácie hlasov Piper kompatibilné so Sonata."
 
-#: source/soundWave_lib/synths/sonata.py:103
-msgid "Sonata gRPC server did not provide a port."
-msgstr "gRPC server Sonata neposkytol port."
+#: source/soundWave_lib/synths/sonata.py
+msgid "Failed to start the Sonata-compatible gRPC server."
+msgstr "Nepodarilo sa spustiť gRPC server kompatibilný so Sonata."
+
+#: source/soundWave_lib/synths/sonata.py
+msgid "The Sonata-compatible gRPC server did not provide a port."
+msgstr "gRPC server kompatibilný so Sonata neposkytol port."
 
 #: source/soundWave_lib/synths/sonata.py:119
 msgid "Sonata LoadVoice returned no voice_id."
 msgstr "Sonata LoadVoice nevrátil voice_id."
 
-#: source/soundWave_lib/synths/sonata.py:186
-msgid "soundWave - Sonata options"
-msgstr "soundWave - možnosti Sonata"
+#: source/soundWave_lib/synths/sonata.py
+msgid "soundWave - %s options"
+msgstr "soundWave - možnosti %s"
 
 #: source/soundWave_lib/synths/sonata.py:200
 msgid "S&peaker:"

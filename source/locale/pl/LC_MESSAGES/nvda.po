@@ -6,9 +6,9 @@
 #, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: soundWave 1.2.7\n"
+"Project-Id-Version: soundWave 1.2.8\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-08-13 08:33+0100\n"
+"POT-Creation-Date: 2026-08-24 23:26+0100\n"
 "PO-Revision-Date: 2026-07-27 22:31+0200\n"
 "Last-Translator: Kazimierz Parzych, DJ Graco\n"
 "Language: pl\n"
@@ -1020,29 +1020,33 @@ msgstr "&Automatycznie odtwarzaj mowę przy zmianie głosu, tempa, wysokości lu
 msgid "Test failed:\n"
 msgstr "Test nie powiódł się:\n"
 
-#: source/soundWave_lib/synths/sonata.py:45
-msgid "Sonata addon not installed (synthDrivers.sonata_neural_voices not found)."
-msgstr "Dodatek Sonata nie jest zainstalowany (nie znaleziono synthDrivers.sonata_neural_voices)."
+#: source/soundWave_lib/synths/sonata.py
+msgid "Sonata or Dengjen Neural Voices is not installed."
+msgstr "Dodatek Sonata ani Dengjen Neural Voices nie jest zainstalowany."
 
-#: source/soundWave_lib/synths/sonata.py:78
-msgid "No Sonata Piper voice configs were found."
-msgstr "Nie znaleziono konfiguracji głosów Sonata Piper."
+#: source/soundWave_lib/synths/sonata.py
+msgid "The installed Sonata-compatible voice engine could not be loaded."
+msgstr "Nie udało się załadować zainstalowanego silnika głosowego zgodnego z Sonata."
 
-#: source/soundWave_lib/synths/sonata.py:100
-msgid "Failed to start Sonata gRPC server."
-msgstr "Nie udało się uruchomić serwera gRPC Sonata."
+#: source/soundWave_lib/synths/sonata.py
+msgid "No Sonata-compatible Piper voice configs were found."
+msgstr "Nie znaleziono konfiguracji głosów Piper zgodnych z Sonata."
 
-#: source/soundWave_lib/synths/sonata.py:103
-msgid "Sonata gRPC server did not provide a port."
-msgstr "Serwer gRPC Sonata nie podał portu."
+#: source/soundWave_lib/synths/sonata.py
+msgid "Failed to start the Sonata-compatible gRPC server."
+msgstr "Nie udało się uruchomić serwera gRPC zgodnego z Sonata."
+
+#: source/soundWave_lib/synths/sonata.py
+msgid "The Sonata-compatible gRPC server did not provide a port."
+msgstr "Serwer gRPC zgodny z Sonata nie podał portu."
 
 #: source/soundWave_lib/synths/sonata.py:119
 msgid "Sonata LoadVoice returned no voice_id."
 msgstr "Sonata LoadVoice nie zwrócił voice_id."
 
-#: source/soundWave_lib/synths/sonata.py:186
-msgid "soundWave - Sonata options"
-msgstr "soundWave - Opcje Sonata"
+#: source/soundWave_lib/synths/sonata.py
+msgid "soundWave - %s options"
+msgstr "soundWave - Opcje %s"
 
 #: source/soundWave_lib/synths/sonata.py:200
 msgid "S&peaker:"

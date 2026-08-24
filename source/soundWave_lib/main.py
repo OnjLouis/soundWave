@@ -323,6 +323,8 @@ CHUNK_RENDER_MIN_CHARS = 24000
 SUPERTONIC_RENDER_CHUNK_CHARS = 700
 GOOGLE_TTS_RENDER_CHUNK_CHARS = 900
 ORPHEUS_CLASSIC_RENDER_CHUNK_CHARS = 2400
+SAMSUNG_RENDER_CHUNK_CHARS = 1200
+NOKIA_RENDER_CHUNK_CHARS = 300
 MAX_WAV_DATA_BYTES = 3600 * 1024 * 1024
 DEFAULT_FILENAME_PATTERN = "%source% - %engine% - %voice%"
 DEFAULT_SINGLE_FOLDER_PATTERN = "%engine% - %voice%"
@@ -1521,7 +1523,7 @@ from soundWave_lib.synths.orpheus_classic import (
 
 # Sonata availability probe
 _runtime.publish(globals())
-from soundWave_lib.synths.sonata import _has_sonata
+from soundWave_lib.synths.sonata import _has_sonata, _sonata_display_name
 
 def _list_nvda_synths() -> List[Tuple[str, str]]:
     """Return available NVDA synth drivers as (id, displayName)."""
@@ -1552,8 +1554,9 @@ class SynthSelectDialog(wx.Dialog):
         self._choice_meta: List[Dict[str, str]] = []
 
         if _has_sonata():
-            choices.append("Sonata")
-            self._choice_meta.append({"kind": "sonata", "label": "Sonata"})
+            sonata_label = _sonata_display_name()
+            choices.append(sonata_label)
+            self._choice_meta.append({"kind": "sonata", "label": sonata_label})
 
         # Offline renderers we implement
         # Orpheus capture requires Orpheus to be the current NVDA synth (reuses live instance).
@@ -1592,7 +1595,7 @@ class SynthSelectDialog(wx.Dialog):
 
         # Enumerate other NVDA synth drivers through the generic NVDA capture path.
         other = _list_nvda_synths()
-        dedicated_ids = {"sonata", "sonata_neural_voices", "orpheus", "sapi5", "_sapi5", "sapi5_32", "ibmeci", "dectalk", "bestspeech"}
+        dedicated_ids = {"sonata", "sonata_neural_voices", "dengjen_neural_voices", "orpheus", "sapi5", "_sapi5", "sapi5_32", "ibmeci", "dectalk", "bestspeech"}
         non_rendering_ids = {"nospeech", "no_speech", "silence"}
         generic_other = [
             (n, d)
@@ -1886,12 +1889,17 @@ def _split_text_for_render(text: str, max_chars: int = RENDER_CHUNK_CHARS) -> Li
 
 def _chunk_size_for_render(kind: str, nvda_name: str = "", synth_label: str = "") -> int:
     joined = f"{kind} {nvda_name} {synth_label}".lower()
+    compact = re.sub(r"[^a-z0-9]+", "", joined)
     if "googletts" in joined or "google tts" in joined or "google_tts" in joined or "google-tts" in joined:
         return GOOGLE_TTS_RENDER_CHUNK_CHARS
     if "orpheusclassic" in joined or "orpheus classic" in joined:
         return ORPHEUS_CLASSIC_RENDER_CHUNK_CHARS
     if "supertonic" in joined:
         return SUPERTONIC_RENDER_CHUNK_CHARS
+    if "samsunggalaxyvoices" in compact or "samsungtvvoices" in compact:
+        return SAMSUNG_RENDER_CHUNK_CHARS
+    if "nokia tts" in joined or "nokiatts" in compact or "nokiaklatt" in compact:
+        return NOKIA_RENDER_CHUNK_CHARS
     return RENDER_CHUNK_CHARS
 
 
@@ -2062,7 +2070,7 @@ def _start_render_workflow():
                 od.Destroy()
             except Exception:
                 pass
-        synth_label = "Sonata"
+        synth_label = _sonata_display_name()
     elif kind == "sapi5":
         od = Sapi5OptionsDialog(parent)
         try:

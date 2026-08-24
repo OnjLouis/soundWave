@@ -28,6 +28,7 @@ soundWave is an NVDA add-on that renders text to an audio file using installed s
 
 ## Changes
 
+- 1.2.8: Added direct support for Dengjen Neural Voices while retaining Sonata compatibility and remembered voice selection. Improved long Samsung Galaxy Voices, Samsung TV Voices, and Nokia TTS rendering with engine-appropriate chunking and Nokia text normalization. Generic NVDA capture now records only the selected render synthesizer, preventing ordinary NVDA speech and sounds from entering output files or causing mixed-format failures.
 - 1.2.7: Made optional NVDA synthesizer setting detection safe for bridged and proxied drivers, preventing unsupported settings such as Rate boost from stopping the options dialog. Closes issue #12.
 - 1.2.6: Changed Escape and the progress window close control to hide an active render instead of cancelling it; only the Cancel button now cancels. Fixed cancellation cleanup so SoundWave does not remain incorrectly marked as already open. Long renders now time out only after five minutes without measurable progress, and Pocket TTS can recover from difficult model fragments through deeper adaptive splitting. A 2,990-character Pocket TTS render completed successfully in just over seven minutes during release testing.
 - 1.2.5: Fixed the Sonata options dialog so Sonata capture opens and renders again. SoundWave now keeps one render workflow open at a time, raises the existing dialog when its command is pressed again, and brings the completion summary forward after automatically opening the output folder.
