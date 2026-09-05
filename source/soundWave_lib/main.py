@@ -1515,6 +1515,7 @@ from soundWave_lib.synths.nvda_capture import (
     GenericNvdaOptionsDialog,
 )
 from soundWave_lib.synths import google_tts
+from soundWave_lib.synths import loquendo
 from soundWave_lib.synths import prose2000
 from soundWave_lib.synths.orpheus_classic import (
     is_orpheus_classic_synth,
@@ -2469,6 +2470,15 @@ def _start_render_workflow():
                             cancel_evt=cancel_evt,
                             progress=result.progress,
                             opts=nvda_opts,
+                        )
+                    if loquendo.is_loquendo_synth(nvda_name, synth_label):
+                        return loquendo.render_to_wav(
+                            chunk_text,
+                            chunk_wav,
+                            opts=nvda_opts,
+                            cancel_evt=cancel_evt,
+                            progress=result.progress,
+                            timeout_seconds=float(TIMEOUT_SECONDS),
                         )
                     if "speech api version 5" in joined or "_sapi5" in joined:
                         return _render_with_sapi5_32(

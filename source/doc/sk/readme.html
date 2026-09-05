@@ -226,6 +226,10 @@ Väčšina dialógov nastavení obsahuje:
       <td>Dlhý text sa odosiela v menších častiach vhodných pre emulovaný engine. Bežná typografická interpunkcia a odrážky sa pred syntézou prevedú na bezpečné vysloviteľné ekvivalenty.</td>
     </tr>
     <tr>
+      <td><strong>Loquendo TTS 7</strong></td>
+      <td>Vyžaduje doplnok Loquendo TTS 7 a aspoň jeden kompatibilný hlas. soundWave renderuje cez izolovaný 32-bitový pomocný program bez spúšťania alebo zastavovania aktívneho hostiteľa syntetizéra NVDA. Pred renderovaním možno nastaviť hlas, tempo, výšku a hlasitosť. Riadiace značky Loquendo vložené do textu sa zachovajú vrátane expresívnych hlasových efektov poskytovaných vybraným hlasom.</td>
+    </tr>
+    <tr>
       <td><strong>Eloquence a IBMTTS</strong></td>
       <td>Dostupné, keď je nainštalovaný príslušný doplnok NVDA. soundWave automaticky zistí rečový engine a pred renderovaním ponúkne možnosti hlasu a rýchlosti.</td>
     </tr>
@@ -265,6 +269,13 @@ soundWave používa aktualizačný kanál doplnkov NVDA kompatibilný s distrib�
 </p>
 
 <h2>Zmeny</h2>
+
+<h3>1.2.9</h3>
+<ul>
+  <li>Pridané priame renderovanie Loquendo TTS 7 cez izolovaný 32-bitový pomocný program bez spúšťania alebo zastavovania aktívneho hostiteľa syntetizéra NVDA.</li>
+  <li>Zachovaný vybraný hlas, tempo, výška, hlasitosť a riadiace značky Loquendo vložené do textu vrátane expresívnych hlasových efektov dostupných v kompatibilných hlasoch.</li>
+  <li>Všeobecné zachytávanie odmietne nepodporované syntetizéry bežiace v samostatnom hostiteľovi, čím zabráni tichým pokusom o renderovanie, opakovaným dočasným denníkom hostiteľa a zamrznutiu pri jeho ukončení.</li>
+</ul>
 
 <h3>1.2.8</h3>
 <ul>

@@ -226,6 +226,10 @@ Most settings dialogs include:
       <td>Long input is sent in smaller chunks suitable for the emulated engine. Common smart punctuation and bullet characters are converted to safe spoken equivalents before synthesis.</td>
     </tr>
     <tr>
+      <td><strong>Loquendo TTS 7</strong></td>
+      <td>Requires the Loquendo TTS 7 add-on and at least one compatible voice. soundWave renders through an isolated 32-bit helper without starting or stopping NVDA's live synthesizer host. Voice, rate, pitch, and volume can be set before rendering. Loquendo inline control tags are preserved, including expressive vocal effects supplied by the selected voice.</td>
+    </tr>
+    <tr>
       <td><strong>Eloquence and IBMTTS</strong></td>
       <td>Available when the relevant NVDA add-on is installed. soundWave detects the speech engine automatically and exposes voice and speed options before rendering.</td>
     </tr>
@@ -265,6 +269,13 @@ soundWave uses NVDA's add-on update channel for store-compatible updates.
 </p>
 
 <h2>Changes</h2>
+
+<h3>1.2.9</h3>
+<ul>
+  <li>Added direct Loquendo TTS 7 rendering through an isolated 32-bit helper without starting or stopping NVDA's live synthesizer host.</li>
+  <li>Preserved the selected voice, rate, pitch, volume, and Loquendo inline control tags, including expressive vocal effects available in compatible voices.</li>
+  <li>Prevented unsupported separate-host synthesizers from entering generic capture, avoiding silent render attempts, repeated temporary host logs, and host shutdown hangs.</li>
+</ul>
 
 <h3>1.2.8</h3>
 <ul>

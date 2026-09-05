@@ -226,6 +226,10 @@ Większość okien ustawień zawiera:
       <td>Długi tekst jest wysyłany w mniejszych fragmentach odpowiednich dla emulowanego silnika. Typowe znaki inteligentnej interpunkcji i punktory są przed syntezą zamieniane na bezpieczne odpowiedniki do wymówienia.</td>
     </tr>
     <tr>
+      <td><strong>Loquendo TTS 7</strong></td>
+      <td>Wymaga dodatku Loquendo TTS 7 oraz co najmniej jednego zgodnego głosu. soundWave renderuje przez odizolowany 32-bitowy program pomocniczy bez uruchamiania ani zatrzymywania aktywnego hosta syntezatora NVDA. Przed renderowaniem można ustawić głos, tempo, wysokość i głośność. Znaczniki sterujące Loquendo w tekście są zachowywane, w tym ekspresyjne efekty głosowe udostępniane przez wybrany głos.</td>
+    </tr>
+    <tr>
       <td><strong>Eloquence i IBMTTS</strong></td>
       <td>Dostępne, gdy zainstalowany jest odpowiedni dodatek NVDA. soundWave automatycznie wykrywa silnik mowy i udostępnia opcje głosu oraz szybkości przed renderowaniem.</td>
     </tr>
@@ -265,6 +269,13 @@ soundWave używa kanału aktualizacji dodatków NVDA zgodnego z dystrybucją prz
 </p>
 
 <h2>Zmiany</h2>
+
+<h3>1.2.9</h3>
+<ul>
+  <li>Dodano bezpośrednie renderowanie Loquendo TTS 7 przez odizolowany 32-bitowy program pomocniczy bez uruchamiania ani zatrzymywania aktywnego hosta syntezatora NVDA.</li>
+  <li>Zachowano wybrany głos, tempo, wysokość, głośność oraz znaczniki sterujące Loquendo w tekście, w tym ekspresyjne efekty głosowe dostępne w zgodnych głosach.</li>
+  <li>Zablokowano ogólne przechwytywanie dla nieobsługiwanych syntezatorów działających w osobnym hoście, co zapobiega niemym próbom renderowania, tworzeniu wielu tymczasowych dzienników hosta i zawieszaniu podczas jego zamykania.</li>
+</ul>
 
 <h3>1.2.8</h3>
 <ul>

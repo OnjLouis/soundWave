@@ -24,6 +24,7 @@ _runtime.bind(globals())
 
 from soundWave_lib import voice_utils
 from soundWave_lib.synths import google_tts
+from soundWave_lib.synths import loquendo
 from soundWave_lib.synths import pocket_tts
 from soundWave_lib.synths import prose2000
 
@@ -41,6 +42,31 @@ _NOKIA_TEXT_TRANSLATION = str.maketrans({
     "\u25cf": " bullet ",
     "\u25e6": " bullet ",
 })
+
+
+def _uses_separate_nvda_synth_host(synth_name: str) -> bool:
+    """Return whether the synth runs behind NVDA's separate process bridge."""
+    try:
+        import importlib
+
+        synth_module = importlib.import_module(f"synthDrivers.{_resolve_synth_id(synth_name)}")
+        synth_class = getattr(synth_module, "SynthDriver", None)
+        return any(
+            base.__module__.startswith("_bridge.clients.synthDriverHost")
+            for base in getattr(synth_class, "__mro__", ())
+        )
+    except Exception:
+        return False
+
+
+def _reject_separate_nvda_synth_host(synth_name: str) -> None:
+    if _uses_separate_nvda_synth_host(synth_name):
+        raise RuntimeError(
+            _(
+                "SoundWave cannot safely capture this synthesizer because NVDA runs it in a separate "
+                "32-bit speech host. Choose another synthesizer."
+            )
+        )
 
 
 def _prepare_generic_capture_text(text: str, synth_name: str) -> str:
@@ -359,6 +385,7 @@ def _render_with_nvda_generic_capture(
     """
     if nvwave is None:
         raise RuntimeError(_("NVDA audio module is not available; generic capture cannot run."))
+    _reject_separate_nvda_synth_host(synth_name)
     cancel_evt = cancel_evt or threading.Event()
     if not out_wav.lower().endswith(".wav"):
         out_wav += ".wav"
@@ -683,6 +710,7 @@ class GenericNvdaOptionsDialog(wx.Dialog):
         self.synth_id = synth_id
         self.synth_label = synth_label or synth_id or "NVDA synth"
         self.is_google_tts = google_tts.is_google_tts_synth("%s %s" % (self.synth_id, self.synth_label))
+        self.is_loquendo = loquendo.is_loquendo_synth(self.synth_id, self.synth_label)
         self.is_prose2000 = prose2000.is_prose2000_synth(self.synth_id, self.synth_label)
         self.cfg_prefix = "genericNvda_" + _safe_config_key(self.synth_id)
         self.synth = None
@@ -692,7 +720,7 @@ class GenericNvdaOptionsDialog(wx.Dialog):
         self.languageSettingId = ""
         self._populating = False
 
-        self.synth = _get_synth_instance(self.synth_id)
+        self.synth = loquendo.create_options_facade() if self.is_loquendo else _get_synth_instance(self.synth_id)
         if self.synth is None:
             raise RuntimeError(_("{synth} could not be initialized.").format(synth=self.synth_label))
         if self.synth_id.lower() == "worldvoice" and not hasattr(self.synth, "_voiceManager"):
@@ -822,7 +850,7 @@ class GenericNvdaOptionsDialog(wx.Dialog):
 
     def Destroy(self):
         try:
-            if self.synth is not None:
+            if self.synth is not None and not self.is_loquendo:
                 self.synth.terminate()
         except Exception:
             pass
@@ -974,6 +1002,14 @@ class GenericNvdaOptionsDialog(wx.Dialog):
                     self.SAMPLE_TEXT,
                     tmp_wav,
                     self.synth,
+                    opts=opts,
+                    progress={},
+                    cancel_evt=threading.Event(),
+                )
+            elif self.is_loquendo:
+                loquendo.render_to_wav(
+                    self.SAMPLE_TEXT,
+                    tmp_wav,
                     opts=opts,
                     progress={},
                     cancel_evt=threading.Event(),
