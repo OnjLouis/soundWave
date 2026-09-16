@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: soundWave 1.2.9\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-09-05 19:29+0100\n"
+"POT-Creation-Date: 2026-09-16 09:08+0100\n"
 "PO-Revision-Date: 2026-07-27 22:31+0200\n"
 "Last-Translator: Kazimierz Parzych\n"
 "Language: sk\n"
@@ -137,92 +137,96 @@ msgstr "súbor"
 msgid "The selected folder does not contain any readable text files."
 msgstr "Vybraný priečinok neobsahuje žiadne čitateľné textové súbory."
 
-#: source/soundWave_lib/main.py:872
+#: source/soundWave_lib/main.py:873
 msgid "Enter text to render:"
 msgstr "Zadajte text na vykreslenie:"
 
-#: source/soundWave_lib/main.py:887
+#: source/soundWave_lib/main.py:888
 #, python-brace-format
 msgid "Couldn't open input dialog: {error}"
 msgstr "Nepodarilo sa otvoriť vstupný dialóg: {error}"
 
-#: source/soundWave_lib/main.py:892 source/soundWave_lib/main.py:899
+#: source/soundWave_lib/main.py:895 source/soundWave_lib/main.py:906
 msgid "Typed"
 msgstr "Zadaný"
 
-#: source/soundWave_lib/main.py:915 source/soundWave_lib/main.py:936
-#: source/soundWave_lib/main.py:1070 source/soundWave_lib/main.py:1115
+#: source/soundWave_lib/main.py:922 source/soundWave_lib/main.py:943
+#: source/soundWave_lib/main.py:1077 source/soundWave_lib/main.py:1122
 msgid "Rendering…"
 msgstr "Vykresľuje sa…"
 
-#: source/soundWave_lib/main.py:927
+#: source/soundWave_lib/main.py:934
 msgid "Progress"
 msgstr "Priebeh"
 
-#: source/soundWave_lib/main.py:945 source/soundWave_lib/main.py:1088
+#: source/soundWave_lib/main.py:952 source/soundWave_lib/main.py:1095
 msgid "Show &details"
 msgstr "Zobraziť &podrobnosti"
 
-#: source/soundWave_lib/main.py:952
+#: source/soundWave_lib/main.py:959
 msgid "&Minimize"
 msgstr "&Minimalizovať"
 
-#: source/soundWave_lib/main.py:958
+#: source/soundWave_lib/main.py:965
 msgid "&Cancel"
 msgstr "&Zrušiť"
 
-#: source/soundWave_lib/main.py:1013
+#: source/soundWave_lib/main.py:1020
 msgid "Cancelling…"
 msgstr "Ruší sa…"
 
-#: source/soundWave_lib/main.py:1072
+#: source/soundWave_lib/main.py:1079
 msgid "Hide &details"
 msgstr "Skryť &podrobnosti"
 
-#: source/soundWave_lib/main.py:1260 source/soundWave_lib/main.py:2736
+#: source/soundWave_lib/main.py:1267 source/soundWave_lib/main.py:2784
 msgid "unknown"
 msgstr "neznáme"
 
-#: source/soundWave_lib/main.py:1377
+#: source/soundWave_lib/main.py:1384
 msgid "WAV audio (*.wav)|*.wav"
 msgstr "Zvukové súbory WAV (*.wav)|*.wav"
 
-#: source/soundWave_lib/main.py:1379
+#: source/soundWave_lib/main.py:1386
 msgid "MP3 audio (*.mp3)|*.mp3|FLAC audio (*.flac)|*.flac|M4A audio (*.m4a)|*.m4a"
 msgstr ""
 "Zvukové súbory MP3 (*.mp3)|*.mp3|Zvukové súbory FLAC "
 "(*.flac)|*.flac|Zvukové súbory M4A (*.m4a)|*.m4a"
 
-#: source/soundWave_lib/main.py:1401
+#: source/soundWave_lib/main.py:1408
 msgid "Save audio as…"
 msgstr "Uložiť audio ako…"
 
-#: source/soundWave_lib/main.py:1441
+#: source/soundWave_lib/main.py:1448
 #, python-format
 msgid "%s requires ffmpeg on PATH. Please choose WAV."
 msgstr "%s vyžaduje ffmpeg v PATH. Vyberte WAV."
 
-#: source/soundWave_lib/main.py:1456
+#: source/soundWave_lib/main.py:1463
 msgid "Choose output format for all files:"
 msgstr "Vyberte výstupný formát pre všetky súbory:"
 
-#: source/soundWave_lib/main.py:1549
+#: source/soundWave_lib/main.py:1513
+msgid "SoundWave could not choose a unique file for the typed text."
+msgstr "SoundWave nemohol vybrať jedinečný súbor pre zadaný text."
+
+#: source/soundWave_lib/main.py:1577
 msgid "soundWave - Synthesizer"
 msgstr "soundWave - Syntezátor"
 
-#: source/soundWave_lib/main.py:1552
+#: source/soundWave_lib/main.py:1580
 msgid "Choose a &synthesizer to render with:"
 msgstr "Vyberte &syntezátor na vykreslenie:"
 
-#: source/soundWave_lib/main.py:1623
+#: source/soundWave_lib/main.py:1651
 msgid "Record base &folder:"
 msgstr "Základný priečinok &nahrávok:"
 
-#: source/soundWave_lib/main.py:1626
+#: source/soundWave_lib/main.py:1654
 msgid "&Browse…"
 msgstr "&Prehľadávať…"
 
-#: source/soundWave_lib/main.py:1634
+#: source/soundWave_lib/main.py:1662
 msgid ""
 "Tip: this is the default save folder for renders. Output folders are "
 "named by your SoundWave templates.\n"
@@ -234,34 +238,34 @@ msgstr ""
 "Nechajte prázdne, ak chcete použiť Documents\\SoundWave. Môžete to "
 "nastaviť aj v nastaveniach NVDA, soundWave."
 
-#: source/soundWave_lib/main.py:1670
+#: source/soundWave_lib/main.py:1698
 msgid "Choose record base folder"
 msgstr "Vyberte základný priečinok nahrávok"
 
-#: source/soundWave_lib/main.py:1729
+#: source/soundWave_lib/main.py:1757
 msgid "ffmpeg not found on PATH."
 msgstr "ffmpeg sa nenašiel v PATH."
 
-#: source/soundWave_lib/main.py:1743
+#: source/soundWave_lib/main.py:1771
 #, python-brace-format
 msgid "ffmpeg failed: {error}"
 msgstr "ffmpeg zlyhal: {error}"
 
-#: source/soundWave_lib/main.py:1743 source/soundWave_lib/main.py:1789
+#: source/soundWave_lib/main.py:1771 source/soundWave_lib/main.py:1817
 #: source/soundWave_lib/synths/sapi5.py:278
 msgid "unknown error"
 msgstr "neznáma chyba"
 
-#: source/soundWave_lib/main.py:1763
+#: source/soundWave_lib/main.py:1791
 msgid "Sonic pitch post-processing requires ffmpeg on PATH."
 msgstr "Dodatočné spracovanie výšky pomocou Sonic vyžaduje ffmpeg dostupný v PATH."
 
-#: source/soundWave_lib/main.py:1789
+#: source/soundWave_lib/main.py:1817
 #, python-brace-format
 msgid "Sonic pitch post-processing failed: {error}"
 msgstr "Dodatočné spracovanie výšky pomocou Sonic zlyhalo: {error}"
 
-#: source/soundWave_lib/main.py:1925
+#: source/soundWave_lib/main.py:1954
 #, python-brace-format
 msgid ""
 "Renderer produced inconsistent WAV format between chunks ({actual!r} vs "
@@ -270,23 +274,23 @@ msgstr ""
 "Renderer vytvoril nekonzistentný formát WAV medzi časťami ({actual!r} vs "
 "{expected!r})."
 
-#: source/soundWave_lib/main.py:1969
+#: source/soundWave_lib/main.py:1998
 msgid "SoundWave is already open."
 msgstr "SoundWave je už otvorený."
 
-#: source/soundWave_lib/main.py:2001
+#: source/soundWave_lib/main.py:2030
 msgid "SoundWave could not open the render workflow."
 msgstr "SoundWave nemohol otvoriť proces renderovania."
 
-#: source/soundWave_lib/main.py:2032
+#: source/soundWave_lib/main.py:2061
 msgid "NVDA synth"
 msgstr "Syntezátor NVDA"
 
-#: source/soundWave_lib/main.py:2092
+#: source/soundWave_lib/main.py:2121
 msgid "soundWave - SAPI5 32-bit options"
 msgstr "soundWave - možnosti SAPI5 32-bit"
 
-#: source/soundWave_lib/main.py:2146 source/soundWave_lib/main.py:2310
+#: source/soundWave_lib/main.py:2175 source/soundWave_lib/main.py:2351
 msgid ""
 "Orpheus offline capture requires Orpheus to be your current NVDA "
 "synthesizer.\n"
@@ -298,20 +302,29 @@ msgstr ""
 "\n"
 "Prepnite NVDA na Orpheus a potom znova otvorte soundWave."
 
-#: source/soundWave_lib/main.py:2211
+#: source/soundWave_lib/main.py:2240
 #, python-brace-format
 msgid "{synth} could not open its options dialog."
 msgstr "{synth} nemohol otvoriť dialóg možností."
 
-#: source/soundWave_lib/main.py:2212
+#: source/soundWave_lib/main.py:2241
 msgid "This synth"
 msgstr "Tento syntezátor"
 
-#: source/soundWave_lib/main.py:2286
+#: source/soundWave_lib/main.py:2311
+#, python-brace-format
+msgid ""
+"SoundWave could not save the typed text, so rendering was not started:\n"
+"{error}"
+msgstr ""
+"SoundWave nemohol uložiť zadaný text, preto sa renderovanie nezačalo:\n"
+"{error}"
+
+#: source/soundWave_lib/main.py:2327
 msgid "Rendering started."
 msgstr "Vykresľovanie spustené."
 
-#: source/soundWave_lib/main.py:2350
+#: source/soundWave_lib/main.py:2391
 #, python-brace-format
 msgid ""
 "Orpheus rendering requires switching NVDA temporarily to a fallback "
@@ -326,15 +339,15 @@ msgstr ""
 "Uistite sa, že je dostupný aspoň jeden syntezátor NVDA iný než Orpheus, a"
 " potom to skúste znova."
 
-#: source/soundWave_lib/main.py:2381
+#: source/soundWave_lib/main.py:2422
 msgid "Google TTS For NVDA could not be initialized for rendering."
 msgstr "Google TTS For NVDA sa nepodarilo inicializovať na vykresľovanie."
 
-#: source/soundWave_lib/main.py:2422
+#: source/soundWave_lib/main.py:2463
 msgid "Orpheus capture couldn't access the live Orpheus instance."
 msgstr "Zachytávanie Orpheus nemohlo získať prístup k aktívnej inštancii Orpheus."
 
-#: source/soundWave_lib/main.py:2430
+#: source/soundWave_lib/main.py:2471
 msgid ""
 "SoundWave could not find the installed Eloquence/IBMTTS speech engine.\n"
 "\n"
@@ -346,9 +359,9 @@ msgstr ""
 "Nainštalujte alebo aktualizujte doplnok Eloquence alebo IBMTTS pre NVDA, "
 "znovu načítajte NVDA a skúste to znova."
 
-#: source/soundWave_lib/main.py:2556 source/soundWave_lib/main.py:2596
-#: source/soundWave_lib/main.py:2626 source/soundWave_lib/main.py:2722
-#: source/soundWave_lib/main.py:2778 source/soundWave_lib/synths/dectalk.py:395
+#: source/soundWave_lib/main.py:2597 source/soundWave_lib/main.py:2637
+#: source/soundWave_lib/main.py:2667 source/soundWave_lib/main.py:2770
+#: source/soundWave_lib/main.py:2828 source/soundWave_lib/synths/dectalk.py:395
 #: source/soundWave_lib/synths/google_tts.py:176
 #: source/soundWave_lib/synths/google_tts.py:225
 #: source/soundWave_lib/synths/google_tts.py:233
@@ -370,16 +383,21 @@ msgstr ""
 msgid "Cancelled."
 msgstr "Zrušené."
 
-#: source/soundWave_lib/main.py:2565
+#: source/soundWave_lib/main.py:2606
 #, python-format
 msgid "Chunk render output was not created: %s"
 msgstr "Výstup vykreslenia časti nebol vytvorený: %s"
 
-#: source/soundWave_lib/main.py:2588
+#: source/soundWave_lib/main.py:2629
 msgid "Render failed: no audio parts were produced."
 msgstr "Vykresľovanie zlyhalo: neboli vytvorené žiadne časti audia."
 
-#: source/soundWave_lib/main.py:2705
+#: source/soundWave_lib/main.py:2708
+#, python-brace-format
+msgid "Your typed text was saved to: {path}"
+msgstr "Zadaný text bol uložený do: {path}"
+
+#: source/soundWave_lib/main.py:2753
 msgid ""
 "Render finished, but soundWave couldn't restore Orpheus as your live "
 "synthesizer. You may need to switch it back manually in NVDA's "
@@ -389,138 +407,143 @@ msgstr ""
 "aktívny syntezátor. Možno ho budete musieť prepnúť späť ručne v "
 "nastaveniach syntezátora NVDA."
 
-#: source/soundWave_lib/main.py:2720
+#: source/soundWave_lib/main.py:2768
 msgid "Render timed out."
 msgstr "Vykresľovanie prekročilo časový limit."
 
-#: source/soundWave_lib/main.py:2731
+#: source/soundWave_lib/main.py:2779
 #, python-format
 msgid "%d files, starting with: %s"
 msgstr "%d súborov, začína sa od: %s"
 
-#: source/soundWave_lib/main.py:2733
+#: source/soundWave_lib/main.py:2781
 msgid "Render complete."
 msgstr "Vykreslenie dokončené."
 
-#: source/soundWave_lib/main.py:2734
+#: source/soundWave_lib/main.py:2782
 #, python-brace-format
 msgid "Synth: {synth}"
 msgstr "Syntezátor: {synth}"
 
-#: source/soundWave_lib/main.py:2735
+#: source/soundWave_lib/main.py:2783
 #, python-brace-format
 msgid "Saved to: {path}"
 msgstr "Uložené do: {path}"
 
-#: source/soundWave_lib/main.py:2736
+#: source/soundWave_lib/main.py:2784
 #, python-brace-format
 msgid "Backend: {backend}"
 msgstr "Backend: {backend}"
 
-#: source/soundWave_lib/main.py:2737
+#: source/soundWave_lib/main.py:2785
 #, python-brace-format
 msgid "Time taken: {duration}"
 msgstr "Čas: {duration}"
 
-#: source/soundWave_lib/main.py:2740
+#: source/soundWave_lib/main.py:2788
+#, python-brace-format
+msgid "Text saved to: {path}"
+msgstr "Text bol uložený do: {path}"
+
+#: source/soundWave_lib/main.py:2790
 #, python-format
 msgid "Text chunks: %d"
 msgstr "Textové časti: %d"
 
-#: source/soundWave_lib/main.py:2742
+#: source/soundWave_lib/main.py:2792
 #, python-format
 msgid "Audio files: %d"
 msgstr "Zvukové súbory: %d"
 
-#: source/soundWave_lib/main.py:2744
+#: source/soundWave_lib/main.py:2794
 #, python-brace-format
 msgid "Audio length: {duration}"
 msgstr "Dĺžka audia: {duration}"
 
-#: source/soundWave_lib/main.py:2753
+#: source/soundWave_lib/main.py:2803
 #, python-format
 msgid "Speed: %.2fx realtime"
 msgstr "Rýchlosť: %.2fx reálneho času"
 
-#: source/soundWave_lib/main.py:2755
+#: source/soundWave_lib/main.py:2805
 msgid "Speed: (unknown)"
 msgstr "Rýchlosť: (neznáma)"
 
-#: source/soundWave_lib/main.py:2758
+#: source/soundWave_lib/main.py:2808
 msgid "Render failed."
 msgstr "Vykresľovanie zlyhalo."
 
-#: source/soundWave_lib/main.py:2814
+#: source/soundWave_lib/main.py:2864
 msgid "Render stopped after five minutes without progress."
 msgstr "Renderovanie bolo zastavené po piatich minútach bez pokroku."
 
-#: source/soundWave_lib/main.py:2826
+#: source/soundWave_lib/main.py:2876
 msgid "Rendering"
 msgstr "Vykresľovanie"
 
-#: source/soundWave_lib/main.py:2829
+#: source/soundWave_lib/main.py:2879
 #, python-format
 msgid "%s… Elapsed %s"
 msgstr "%s… Uplynulo %s"
 
-#: source/soundWave_lib/main.py:2835
+#: source/soundWave_lib/main.py:2885
 #, python-format
 msgid "Synth: %s"
 msgstr "Syntezátor: %s"
 
-#: source/soundWave_lib/main.py:2836
+#: source/soundWave_lib/main.py:2886
 #, python-format
 msgid "Elapsed time: %s"
 msgstr "Uplynutý čas: %s"
 
-#: source/soundWave_lib/main.py:2850
+#: source/soundWave_lib/main.py:2900
 #, python-format
 msgid "File: %d of %d (%d complete)"
 msgstr "Súbor: %d z %d (%d dokončené)"
 
-#: source/soundWave_lib/main.py:2858
+#: source/soundWave_lib/main.py:2908
 #, python-format
 msgid "Text chunk: %d of %d (%d complete)"
 msgstr "Textová časť: %d z %d (%d dokončené)"
 
-#: source/soundWave_lib/main.py:2876
+#: source/soundWave_lib/main.py:2926
 #, python-format
 msgid "Audio rendered: %s"
 msgstr "Vykreslené audio: %s"
 
-#: source/soundWave_lib/main.py:2878
+#: source/soundWave_lib/main.py:2928
 #, python-format
 msgid "Conversion rate: %.2fx realtime"
 msgstr "Rýchlosť konverzie: %.2fx reálneho času"
 
-#: source/soundWave_lib/main.py:2880
+#: source/soundWave_lib/main.py:2930
 #, python-format
 msgid "Audio written: %s"
 msgstr "Zapísané audio: %s"
 
-#: source/soundWave_lib/main.py:2882
+#: source/soundWave_lib/main.py:2932
 #, python-format
 msgid "Write rate: %s/s"
 msgstr "Rýchlosť zápisu: %s/s"
 
-#: source/soundWave_lib/main.py:2885
+#: source/soundWave_lib/main.py:2935
 msgid "Audio progress: waiting for renderer output"
 msgstr "Priebeh audia: čaká sa na výstup rendereru"
 
-#: source/soundWave_lib/main.py:2891
+#: source/soundWave_lib/main.py:2941
 #, python-format
 msgid "Last audio update: %.1f s ago"
 msgstr "Posledná aktualizácia audia: pred %.1f s"
 
-#: source/soundWave_lib/main.py:2907 source/soundWave_lib/main.py:3032
+#: source/soundWave_lib/main.py:2957 source/soundWave_lib/main.py:3082
 msgid "soundWave"
 msgstr "soundWave"
 
-#: source/soundWave_lib/main.py:2912
+#: source/soundWave_lib/main.py:2962
 msgid "Default save &folder:"
 msgstr "Predvolený priečinok &ukladania:"
 
-#: source/soundWave_lib/main.py:2917
+#: source/soundWave_lib/main.py:2967
 msgid ""
 "Leave blank to use Documents\\SoundWave. SoundWave creates a subfolder "
 "under this folder using your naming templates. You can also change it for"
@@ -530,27 +553,27 @@ msgstr ""
 "vytvorí podpriečinok v tomto priečinku pomocou vašich šablón názvov. "
 "Môžete to zmeniť aj pre jedno vykreslenie na prvej obrazovke SoundWave."
 
-#: source/soundWave_lib/main.py:2922
+#: source/soundWave_lib/main.py:2972
 msgid "&Browse..."
 msgstr "&Prehľadávať..."
 
-#: source/soundWave_lib/main.py:2924
+#: source/soundWave_lib/main.py:2974
 msgid "Single render fol&der pattern:"
 msgstr "Vzor priečinka &jedného vykreslenia:"
 
-#: source/soundWave_lib/main.py:2926
+#: source/soundWave_lib/main.py:2976
 msgid "Single file &name pattern:"
 msgstr "Vzor &názvu jedného súboru:"
 
-#: source/soundWave_lib/main.py:2928
+#: source/soundWave_lib/main.py:2978
 msgid "Batch folde&r pattern:"
 msgstr "Vzor dávkového p&riečinka:"
 
-#: source/soundWave_lib/main.py:2930
+#: source/soundWave_lib/main.py:2980
 msgid "Batch file &pattern:"
 msgstr "Vzor dávkového &súboru:"
 
-#: source/soundWave_lib/main.py:2935
+#: source/soundWave_lib/main.py:2985
 #, no-python-format, python-format
 msgid ""
 "Available tokens: %source%, %engine%, %voice%, and %number%. The number "
@@ -559,7 +582,7 @@ msgstr ""
 "Dostupné značky: %source%, %engine%, %voice% a %number%. Značka čísla je "
 "hlavne pre názvy dávkových súborov."
 
-#: source/soundWave_lib/main.py:2941
+#: source/soundWave_lib/main.py:2991
 #, no-python-format, python-format
 msgid ""
 "Defaults: folders use %engine% - %voice%; single files use %source%; "
@@ -568,11 +591,11 @@ msgstr ""
 "Predvolené: priečinky používajú %engine% - %voice%; jednotlivé súbory "
 "používajú %source%; dávkové súbory používajú %number% - %source%."
 
-#: source/soundWave_lib/main.py:2945
+#: source/soundWave_lib/main.py:2995
 msgid "Default output forma&t:"
 msgstr "Predvolený výstupný formá&t:"
 
-#: source/soundWave_lib/main.py:2953
+#: source/soundWave_lib/main.py:3003
 msgid ""
 "MP3, FLAC, and M4A are available when ffmpeg is installed and available "
 "on PATH."
@@ -580,15 +603,15 @@ msgstr ""
 "MP3, FLAC a M4A sú dostupné, keď je ffmpeg nainštalovaný a dostupný v "
 "PATH."
 
-#: source/soundWave_lib/main.py:2956
+#: source/soundWave_lib/main.py:3006
 msgid "Enable pitch post-processin&g"
 msgstr "Povoliť dodatočné spracovanie výšk&y"
 
-#: source/soundWave_lib/main.py:2959
+#: source/soundWave_lib/main.py:3009
 msgid "Sonic pit&ch:"
 msgstr "Výška v škále Soni&c:"
 
-#: source/soundWave_lib/main.py:2964
+#: source/soundWave_lib/main.py:3014
 msgid ""
 "Optional post-render pitch shift. 50 is unchanged; lower values deepen "
 "the finished audio and higher values raise it. The full range maps to "
@@ -599,31 +622,31 @@ msgstr ""
 "zodpovedá približne -12 až +12 poltónom. Vyžaduje ffmpeg s podporou "
 "rubberband."
 
-#: source/soundWave_lib/main.py:2967
+#: source/soundWave_lib/main.py:3017
 msgid "Skip single-render Save &As dialog"
 msgstr "Preskočiť dialóg Uložiť &ako pri jednom vykreslení"
 
-#: source/soundWave_lib/main.py:2969
+#: source/soundWave_lib/main.py:3019
 msgid "Skip batch output format &choice"
 msgstr "Preskočiť výber výstupného &formátu pre dávku"
 
-#: source/soundWave_lib/main.py:2974
+#: source/soundWave_lib/main.py:3024
 msgid "&Open output folder when the whole render finishes"
 msgstr "&Otvoriť výstupný priečinok po dokončení celého vykreslenia"
 
-#: source/soundWave_lib/main.py:2976
+#: source/soundWave_lib/main.py:3026
 msgid "Automatically pla&y rendered audio when rendering finishes"
 msgstr "Automaticky prehra&ť vykreslené audio po dokončení vykreslenia"
 
-#: source/soundWave_lib/main.py:2978
+#: source/soundWave_lib/main.py:3028
 msgid "Show render &summary when rendering finishes"
 msgstr "Zobraziť &súhrn vykreslenia po dokončení"
 
-#: source/soundWave_lib/main.py:2997
+#: source/soundWave_lib/main.py:3047
 msgid "Choose default soundWave save folder"
 msgstr "Vyberte predvolený priečinok ukladania soundWave"
 
-#: source/soundWave_lib/main.py:3053
+#: source/soundWave_lib/main.py:3103
 msgid "Open the soundWave text-to-audio render dialog."
 msgstr "Otvoriť dialóg soundWave na vykreslenie textu do audia."
 

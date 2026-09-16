@@ -28,6 +28,7 @@ soundWave is an NVDA add-on that renders text to an audio file using installed s
 
 ## Changes
 
+- 1.2.10: Typed-text input now opens empty instead of copying clipboard contents into the editor. After an output filename is chosen, SoundWave saves the submitted text as a collision-safe UTF-8 `.txt` file beside the audio before rendering begins, preserving it even when synthesis or audio conversion fails.
 - 1.2.9: Added safe direct rendering for Loquendo TTS 7 through an isolated 32-bit helper, preserving voice settings and Loquendo inline controls such as expressive vocal effects. SoundWave no longer starts NVDA's separate speech host for Loquendo rendering, preventing no-audio attempts, temporary host-log floods, and host shutdown hangs. Generic capture now rejects other separate-host synthesizers that do not yet have a dedicated rendering path.
 - 1.2.8: Added direct support for Dengjen Neural Voices while retaining Sonata compatibility and remembered voice selection. Improved long Samsung Galaxy Voices, Samsung TV Voices, and Nokia TTS rendering with engine-appropriate chunking and Nokia text normalization. Generic NVDA capture now records only the selected render synthesizer, preventing ordinary NVDA speech and sounds from entering output files or causing mixed-format failures.
 - 1.2.7: Made optional NVDA synthesizer setting detection safe for bridged and proxied drivers, preventing unsupported settings such as Rate boost from stopping the options dialog. Closes issue #12.

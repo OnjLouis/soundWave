@@ -48,6 +48,7 @@ Dialog controls include keyboard accelerators where practical, such as <span cla
 
 <ul>
   <li><strong>Input:</strong> clipboard text, a text file, a folder of text files, or typed/pasted text.</li>
+  <li><strong>Typed text safety:</strong> the manual text editor opens empty. Paste clipboard text yourself when wanted. After you choose an output filename, soundWave saves the submitted text as a UTF-8 text file beside the audio before rendering begins. Existing text files are never overwritten, and the saved text remains available if rendering fails.</li>
   <li><strong>Output:</strong> WAV is always supported. MP3, FLAC, and M4A are available when ffmpeg is installed and available on the system PATH.</li>
   <li><strong>Batch input:</strong> choosing a folder renders each readable text-like file as a separate audio file in sorted order. By default, batch renders are written to a synthesizer and voice subfolder, and filenames are automatically prefixed with ordered numbers.</li>
   <li><strong>Large inputs:</strong> long text is rendered in chunks. If a single WAV would become too large, soundWave writes numbered part files.</li>
@@ -269,6 +270,12 @@ soundWave uses NVDA's add-on update channel for store-compatible updates.
 </p>
 
 <h2>Changes</h2>
+
+<h3>1.2.10</h3>
+<ul>
+  <li>Changed the typed-text editor to open empty instead of automatically inserting clipboard contents.</li>
+  <li>Preserved manually entered text as a collision-safe UTF-8 text file beside the chosen audio output before rendering begins, including when synthesis or conversion later fails.</li>
+</ul>
 
 <h3>1.2.9</h3>
 <ul>

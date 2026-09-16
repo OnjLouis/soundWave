@@ -864,20 +864,21 @@ def _pick_input_items(parent) -> List[Dict[str, str]]:
             _error(_("The selected folder does not contain any readable text files."))
         return items
 
-    # Ask for manual input (multi-line).
-    clip = _get_clipboard_text().strip()
+    # Ask for manual input (multi-line). Clipboard text is available through
+    # normal paste commands; pre-filling this field makes accidental reuse and
+    # deletion too easy.
     try:
         dlg = wx.TextEntryDialog(
             parent,
             _("Enter text to render:"),
             ADDON_NAME,
-            value=clip if clip else "",
+            value="",
             style=wx.TE_MULTILINE | wx.OK | wx.CANCEL,
         )
         try:
             if _show_modal(dlg) != wx.ID_OK:
                 return []
-            txt = (dlg.GetValue() or "").strip()
+            txt = dlg.GetValue() or ""
         finally:
             try:
                 dlg.Destroy()
@@ -887,9 +888,15 @@ def _pick_input_items(parent) -> List[Dict[str, str]]:
         _error(_("Couldn't open input dialog: {error}").format(error=e))
         return []
 
-    if not txt:
+    if not txt.strip():
         return []
-    return [{"text": txt, "base": _("Typed"), "path": ""}]
+    return [{
+        "text": txt,
+        "base": _("Typed"),
+        "path": "",
+        "inputKind": "typed",
+        "sourceText": txt,
+    }]
 
 
 def _pick_input_text(parent) -> tuple[str, str]:
@@ -1485,6 +1492,27 @@ def _unique_output_path(path: str) -> str:
     return path
 
 
+def _save_typed_text_sidecar(item: Dict[str, str], audio_path: str) -> Optional[str]:
+    """Preserve manually entered text before audio rendering begins."""
+    if item.get("inputKind") != "typed":
+        return None
+    text = item.get("sourceText", item.get("text", ""))
+    if not text:
+        return None
+    folder = os.path.dirname(os.path.abspath(audio_path))
+    _ensure_dir(folder)
+    base_path = os.path.splitext(os.path.abspath(audio_path))[0] + ".txt"
+    for _attempt in range(10000):
+        text_path = _unique_output_path(base_path)
+        try:
+            with open(text_path, "x", encoding="utf-8-sig", newline="") as f:
+                f.write(text)
+            return text_path
+        except FileExistsError:
+            continue
+    raise RuntimeError(_("SoundWave could not choose a unique file for the typed text."))
+
+
 # ----------------------------
 # SAPI5 offline rendering + options
 _runtime.publish(globals())
@@ -1807,6 +1835,7 @@ class RenderResult:
     chunks: int = 1
     parts: int = 1
     output_paths: Optional[List[str]] = None
+    source_text_paths: Optional[List[str]] = None
 
 
 def _split_text_for_render(text: str, max_chars: int = RENDER_CHUNK_CHARS) -> List[str]:
@@ -2270,8 +2299,20 @@ def _start_render_workflow():
             return
         render_jobs.append({"text": text, "base": base, "outPath": out_path, "number": ""})
 
+    source_text_paths: List[str] = []
+    try:
+        for item, job in zip(cleaned_items, render_jobs):
+            text_path = _save_typed_text_sidecar(item, job["outPath"])
+            if text_path:
+                source_text_paths.append(text_path)
+                log.info("soundWave: preserved typed text at %s", text_path)
+    except Exception as e:
+        log.error("soundWave: could not preserve typed text", exc_info=True)
+        _error(_("SoundWave could not save the typed text, so rendering was not started:\n{error}").format(error=e))
+        return
+
     cancel_evt = threading.Event()
-    result = RenderResult(synth_label=synth_label)
+    result = RenderResult(synth_label=synth_label, source_text_paths=source_text_paths)
 
     prog = _RenderProgressDialog(parent)
     _ACTIVE_RENDER_PROGRESS = prog
@@ -2661,6 +2702,13 @@ def _start_render_workflow():
     t = threading.Thread(target=worker, daemon=True)
     t.start()
 
+    def _with_saved_text_notice(message: str) -> str:
+        if not result.source_text_paths:
+            return message
+        return message + "\n\n" + _("Your typed text was saved to: {path}").format(
+            path=result.source_text_paths[0]
+        )
+
     def finish():
         global _ACTIVE_RENDER_PROGRESS, _SOUNDWAVE_WORKFLOW_ACTIVE
         if _finish_state.get('done'):
@@ -2717,9 +2765,9 @@ def _start_render_workflow():
         try:
             if cancel_evt.is_set() and not result.ok:
                 if _poll_state.get('timed_out'):
-                    _error(str(result.err or _('Render timed out.')))
+                    _error(_with_saved_text_notice(str(result.err or _('Render timed out.'))))
                     return
-                _info(_("Cancelled."))
+                _info(_with_saved_text_notice(_("Cancelled.")))
                 return
 
             if result.ok:
@@ -2736,6 +2784,8 @@ def _start_render_workflow():
                     _("Backend: {backend}").format(backend=result.mode or _("unknown")),
                     _("Time taken: {duration}").format(duration=_format_duration(result.wall_s)),
                 ]
+                for text_path in result.source_text_paths or []:
+                    msg.append(_("Text saved to: {path}").format(path=text_path))
                 if result.chunks and result.chunks > 1:
                     msg.append(_("Text chunks: %d") % result.chunks)
                 if result.parts and result.parts > 1:
@@ -2755,7 +2805,7 @@ def _start_render_workflow():
                         msg.append(_("Speed: (unknown)"))
                 _show_render_complete(parent, "\n".join(msg), result.output_paths or [out_path])
             else:
-                _error(str(result.err or _("Render failed.")))
+                _error(_with_saved_text_notice(str(result.err or _("Render failed."))))
         finally:
             _SOUNDWAVE_WORKFLOW_ACTIVE = False
 

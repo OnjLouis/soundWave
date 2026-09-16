@@ -48,6 +48,7 @@ Kontrolki dialogów mają skróty klawiaturowe tam, gdzie jest to praktyczne, na
 
 <ul>
   <li><strong>Wejście:</strong> tekst ze schowka, plik tekstowy, folder plików tekstowych albo tekst wpisany lub wklejony ręcznie.</li>
+  <li><strong>Bezpieczeństwo wpisanego tekstu:</strong> edytor ręcznego tekstu otwiera się pusty. W razie potrzeby wklej tekst ze schowka samodzielnie. Po wybraniu nazwy pliku wyjściowego soundWave zapisuje przesłany tekst jako plik tekstowy UTF-8 obok pliku audio, zanim rozpocznie renderowanie. Istniejące pliki tekstowe nie są nadpisywane, a zapisany tekst pozostaje dostępny, jeśli renderowanie się nie powiedzie.</li>
   <li><strong>Wyjście:</strong> WAV jest zawsze obsługiwany. MP3, FLAC i M4A są dostępne, gdy ffmpeg jest zainstalowany i dostępny w systemowej zmiennej PATH.</li>
   <li><strong>Tryb wsadowy:</strong> wybranie folderu renderuje każdy czytelny plik tekstowy jako osobny plik audio w kolejności sortowania. Domyślnie renderowanie wsadowe zapisuje pliki w podfolderze syntezatora i głosu, a nazwy plików otrzymują automatyczne numery porządkowe.</li>
   <li><strong>Długie teksty:</strong> długi tekst jest renderowany w częściach. Jeśli jeden plik WAV byłby zbyt duży, soundWave zapisuje ponumerowane pliki części.</li>
@@ -269,6 +270,12 @@ soundWave używa kanału aktualizacji dodatków NVDA zgodnego z dystrybucją prz
 </p>
 
 <h2>Zmiany</h2>
+
+<h3>1.2.10</h3>
+<ul>
+  <li>Edytor wpisywanego tekstu otwiera się teraz pusty zamiast automatycznie wstawiać zawartość schowka.</li>
+  <li>Ręcznie wprowadzony tekst jest zapisywany przed rozpoczęciem renderowania jako bezpieczny plik tekstowy UTF-8 obok wybranego pliku audio. Zapis pozostaje dostępny także wtedy, gdy synteza lub konwersja później się nie powiedzie.</li>
+</ul>
 
 <h3>1.2.9</h3>
 <ul>

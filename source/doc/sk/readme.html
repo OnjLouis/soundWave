@@ -48,6 +48,7 @@ Ovládacie prvky dialógov majú klávesové skratky tam, kde je to praktické, 
 
 <ul>
   <li><strong>Vstup:</strong> text zo schránky, textový súbor, priečinok textových súborov alebo ručne zadaný či prilepený text.</li>
+  <li><strong>Bezpečnosť zadaného textu:</strong> editor ručne zadávaného textu sa otvorí prázdny. Text zo schránky prilepte sami, keď ho chcete použiť. Po výbere názvu výstupného súboru soundWave uloží zadaný text ako textový súbor UTF-8 vedľa zvuku ešte pred začatím renderovania. Existujúce textové súbory sa neprepíšu a uložený text zostane dostupný aj v prípade zlyhania renderovania.</li>
   <li><strong>Výstup:</strong> WAV je podporovaný vždy. MP3, FLAC a M4A sú dostupné, keď je ffmpeg nainštalovaný a dostupný v systémovej premennej PATH.</li>
   <li><strong>Dávkový vstup:</strong> výber priečinka vyrenderuje každý čitateľný textový súbor ako samostatný zvukový súbor v zoradenom poradí. Dávkové renderovanie sa predvolene ukladá do podpriečinka syntetizéra a hlasu a názvy súborov dostanú poradové čísla.</li>
   <li><strong>Dlhé vstupy:</strong> dlhý text sa renderuje po častiach. Ak by jeden súbor WAV bol príliš veľký, soundWave zapíše očíslované časti.</li>
@@ -269,6 +270,12 @@ soundWave používa aktualizačný kanál doplnkov NVDA kompatibilný s distrib�
 </p>
 
 <h2>Zmeny</h2>
+
+<h3>1.2.10</h3>
+<ul>
+  <li>Editor zadávaného textu sa teraz otvorí prázdny namiesto automatického vloženia obsahu schránky.</li>
+  <li>Ručne zadaný text sa pred začatím renderovania uloží ako bezpečný textový súbor UTF-8 vedľa vybraného zvukového výstupu. Zostane dostupný aj v prípade, že syntéza alebo konverzia neskôr zlyhá.</li>
+</ul>
 
 <h3>1.2.9</h3>
 <ul>
