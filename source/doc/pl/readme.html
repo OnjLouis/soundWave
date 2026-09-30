@@ -232,7 +232,7 @@ Większość okien ustawień zawiera:
     </tr>
     <tr>
       <td><strong>Eloquence i IBMTTS</strong></td>
-      <td>Dostępne, gdy zainstalowany jest odpowiedni dodatek NVDA. soundWave automatycznie wykrywa silnik mowy i udostępnia opcje głosu oraz szybkości przed renderowaniem.</td>
+      <td>Dostępne, gdy zainstalowany jest odpowiedni dodatek NVDA. soundWave automatycznie wykrywa silnik mowy i udostępnia opcje głosu oraz szybkości przed renderowaniem. W przypadku IBMTTS używa lokalizacji biblioteki skonfigurowanej w ustawieniach NVDA tego dodatku, także dla instalacji zewnętrznych i przenośnego NVDA.</td>
     </tr>
     <tr>
       <td><strong>Orpheus</strong></td>
@@ -270,6 +270,12 @@ soundWave używa kanału aktualizacji dodatków NVDA zgodnego z dystrybucją prz
 </p>
 
 <h2>Zmiany</h2>
+
+<h3>1.2.11</h3>
+<ul>
+  <li>Naprawiono wykrywanie IBMTTS dla bibliotek zainstalowanych poza dodatkiem, niestandardowych nazw plików bibliotek oraz przenośnego NVDA. SoundWave używa teraz lokalizacji biblioteki skonfigurowanej w IBMTTS. Dotyczy zgłoszenia <a href="https://github.com/OnjLouis/soundWave/issues/14">14</a>.</li>
+  <li>Rozdzielono wykrywanie Eloquence i IBMTTS, aby jeden syntezator nie pojawiał się pod nazwą drugiego.</li>
+</ul>
 
 <h3>1.2.10</h3>
 <ul>
@@ -429,7 +435,7 @@ soundWave używa kanału aktualizacji dodatków NVDA zgodnego z dystrybucją prz
 
 <ul>
   <li><strong>Nie powstaje audio:</strong> wybrany syntezator może nie udostępniać ścieżki audio, którą soundWave potrafi renderować. Spróbuj innego syntezatora i sprawdź log NVDA.</li>
-  <li><strong>Eloquence lub IBMTTS nie jest dostępny:</strong> zainstaluj lub zaktualizuj odpowiedni dodatek NVDA, przeładuj NVDA i spróbuj ponownie.</li>
+  <li><strong>Eloquence lub IBMTTS nie jest dostępny:</strong> najpierw sprawdź, czy syntezator działa w NVDA. SoundWave używa zainstalowanego dodatku, a dla IBMTTS także skonfigurowanej lokalizacji biblioteki. W razie potrzeby zainstaluj lub zaktualizuj odpowiedni dodatek, przeładuj NVDA i spróbuj ponownie; działających bibliotek zewnętrznych nie trzeba przenosić.</li>
   <li><strong>Orpheus się nie uruchamia:</strong> przełącz bieżący syntezator NVDA na Orpheus, a następnie ponownie otwórz soundWave.</li>
   <li><strong>WorldVoice się nie inicjuje:</strong> sprawdź log NVDA pod kątem brakujących plików w WorldVoice-workspace. soundWave nie może renderować WorldVoice, dopóki sam WorldVoice nie załaduje się poprawnie.</li>
   <li><strong>Eksport MP3, FLAC lub M4A nie działa:</strong> zainstaluj ffmpeg i upewnij się, że polecenie ffmpeg działa z wiersza polecenia.</li>

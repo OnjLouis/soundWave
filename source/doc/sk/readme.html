@@ -232,7 +232,7 @@ Väčšina dialógov nastavení obsahuje:
     </tr>
     <tr>
       <td><strong>Eloquence a IBMTTS</strong></td>
-      <td>Dostupné, keď je nainštalovaný príslušný doplnok NVDA. soundWave automaticky zistí rečový engine a pred renderovaním ponúkne možnosti hlasu a rýchlosti.</td>
+      <td>Dostupné, keď je nainštalovaný príslušný doplnok NVDA. soundWave automaticky zistí rečový engine a pred renderovaním ponúkne možnosti hlasu a rýchlosti. Pri IBMTTS používa umiestnenie knižnice nastavené v jeho nastaveniach NVDA vrátane externých inštalácií a prenosného NVDA.</td>
     </tr>
     <tr>
       <td><strong>Orpheus</strong></td>
@@ -270,6 +270,12 @@ soundWave používa aktualizačný kanál doplnkov NVDA kompatibilný s distrib�
 </p>
 
 <h2>Zmeny</h2>
+
+<h3>1.2.11</h3>
+<ul>
+  <li>Opravené zisťovanie IBMTTS pre externe nainštalované knižnice, vlastné názvy súborov knižníc a prenosné NVDA. SoundWave teraz používa umiestnenie knižnice nastavené v IBMTTS. Týka sa hlásenia <a href="https://github.com/OnjLouis/soundWave/issues/14">14</a>.</li>
+  <li>Oddelené zisťovanie Eloquence a IBMTTS, aby sa jeden syntetizér nezobrazoval pod názvom druhého.</li>
+</ul>
 
 <h3>1.2.10</h3>
 <ul>
@@ -429,7 +435,7 @@ soundWave používa aktualizačný kanál doplnkov NVDA kompatibilný s distrib�
 
 <ul>
   <li><strong>Nevytvorí sa žiadny zvuk:</strong> vybraný syntetizér nemusí sprístupňovať zvukovú cestu, ktorú soundWave dokáže renderovať. Skúste iný syntetizér a skontrolujte log NVDA.</li>
-  <li><strong>Eloquence alebo IBMTTS nie je dostupný:</strong> nainštalujte alebo aktualizujte príslušný doplnok NVDA, znovu načítajte NVDA a skúste to znova.</li>
+  <li><strong>Eloquence alebo IBMTTS nie je dostupný:</strong> najprv overte, či syntetizér funguje v NVDA. SoundWave používa nainštalovaný doplnok a pri IBMTTS aj nastavené umiestnenie knižnice. V prípade potreby nainštalujte alebo aktualizujte príslušný doplnok, znovu načítajte NVDA a skúste to znova; fungujúce externé knižnice netreba presúvať.</li>
   <li><strong>Orpheus sa nespustí:</strong> prepnite aktuálny syntetizér NVDA na Orpheus a potom znova otvorte soundWave.</li>
   <li><strong>WorldVoice sa neinicializuje:</strong> skontrolujte log NVDA, či nechýbajú súbory pod WorldVoice-workspace. soundWave nemôže renderovať WorldVoice, kým sa samotný WorldVoice nenačíta správne.</li>
   <li><strong>Export MP3, FLAC alebo M4A zlyhá:</strong> nainštalujte ffmpeg a uistite sa, že príkaz ffmpeg funguje z príkazového riadka.</li>

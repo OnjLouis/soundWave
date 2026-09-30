@@ -232,7 +232,7 @@ Most settings dialogs include:
     </tr>
     <tr>
       <td><strong>Eloquence and IBMTTS</strong></td>
-      <td>Available when the relevant NVDA add-on is installed. soundWave detects the speech engine automatically and exposes voice and speed options before rendering.</td>
+      <td>Available when the relevant NVDA add-on is installed. soundWave detects the speech engine automatically and exposes voice and speed options before rendering. IBMTTS uses the library location already configured in its NVDA settings, including external installations and portable NVDA.</td>
     </tr>
     <tr>
       <td><strong>Orpheus</strong></td>
@@ -270,6 +270,12 @@ soundWave uses NVDA's add-on update channel for store-compatible updates.
 </p>
 
 <h2>Changes</h2>
+
+<h3>1.2.11</h3>
+<ul>
+  <li>Fixed IBMTTS detection for externally installed libraries, custom library filenames, and portable NVDA. SoundWave now uses the library location configured in IBMTTS. Addresses Issue <a href="https://github.com/OnjLouis/soundWave/issues/14">14</a>.</li>
+  <li>Kept Eloquence and IBMTTS detection separate so one synthesizer cannot appear under the other's name.</li>
+</ul>
 
 <h3>1.2.10</h3>
 <ul>
@@ -429,7 +435,7 @@ soundWave uses NVDA's add-on update channel for store-compatible updates.
 
 <ul>
   <li><strong>No audio is produced:</strong> the selected synthesizer may not expose an audio path soundWave can render. Try another synthesizer and check the NVDA log.</li>
-  <li><strong>Eloquence or IBMTTS is not available:</strong> install or update the relevant NVDA add-on, reload NVDA, and try again.</li>
+  <li><strong>Eloquence or IBMTTS is not available:</strong> first check that the synthesizer works in NVDA. SoundWave uses the installed add-on and, for IBMTTS, its configured library location. Install or update the relevant add-on if needed, reload NVDA, and try again; working external libraries do not need to be moved.</li>
   <li><strong>Orpheus will not start:</strong> switch NVDA's current synthesizer to Orpheus, then open soundWave again.</li>
   <li><strong>WorldVoice does not initialize:</strong> check the NVDA log for missing files under WorldVoice-workspace. soundWave cannot render WorldVoice until WorldVoice itself loads cleanly.</li>
   <li><strong>MP3, FLAC, or M4A export fails:</strong> install ffmpeg and ensure the ffmpeg command works from a Command Prompt.</li>

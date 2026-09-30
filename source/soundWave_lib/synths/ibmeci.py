@@ -206,48 +206,68 @@ _ECIMessage_eciWaveformBuffer = 0
 _ECIMessage_eciIndexReply = 2
 _END_STRING_MARK = 0xFFFF
 
-def _find_ibmeci_dll(preferred_addon: str = "") -> str:
-    """Find a bundled IBM ECI DLL from installed Eloquence/IBMTTS add-ons."""
-    candidates = []
-    addon_names = []
-    preferred_addon = (preferred_addon or "").strip()
-    if preferred_addon:
-        addon_names.append(preferred_addon)
-    for name in ("Eloquence", "IBMTTS"):
-        if name.lower() not in [x.lower() for x in addon_names]:
-            addon_names.append(name)
+def _configured_ibmeci_path(addon_root: str) -> Optional[str]:
+    """Resolve IBMTTS settings without importing or starting its speech driver."""
     try:
-        addons_dir = os.path.join(os.path.expandvars("%APPDATA%"), "nvda", "addons")
-        for addon_name in addon_names:
-            base = os.path.join(addons_dir, addon_name)
-            candidates.append(os.path.join(base, "synthDrivers", "eloquence", "ECI.DLL"))
-            candidates.append(os.path.join(base, "synthDrivers", "ibmtts", "ECI.DLL"))
-            candidates.append(os.path.join(base, "synthDrivers", "ibmtts", "ibmeci", "ECI.DLL"))
-    except Exception:
-        pass
+        import config
+        active = config.conf.get("ibmeci", {})
+        profiles = getattr(config.conf, "profiles", ())
+        general = profiles[0].get("ibmeci", {}) if profiles else {}
+    except (ImportError, AttributeError, KeyError):
+        return None
+    if not general and not active:
+        return None
+    # The driver's library options use the base profile, falling back per key.
+    directory = general.get("TTSPath", active.get("TTSPath", "ibmtts"))
+    filename = general.get("dllName", active.get("dllName", "eci.dll"))
+    if not directory or not filename:
+        return ""
+    if not os.path.isabs(directory):
+        directory = os.path.join(addon_root, "synthDrivers", directory)
+    return os.path.abspath(os.path.join(directory, filename))
+
+
+def _find_ibmeci_dll(preferred_addon: str = "") -> str:
+    """Find the selected add-on's engine, including configured external libraries."""
+    names = ("Eloquence", "IBMTTS")
+    preferred = (preferred_addon or "").strip().casefold()
+    if preferred in {name.casefold() for name in names}:
+        names = tuple(name for name in names if name.casefold() == preferred)
     try:
         import addonHandler
-        addon = addonHandler.getCodeAddon()
-        if addon:
-            root = getattr(addon, "path", "") or ""
-            if root:
-                candidates.append(os.path.join(root, "synthDrivers", "ibmtts", "ECI.DLL"))
+        installed = [addon for addon in addonHandler.getAvailableAddons() if not addon.isPendingInstall]
     except Exception:
-        pass
-    for path in candidates:
-        try:
-            if path and os.path.isfile(path):
-                return path
-        except Exception:
-            pass
+        installed = []
     try:
-        addons_dir = os.path.join(os.path.expandvars("%APPDATA%"), "nvda", "addons")
-        for addon_name in addon_names:
-            for path in glob.glob(os.path.join(addons_dir, addon_name, "**", "ECI.DLL"), recursive=True):
+        import globalVars
+        config_root = globalVars.appArgs.configPath
+    except (ImportError, AttributeError):
+        config_root = os.path.join(os.path.expandvars("%APPDATA%"), "nvda")
+    for name in names:
+        roots = [addon.path for addon in installed if addon.name.casefold() == name.casefold()]
+        if not roots:
+            roots = [os.path.join(config_root, "addons", name)]
+        for root in roots:
+            if not os.path.isdir(root):
+                continue
+            if name == "IBMTTS":
+                configured = _configured_ibmeci_path(root)
+                if configured is not None:
+                    if configured and os.path.isfile(configured):
+                        return configured
+                    # Do not silently substitute a different engine for an explicit setting.
+                    continue
+            candidates = [
+                os.path.join(root, "synthDrivers", "eloquence", "ECI.DLL"),
+                os.path.join(root, "synthDrivers", "ibmtts", "ECI.DLL"),
+                os.path.join(root, "synthDrivers", "ibmtts", "ibmeci", "ECI.DLL"),
+            ]
+            for path in candidates:
                 if os.path.isfile(path):
                     return path
-    except Exception:
-        pass
+            for path in glob.glob(os.path.join(root, "**", "ECI.DLL"), recursive=True):
+                if os.path.isfile(path):
+                    return path
     return ""
 
 

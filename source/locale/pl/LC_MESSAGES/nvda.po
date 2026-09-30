@@ -5,9 +5,9 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: soundWave 1.2.9\n"
+"Project-Id-Version: soundWave 1.2.11\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-09-16 09:08+0100\n"
+"POT-Creation-Date: 2026-09-30 21:22+0100\n"
 "PO-Revision-Date: 2026-07-27 22:31+0200\n"
 "Last-Translator: Kazimierz Parzych, DJ Graco\n"
 "Language: pl\n"
@@ -369,11 +369,11 @@ msgstr ""
 #: source/soundWave_lib/synths/google_tts.py:176
 #: source/soundWave_lib/synths/google_tts.py:225
 #: source/soundWave_lib/synths/google_tts.py:233
-#: source/soundWave_lib/synths/ibmeci.py:387
-#: source/soundWave_lib/synths/ibmeci.py:401
-#: source/soundWave_lib/synths/ibmeci.py:660
-#: source/soundWave_lib/synths/ibmeci.py:708
-#: source/soundWave_lib/synths/ibmeci.py:723
+#: source/soundWave_lib/synths/ibmeci.py:407
+#: source/soundWave_lib/synths/ibmeci.py:421
+#: source/soundWave_lib/synths/ibmeci.py:680
+#: source/soundWave_lib/synths/ibmeci.py:728
+#: source/soundWave_lib/synths/ibmeci.py:743
 #: source/soundWave_lib/synths/loquendo.py:150
 #: source/soundWave_lib/synths/nvda_capture.py:132
 #: source/soundWave_lib/synths/nvda_capture.py:491
@@ -766,56 +766,56 @@ msgstr ""
 "Test nie powiódł się:\n"
 "{error}"
 
-#: source/soundWave_lib/synths/ibmeci.py:279
+#: source/soundWave_lib/synths/ibmeci.py:299
 msgid "IBMTTS 32-bit proxy is not available; install or update the IBMTTS add-on."
 msgstr ""
 "Proxy IBMTTS 32-bit jest niedostępne; zainstaluj lub zaktualizuj dodatek "
 "IBMTTS."
 
-#: source/soundWave_lib/synths/ibmeci.py:284
-#: source/soundWave_lib/synths/ibmeci.py:439
+#: source/soundWave_lib/synths/ibmeci.py:304
+#: source/soundWave_lib/synths/ibmeci.py:459
 msgid "The Eloquence/IBMTTS speech engine could not be found."
 msgstr "Nie można znaleźć silnika mowy Eloquence/IBMTTS."
 
-#: source/soundWave_lib/synths/ibmeci.py:345
-#: source/soundWave_lib/synths/ibmeci.py:568
+#: source/soundWave_lib/synths/ibmeci.py:365
+#: source/soundWave_lib/synths/ibmeci.py:588
 msgid "eciNewEx failed (no handle)."
 msgstr "eciNewEx nie powiodło się (brak uchwytu)."
 
-#: source/soundWave_lib/synths/ibmeci.py:369
+#: source/soundWave_lib/synths/ibmeci.py:389
 msgid "IBMTTS proxy did not expose an audio buffer."
 msgstr "Proxy IBMTTS nie udostępniło bufora audio."
 
-#: source/soundWave_lib/synths/ibmeci.py:391
+#: source/soundWave_lib/synths/ibmeci.py:411
 msgid "IBM ECI proxy produced no audio."
 msgstr "Proxy IBM ECI nie utworzyło audio."
 
-#: source/soundWave_lib/synths/ibmeci.py:403
+#: source/soundWave_lib/synths/ibmeci.py:423
 msgid "IBM ECI proxy render timed out."
 msgstr "Renderowanie proxy IBM ECI przekroczyło limit czasu."
 
-#: source/soundWave_lib/synths/ibmeci.py:423
+#: source/soundWave_lib/synths/ibmeci.py:443
 msgid "IBM ECI proxy render failed: no audio was captured."
 msgstr "Proxy IBM ECI nie utworzyło audio: nie przechwycono audio."
 
-#: source/soundWave_lib/synths/ibmeci.py:613
+#: source/soundWave_lib/synths/ibmeci.py:633
 msgid "ECI voice switching not supported; using voice 0."
 msgstr "Przełączanie głosów ECI nie jest obsługiwane; używam głosu 0."
 
-#: source/soundWave_lib/synths/ibmeci.py:638
+#: source/soundWave_lib/synths/ibmeci.py:658
 msgid "eciSetOutputBuffer failed (no callback/buffer accepted)."
 msgstr "eciSetOutputBuffer nie powiodło się (nie zaakceptowano callbacka/bufora)."
 
-#: source/soundWave_lib/synths/ibmeci.py:664
-#: source/soundWave_lib/synths/ibmeci.py:725
+#: source/soundWave_lib/synths/ibmeci.py:684
+#: source/soundWave_lib/synths/ibmeci.py:745
 msgid "IBM ECI render timed out."
 msgstr "Renderowanie IBM ECI przekroczyło limit czasu."
 
-#: source/soundWave_lib/synths/ibmeci.py:684
+#: source/soundWave_lib/synths/ibmeci.py:704
 msgid "IBM ECI produced no audio (no waveform buffers)."
 msgstr "IBM ECI nie utworzył audio (brak buforów waveform)."
 
-#: source/soundWave_lib/synths/ibmeci.py:712
+#: source/soundWave_lib/synths/ibmeci.py:732
 msgid "IBM ECI produced no audio (no buffers within 2 seconds)."
 msgstr "IBM ECI nie utworzył audio (brak buforów w ciągu 2 sekund)."
 

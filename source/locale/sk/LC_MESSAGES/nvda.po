@@ -5,9 +5,9 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: soundWave 1.2.9\n"
+"Project-Id-Version: soundWave 1.2.11\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-09-16 09:08+0100\n"
+"POT-Creation-Date: 2026-09-30 21:22+0100\n"
 "PO-Revision-Date: 2026-07-27 22:31+0200\n"
 "Last-Translator: Kazimierz Parzych\n"
 "Language: sk\n"
@@ -365,11 +365,11 @@ msgstr ""
 #: source/soundWave_lib/synths/google_tts.py:176
 #: source/soundWave_lib/synths/google_tts.py:225
 #: source/soundWave_lib/synths/google_tts.py:233
-#: source/soundWave_lib/synths/ibmeci.py:387
-#: source/soundWave_lib/synths/ibmeci.py:401
-#: source/soundWave_lib/synths/ibmeci.py:660
-#: source/soundWave_lib/synths/ibmeci.py:708
-#: source/soundWave_lib/synths/ibmeci.py:723
+#: source/soundWave_lib/synths/ibmeci.py:407
+#: source/soundWave_lib/synths/ibmeci.py:421
+#: source/soundWave_lib/synths/ibmeci.py:680
+#: source/soundWave_lib/synths/ibmeci.py:728
+#: source/soundWave_lib/synths/ibmeci.py:743
 #: source/soundWave_lib/synths/loquendo.py:150
 #: source/soundWave_lib/synths/nvda_capture.py:132
 #: source/soundWave_lib/synths/nvda_capture.py:491
@@ -762,56 +762,56 @@ msgstr ""
 "Test zlyhal:\n"
 "{error}"
 
-#: source/soundWave_lib/synths/ibmeci.py:279
+#: source/soundWave_lib/synths/ibmeci.py:299
 msgid "IBMTTS 32-bit proxy is not available; install or update the IBMTTS add-on."
 msgstr ""
 "32-bitové proxy IBMTTS nie je dostupné; nainštalujte alebo aktualizujte "
 "doplnok IBMTTS."
 
-#: source/soundWave_lib/synths/ibmeci.py:284
-#: source/soundWave_lib/synths/ibmeci.py:439
+#: source/soundWave_lib/synths/ibmeci.py:304
+#: source/soundWave_lib/synths/ibmeci.py:459
 msgid "The Eloquence/IBMTTS speech engine could not be found."
 msgstr "Rečový engine Eloquence/IBMTTS sa nenašiel."
 
-#: source/soundWave_lib/synths/ibmeci.py:345
-#: source/soundWave_lib/synths/ibmeci.py:568
+#: source/soundWave_lib/synths/ibmeci.py:365
+#: source/soundWave_lib/synths/ibmeci.py:588
 msgid "eciNewEx failed (no handle)."
 msgstr "eciNewEx zlyhalo (žiadny handle)."
 
-#: source/soundWave_lib/synths/ibmeci.py:369
+#: source/soundWave_lib/synths/ibmeci.py:389
 msgid "IBMTTS proxy did not expose an audio buffer."
 msgstr "Proxy IBMTTS neposkytlo audio buffer."
 
-#: source/soundWave_lib/synths/ibmeci.py:391
+#: source/soundWave_lib/synths/ibmeci.py:411
 msgid "IBM ECI proxy produced no audio."
 msgstr "Proxy IBM ECI nevytvorilo žiadne audio."
 
-#: source/soundWave_lib/synths/ibmeci.py:403
+#: source/soundWave_lib/synths/ibmeci.py:423
 msgid "IBM ECI proxy render timed out."
 msgstr "Vykresľovanie proxy IBM ECI prekročilo časový limit."
 
-#: source/soundWave_lib/synths/ibmeci.py:423
+#: source/soundWave_lib/synths/ibmeci.py:443
 msgid "IBM ECI proxy render failed: no audio was captured."
 msgstr "Proxy IBM ECI zlyhalo: nezachytilo sa žiadne audio."
 
-#: source/soundWave_lib/synths/ibmeci.py:613
+#: source/soundWave_lib/synths/ibmeci.py:633
 msgid "ECI voice switching not supported; using voice 0."
 msgstr "Prepínanie hlasov ECI nie je podporované; používa sa hlas 0."
 
-#: source/soundWave_lib/synths/ibmeci.py:638
+#: source/soundWave_lib/synths/ibmeci.py:658
 msgid "eciSetOutputBuffer failed (no callback/buffer accepted)."
 msgstr "eciSetOutputBuffer zlyhalo (callback/buffer nebol prijatý)."
 
-#: source/soundWave_lib/synths/ibmeci.py:664
-#: source/soundWave_lib/synths/ibmeci.py:725
+#: source/soundWave_lib/synths/ibmeci.py:684
+#: source/soundWave_lib/synths/ibmeci.py:745
 msgid "IBM ECI render timed out."
 msgstr "Vykresľovanie IBM ECI prekročilo časový limit."
 
-#: source/soundWave_lib/synths/ibmeci.py:684
+#: source/soundWave_lib/synths/ibmeci.py:704
 msgid "IBM ECI produced no audio (no waveform buffers)."
 msgstr "IBM ECI nevytvoril audio (žiadne waveform buffery)."
 
-#: source/soundWave_lib/synths/ibmeci.py:712
+#: source/soundWave_lib/synths/ibmeci.py:732
 msgid "IBM ECI produced no audio (no buffers within 2 seconds)."
 msgstr "IBM ECI nevytvoril audio (žiadne buffery do 2 sekúnd)."
 
