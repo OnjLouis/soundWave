@@ -1746,6 +1746,7 @@ from soundWave_lib.synths.orpheus import (
 _runtime.publish(globals())
 from soundWave_lib.synths.ibmeci import (
     _find_ibmeci_dll,
+    _eci_live_options,
     _render_with_ibmeci_dll,
 )
 
@@ -2207,12 +2208,18 @@ def _start_render_workflow():
         synth_label = synth_meta.get("label", "") or "IBM ECI"
         detected_eci_dll = (synth_meta.get("eciDllPath", "") or "").strip()
         auto_eci_dll = detected_eci_dll or _find_ibmeci_dll(synth_label)
-        init = {
-            "dllPath": detected_eci_dll or (_cfg_get("ibmeciDllPath", "") or "").strip() or (os.environ.get("SOUNDWAVE_IBMECI_DLL", "") or "").strip() or auto_eci_dll,
-            "voiceId": int(_cfg_get("ibmeciVoiceId", 0) or 0),
-            "speed": int(_cfg_get("ibmeciSpeed", 110) or 110),
+        dll_path = detected_eci_dll or (_cfg_get("ibmeciDllPath", "") or "").strip() or (os.environ.get("SOUNDWAVE_IBMECI_DLL", "") or "").strip() or auto_eci_dll
+        init = _eci_live_options(dll_path)
+        init.update({
+            "dllPath": dll_path,
+            "voiceId": int(_cfg_get("ibmeciVoiceId", init.get("voiceId", 0))),
+            "speed": int(_cfg_get("ibmeciSpeed", init.get("speed", 110))),
             "autoTest": _cfg_get_bool("autoTestOnChangeIbmEci", True),
-        }
+        })
+        for name in ("variant", "sampleRate", "pitch", "inflection", "volume", "headSize", "roughness", "breathiness"):
+            value = _cfg_get("ibmeci" + name[0].upper() + name[1:], None)
+            if value is not None:
+                init[name] = int(value)
         od = IbmEciOptionsDialog(parent, initial=init)
         try:
             if _show_modal(od) != wx.ID_OK:
@@ -2221,7 +2228,10 @@ def _start_render_workflow():
             voice_label = str(eci.get("voiceLabel", "") or eci.get("voiceId", "") or "")
             _cfg_set("ibmeciDllPath", eci.get("dllPath", "") or "")
             _cfg_set("ibmeciVoiceId", int(eci.get("voiceId", 0) or 0))
-            _cfg_set("ibmeciSpeed", int(eci.get("speed", 110) or 110))
+            _cfg_set("ibmeciSpeed", int(eci.get("speed", 110)))
+            for name in ("variant", "sampleRate", "pitch", "inflection", "volume", "headSize", "roughness", "breathiness"):
+                if name in eci:
+                    _cfg_set("ibmeci" + name[0].upper() + name[1:], int(eci[name]))
             _cfg_set("autoTestOnChangeIbmEci", bool(eci.get("autoTest", True)))
         finally:
             try:
@@ -2464,7 +2474,7 @@ def _start_render_workflow():
                     return _render_with_orpheus_capture(chunk_text, chunk_wav, _orpheus_live, opts=orpheus_opts)
 
                 if kind == "ibmeci":
-                    dll_path = (_cfg_get("ibmeciDllPath", "") or "").strip() or (os.environ.get("SOUNDWAVE_IBMECI_DLL", "") or "").strip() or _find_ibmeci_dll()
+                    dll_path = eci["dllPath"]
                     if not dll_path or not os.path.isfile(dll_path):
                         raise RuntimeError(
                             _(
@@ -2476,9 +2486,7 @@ def _start_render_workflow():
                         chunk_text,
                         chunk_wav,
                         dll_path,
-                        voice_id=int(_cfg_get('ibmeciVoiceId', 0) or 0),
-                        sample_rate_param=2,
-                        speed=int(_cfg_get('ibmeciSpeed', 110) or 110),
+                        opts=eci,
                         progress=result.progress,
                         cancel_evt=cancel_evt,
                     )

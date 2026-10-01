@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: soundWave 1.2.11\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-09-30 21:22+0100\n"
+"POT-Creation-Date: 2026-09-30 23:21+0100\n"
 "PO-Revision-Date: 2026-07-27 22:31+0200\n"
 "Last-Translator: Kazimierz Parzych, DJ Graco\n"
 "Language: pl\n"
@@ -179,7 +179,7 @@ msgstr "Anulowanie…"
 msgid "Hide &details"
 msgstr "Ukryj &szczegóły"
 
-#: source/soundWave_lib/main.py:1267 source/soundWave_lib/main.py:2784
+#: source/soundWave_lib/main.py:1267 source/soundWave_lib/main.py:2792
 msgid "unknown"
 msgstr "nieznane"
 
@@ -242,30 +242,30 @@ msgstr ""
 msgid "Choose record base folder"
 msgstr "Wybierz folder bazowy nagrań"
 
-#: source/soundWave_lib/main.py:1757
+#: source/soundWave_lib/main.py:1758
 msgid "ffmpeg not found on PATH."
 msgstr "Nie znaleziono ffmpeg w PATH."
 
-#: source/soundWave_lib/main.py:1771
+#: source/soundWave_lib/main.py:1772
 #, python-brace-format
 msgid "ffmpeg failed: {error}"
 msgstr "ffmpeg nie powiódł się: {error}"
 
-#: source/soundWave_lib/main.py:1771 source/soundWave_lib/main.py:1817
+#: source/soundWave_lib/main.py:1772 source/soundWave_lib/main.py:1818
 #: source/soundWave_lib/synths/sapi5.py:278
 msgid "unknown error"
 msgstr "nieznany błąd"
 
-#: source/soundWave_lib/main.py:1791
+#: source/soundWave_lib/main.py:1792
 msgid "Sonic pitch post-processing requires ffmpeg on PATH."
 msgstr "Końcowa zmiana wysokości dźwięku wymaga programu ffmpeg dostępnego w PATH."
 
-#: source/soundWave_lib/main.py:1817
+#: source/soundWave_lib/main.py:1818
 #, python-brace-format
 msgid "Sonic pitch post-processing failed: {error}"
 msgstr "Końcowa zmiana wysokości dźwięku nie powiodła się: {error}"
 
-#: source/soundWave_lib/main.py:1954
+#: source/soundWave_lib/main.py:1955
 #, python-brace-format
 msgid ""
 "Renderer produced inconsistent WAV format between chunks ({actual!r} vs "
@@ -274,23 +274,23 @@ msgstr ""
 "Renderer utworzył niespójny format WAV między fragmentami ({actual!r} vs "
 "{expected!r})."
 
-#: source/soundWave_lib/main.py:1998
+#: source/soundWave_lib/main.py:1999
 msgid "SoundWave is already open."
 msgstr "SoundWave jest już otwarty."
 
-#: source/soundWave_lib/main.py:2030
+#: source/soundWave_lib/main.py:2031
 msgid "SoundWave could not open the render workflow."
 msgstr "Nie udało się otworzyć procesu renderowania w SoundWave."
 
-#: source/soundWave_lib/main.py:2061
+#: source/soundWave_lib/main.py:2062
 msgid "NVDA synth"
 msgstr "Syntezator NVDA"
 
-#: source/soundWave_lib/main.py:2121
+#: source/soundWave_lib/main.py:2122
 msgid "soundWave - SAPI5 32-bit options"
 msgstr "soundWave - Opcje SAPI5 32-bit"
 
-#: source/soundWave_lib/main.py:2175 source/soundWave_lib/main.py:2351
+#: source/soundWave_lib/main.py:2176 source/soundWave_lib/main.py:2361
 msgid ""
 "Orpheus offline capture requires Orpheus to be your current NVDA "
 "synthesizer.\n"
@@ -302,16 +302,16 @@ msgstr ""
 "\n"
 "Przełącz NVDA na Orpheus, a potem ponownie otwórz soundWave."
 
-#: source/soundWave_lib/main.py:2240
+#: source/soundWave_lib/main.py:2250
 #, python-brace-format
 msgid "{synth} could not open its options dialog."
 msgstr "{synth} nie mógł otworzyć okna opcji."
 
-#: source/soundWave_lib/main.py:2241
+#: source/soundWave_lib/main.py:2251
 msgid "This synth"
 msgstr "Ten syntezator"
 
-#: source/soundWave_lib/main.py:2311
+#: source/soundWave_lib/main.py:2321
 #, python-brace-format
 msgid ""
 "SoundWave could not save the typed text, so rendering was not started:\n"
@@ -321,11 +321,11 @@ msgstr ""
 "zostało rozpoczęte:\n"
 "{error}"
 
-#: source/soundWave_lib/main.py:2327
+#: source/soundWave_lib/main.py:2337
 msgid "Rendering started."
 msgstr "Rozpoczęto renderowanie."
 
-#: source/soundWave_lib/main.py:2391
+#: source/soundWave_lib/main.py:2401
 #, python-brace-format
 msgid ""
 "Orpheus rendering requires switching NVDA temporarily to a fallback "
@@ -340,17 +340,17 @@ msgstr ""
 "Upewnij się, że dostępny jest co najmniej jeden syntezator NVDA inny niż "
 "Orpheus, a potem spróbuj ponownie."
 
-#: source/soundWave_lib/main.py:2422
+#: source/soundWave_lib/main.py:2432
 msgid "Google TTS For NVDA could not be initialized for rendering."
 msgstr "Nie można zainicjować Google TTS For NVDA do renderowania."
 
-#: source/soundWave_lib/main.py:2463
+#: source/soundWave_lib/main.py:2473
 msgid "Orpheus capture couldn't access the live Orpheus instance."
 msgstr ""
 "Przechwytywanie Orpheus nie mogło uzyskać dostępu do aktywnej instancji "
 "Orpheus."
 
-#: source/soundWave_lib/main.py:2471
+#: source/soundWave_lib/main.py:2481
 msgid ""
 "SoundWave could not find the installed Eloquence/IBMTTS speech engine.\n"
 "\n"
@@ -363,17 +363,12 @@ msgstr ""
 "Zainstaluj lub zaktualizuj dodatek Eloquence albo IBMTTS dla NVDA, "
 "uruchom ponownie NVDA i spróbuj jeszcze raz."
 
-#: source/soundWave_lib/main.py:2597 source/soundWave_lib/main.py:2637
-#: source/soundWave_lib/main.py:2667 source/soundWave_lib/main.py:2770
-#: source/soundWave_lib/main.py:2828 source/soundWave_lib/synths/dectalk.py:395
+#: source/soundWave_lib/main.py:2605 source/soundWave_lib/main.py:2645
+#: source/soundWave_lib/main.py:2675 source/soundWave_lib/main.py:2778
+#: source/soundWave_lib/main.py:2836 source/soundWave_lib/synths/dectalk.py:395
 #: source/soundWave_lib/synths/google_tts.py:176
 #: source/soundWave_lib/synths/google_tts.py:225
 #: source/soundWave_lib/synths/google_tts.py:233
-#: source/soundWave_lib/synths/ibmeci.py:407
-#: source/soundWave_lib/synths/ibmeci.py:421
-#: source/soundWave_lib/synths/ibmeci.py:680
-#: source/soundWave_lib/synths/ibmeci.py:728
-#: source/soundWave_lib/synths/ibmeci.py:743
 #: source/soundWave_lib/synths/loquendo.py:150
 #: source/soundWave_lib/synths/nvda_capture.py:132
 #: source/soundWave_lib/synths/nvda_capture.py:491
@@ -387,21 +382,21 @@ msgstr ""
 msgid "Cancelled."
 msgstr "Anulowano."
 
-#: source/soundWave_lib/main.py:2606
+#: source/soundWave_lib/main.py:2614
 #, python-format
 msgid "Chunk render output was not created: %s"
 msgstr "Nie utworzono wyjścia renderowania fragmentu: %s"
 
-#: source/soundWave_lib/main.py:2629
+#: source/soundWave_lib/main.py:2637
 msgid "Render failed: no audio parts were produced."
 msgstr "Renderowanie nie powiodło się: nie utworzono części audio."
 
-#: source/soundWave_lib/main.py:2708
+#: source/soundWave_lib/main.py:2716
 #, python-brace-format
 msgid "Your typed text was saved to: {path}"
 msgstr "Wpisany tekst zapisano w: {path}"
 
-#: source/soundWave_lib/main.py:2753
+#: source/soundWave_lib/main.py:2761
 msgid ""
 "Render finished, but soundWave couldn't restore Orpheus as your live "
 "synthesizer. You may need to switch it back manually in NVDA's "
@@ -411,143 +406,143 @@ msgstr ""
 "syntezatora na żywo. Być może trzeba przełączyć go ręcznie w ustawieniach"
 " syntezatora NVDA."
 
-#: source/soundWave_lib/main.py:2768
+#: source/soundWave_lib/main.py:2776
 msgid "Render timed out."
 msgstr "Renderowanie przekroczyło limit czasu."
 
-#: source/soundWave_lib/main.py:2779
+#: source/soundWave_lib/main.py:2787
 #, python-format
 msgid "%d files, starting with: %s"
 msgstr "%d plików, zaczynając od: %s"
 
-#: source/soundWave_lib/main.py:2781
+#: source/soundWave_lib/main.py:2789
 msgid "Render complete."
 msgstr "Renderowanie zakończone."
 
-#: source/soundWave_lib/main.py:2782
+#: source/soundWave_lib/main.py:2790
 #, python-brace-format
 msgid "Synth: {synth}"
 msgstr "Syntezator: {synth}"
 
-#: source/soundWave_lib/main.py:2783
+#: source/soundWave_lib/main.py:2791
 #, python-brace-format
 msgid "Saved to: {path}"
 msgstr "Zapisano do: {path}"
 
-#: source/soundWave_lib/main.py:2784
+#: source/soundWave_lib/main.py:2792
 #, python-brace-format
 msgid "Backend: {backend}"
 msgstr "Backend: {backend}"
 
-#: source/soundWave_lib/main.py:2785
+#: source/soundWave_lib/main.py:2793
 #, python-brace-format
 msgid "Time taken: {duration}"
 msgstr "Czas: {duration}"
 
-#: source/soundWave_lib/main.py:2788
+#: source/soundWave_lib/main.py:2796
 #, python-brace-format
 msgid "Text saved to: {path}"
 msgstr "Tekst zapisano w: {path}"
 
-#: source/soundWave_lib/main.py:2790
+#: source/soundWave_lib/main.py:2798
 #, python-format
 msgid "Text chunks: %d"
 msgstr "Fragmenty tekstu: %d"
 
-#: source/soundWave_lib/main.py:2792
+#: source/soundWave_lib/main.py:2800
 #, python-format
 msgid "Audio files: %d"
 msgstr "Pliki audio: %d"
 
-#: source/soundWave_lib/main.py:2794
+#: source/soundWave_lib/main.py:2802
 #, python-brace-format
 msgid "Audio length: {duration}"
 msgstr "Długość audio: {duration}"
 
-#: source/soundWave_lib/main.py:2803
+#: source/soundWave_lib/main.py:2811
 #, python-format
 msgid "Speed: %.2fx realtime"
 msgstr "Szybkość: %.2fx czasu rzeczywistego"
 
-#: source/soundWave_lib/main.py:2805
+#: source/soundWave_lib/main.py:2813
 msgid "Speed: (unknown)"
 msgstr "Szybkość: (nieznana)"
 
-#: source/soundWave_lib/main.py:2808
+#: source/soundWave_lib/main.py:2816
 msgid "Render failed."
 msgstr "Renderowanie nie powiodło się."
 
-#: source/soundWave_lib/main.py:2864
+#: source/soundWave_lib/main.py:2872
 msgid "Render stopped after five minutes without progress."
 msgstr "Renderowanie zatrzymano po pięciu minutach bez postępu."
 
-#: source/soundWave_lib/main.py:2876
+#: source/soundWave_lib/main.py:2884
 msgid "Rendering"
 msgstr "Renderowanie"
 
-#: source/soundWave_lib/main.py:2879
+#: source/soundWave_lib/main.py:2887
 #, python-format
 msgid "%s… Elapsed %s"
 msgstr "%s… Minęło %s"
 
-#: source/soundWave_lib/main.py:2885
+#: source/soundWave_lib/main.py:2893
 #, python-format
 msgid "Synth: %s"
 msgstr "Syntezator: %s"
 
-#: source/soundWave_lib/main.py:2886
+#: source/soundWave_lib/main.py:2894
 #, python-format
 msgid "Elapsed time: %s"
 msgstr "Czas, który upłynął: %s"
 
-#: source/soundWave_lib/main.py:2900
+#: source/soundWave_lib/main.py:2908
 #, python-format
 msgid "File: %d of %d (%d complete)"
 msgstr "Plik: %d z %d (%d ukończono)"
 
-#: source/soundWave_lib/main.py:2908
+#: source/soundWave_lib/main.py:2916
 #, python-format
 msgid "Text chunk: %d of %d (%d complete)"
 msgstr "Fragment tekstu: %d z %d (%d ukończono)"
 
-#: source/soundWave_lib/main.py:2926
+#: source/soundWave_lib/main.py:2934
 #, python-format
 msgid "Audio rendered: %s"
 msgstr "Wyrenderowano audio: %s"
 
-#: source/soundWave_lib/main.py:2928
+#: source/soundWave_lib/main.py:2936
 #, python-format
 msgid "Conversion rate: %.2fx realtime"
 msgstr "Współczynnik konwersji: %.2fx czasu rzeczywistego"
 
-#: source/soundWave_lib/main.py:2930
+#: source/soundWave_lib/main.py:2938
 #, python-format
 msgid "Audio written: %s"
 msgstr "Zapisano audio: %s"
 
-#: source/soundWave_lib/main.py:2932
+#: source/soundWave_lib/main.py:2940
 #, python-format
 msgid "Write rate: %s/s"
 msgstr "Szybkość zapisu: %s/s"
 
-#: source/soundWave_lib/main.py:2935
+#: source/soundWave_lib/main.py:2943
 msgid "Audio progress: waiting for renderer output"
 msgstr "Postęp audio: oczekiwanie na wyjście renderera"
 
-#: source/soundWave_lib/main.py:2941
+#: source/soundWave_lib/main.py:2949
 #, python-format
 msgid "Last audio update: %.1f s ago"
 msgstr "Ostatnia aktualizacja audio: %.1f s temu"
 
-#: source/soundWave_lib/main.py:2957 source/soundWave_lib/main.py:3082
+#: source/soundWave_lib/main.py:2965 source/soundWave_lib/main.py:3090
 msgid "soundWave"
 msgstr "soundWave"
 
-#: source/soundWave_lib/main.py:2962
+#: source/soundWave_lib/main.py:2970
 msgid "Default save &folder:"
 msgstr "Domyślny &folder zapisu:"
 
-#: source/soundWave_lib/main.py:2967
+#: source/soundWave_lib/main.py:2975
 msgid ""
 "Leave blank to use Documents\\SoundWave. SoundWave creates a subfolder "
 "under this folder using your naming templates. You can also change it for"
@@ -557,27 +552,27 @@ msgstr ""
 "podfolder w tym folderze, używając twoich szablonów nazw. Możesz też "
 "zmienić to dla pojedynczego renderowania na pierwszym ekranie SoundWave."
 
-#: source/soundWave_lib/main.py:2972
+#: source/soundWave_lib/main.py:2980
 msgid "&Browse..."
 msgstr "&Przeglądaj..."
 
-#: source/soundWave_lib/main.py:2974
+#: source/soundWave_lib/main.py:2982
 msgid "Single render fol&der pattern:"
 msgstr "Wzorzec fol&deru pojedynczego renderowania:"
 
-#: source/soundWave_lib/main.py:2976
+#: source/soundWave_lib/main.py:2984
 msgid "Single file &name pattern:"
 msgstr "Wzorzec &nazwy pojedynczego pliku:"
 
-#: source/soundWave_lib/main.py:2978
+#: source/soundWave_lib/main.py:2986
 msgid "Batch folde&r pattern:"
 msgstr "Wzorzec folde&ru wsadowego:"
 
-#: source/soundWave_lib/main.py:2980
+#: source/soundWave_lib/main.py:2988
 msgid "Batch file &pattern:"
 msgstr "Wzorzec &pliku wsadowego:"
 
-#: source/soundWave_lib/main.py:2985
+#: source/soundWave_lib/main.py:2993
 #, no-python-format, python-format
 msgid ""
 "Available tokens: %source%, %engine%, %voice%, and %number%. The number "
@@ -586,7 +581,7 @@ msgstr ""
 "Dostępne znaczniki: %source%, %engine%, %voice%, jak również %number%. "
 "Znacznik liczby służy głównie do nazw plików wsadowych."
 
-#: source/soundWave_lib/main.py:2991
+#: source/soundWave_lib/main.py:2999
 #, no-python-format, python-format
 msgid ""
 "Defaults: folders use %engine% - %voice%; single files use %source%; "
@@ -595,11 +590,11 @@ msgstr ""
 "Domyślnie: foldery używają %engine% - %voice%; pojedyncze pliki używają "
 "%source%; pliki wsadowe używają %number% - %source%."
 
-#: source/soundWave_lib/main.py:2995
+#: source/soundWave_lib/main.py:3003
 msgid "Default output forma&t:"
 msgstr "Domyślny forma&t wyjściowy:"
 
-#: source/soundWave_lib/main.py:3003
+#: source/soundWave_lib/main.py:3011
 msgid ""
 "MP3, FLAC, and M4A are available when ffmpeg is installed and available "
 "on PATH."
@@ -607,15 +602,15 @@ msgstr ""
 "MP3, FLAC i M4A są dostępne, gdy ffmpeg jest zainstalowany i dostępny w "
 "PATH."
 
-#: source/soundWave_lib/main.py:3006
+#: source/soundWave_lib/main.py:3014
 msgid "Enable pitch post-processin&g"
 msgstr "Włącz końcową zmianę &wysokości dźwięku"
 
-#: source/soundWave_lib/main.py:3009
+#: source/soundWave_lib/main.py:3017
 msgid "Sonic pit&ch:"
 msgstr "Wysokość w skali Soni&c:"
 
-#: source/soundWave_lib/main.py:3014
+#: source/soundWave_lib/main.py:3022
 msgid ""
 "Optional post-render pitch shift. 50 is unchanged; lower values deepen "
 "the finished audio and higher values raise it. The full range maps to "
@@ -626,31 +621,31 @@ msgstr ""
 "wyższe ją podnoszą. Pełny zakres odpowiada w przybliżeniu od -12 do +12 "
 "półtonów. Wymaga ffmpeg z obsługą rubberband."
 
-#: source/soundWave_lib/main.py:3017
+#: source/soundWave_lib/main.py:3025
 msgid "Skip single-render Save &As dialog"
 msgstr "Pomijaj okno Zapisz &jako dla pojedynczego renderowania"
 
-#: source/soundWave_lib/main.py:3019
+#: source/soundWave_lib/main.py:3027
 msgid "Skip batch output format &choice"
 msgstr "Pomijaj wybór &formatu wyjściowego dla wsadu"
 
-#: source/soundWave_lib/main.py:3024
+#: source/soundWave_lib/main.py:3032
 msgid "&Open output folder when the whole render finishes"
 msgstr "&Otwieraj folder wyjściowy po zakończeniu całego renderowania"
 
-#: source/soundWave_lib/main.py:3026
+#: source/soundWave_lib/main.py:3034
 msgid "Automatically pla&y rendered audio when rendering finishes"
 msgstr "Automatycznie odtwarz&aj wyrenderowane audio po zakończeniu renderowania"
 
-#: source/soundWave_lib/main.py:3028
+#: source/soundWave_lib/main.py:3036
 msgid "Show render &summary when rendering finishes"
 msgstr "Pokaż &podsumowanie renderowania po zakończeniu"
 
-#: source/soundWave_lib/main.py:3047
+#: source/soundWave_lib/main.py:3055
 msgid "Choose default soundWave save folder"
 msgstr "Wybierz domyślny folder zapisu soundWave"
 
-#: source/soundWave_lib/main.py:3103
+#: source/soundWave_lib/main.py:3111
 msgid "Open the soundWave text-to-audio render dialog."
 msgstr "Otwórz okno renderowania tekstu do audio soundWave."
 
@@ -659,7 +654,7 @@ msgid "soundWave - DECtalk options"
 msgstr "soundWave - Opcje DECtalk"
 
 #: source/soundWave_lib/synths/dectalk.py:50
-#: source/soundWave_lib/synths/ibmeci.py:91
+#: source/soundWave_lib/synths/ibmeci.py:128
 #: source/soundWave_lib/synths/nvda_capture.py:739
 #: source/soundWave_lib/synths/nvda_capture.py:1105
 #: source/soundWave_lib/synths/orpheus.py:39
@@ -675,7 +670,7 @@ msgid "&Rate:"
 msgstr "&Tempo:"
 
 #: source/soundWave_lib/synths/dectalk.py:76
-#: source/soundWave_lib/synths/ibmeci.py:127
+#: source/soundWave_lib/synths/ibmeci.py:144
 #: source/soundWave_lib/synths/nvda_capture.py:809
 #: source/soundWave_lib/synths/nvda_capture.py:1135
 #: source/soundWave_lib/synths/orpheus.py:65
@@ -736,28 +731,186 @@ msgstr "Renderowanie Google TTS nie powiodło się: %s"
 msgid "Google TTS produced no audio."
 msgstr "Google TTS nie utworzył audio."
 
-#: source/soundWave_lib/synths/ibmeci.py:44
-msgid "Default (0)"
-msgstr "Domyślny (0)"
+#: source/soundWave_lib/synths/ibmeci.py:23
+msgid "Engine default"
+msgstr "Domyślny głos silnika"
 
-#: source/soundWave_lib/synths/ibmeci.py:75
-msgid "soundWave - IBM ECI options"
-msgstr "soundWave - Opcje IBM ECI"
+#: source/soundWave_lib/synths/ibmeci.py:24
+msgid "American English"
+msgstr "Angielski amerykański"
 
-#: source/soundWave_lib/synths/ibmeci.py:97
+#: source/soundWave_lib/synths/ibmeci.py:24
+msgid "British English"
+msgstr "Angielski brytyjski"
+
+#: source/soundWave_lib/synths/ibmeci.py:25
+msgid "Castilian Spanish"
+msgstr "Hiszpański kastylijski"
+
+#: source/soundWave_lib/synths/ibmeci.py:25
+msgid "Latin American Spanish"
+msgstr "Hiszpański latynoamerykański"
+
+#: source/soundWave_lib/synths/ibmeci.py:26
+msgid "French"
+msgstr "Francuski"
+
+#: source/soundWave_lib/synths/ibmeci.py:26
+msgid "French Canadian"
+msgstr "Francuski kanadyjski"
+
+#: source/soundWave_lib/synths/ibmeci.py:26
+msgid "German"
+msgstr "Niemiecki"
+
+#: source/soundWave_lib/synths/ibmeci.py:27
+msgid "Italian"
+msgstr "Włoski"
+
+#: source/soundWave_lib/synths/ibmeci.py:27
+msgid "Mandarin Chinese"
+msgstr "Chiński mandaryński"
+
+#: source/soundWave_lib/synths/ibmeci.py:28
+msgid "Taiwanese Mandarin"
+msgstr "Mandaryński tajwański"
+
+#: source/soundWave_lib/synths/ibmeci.py:28
+msgid "Brazilian Portuguese"
+msgstr "Portugalski brazylijski"
+
+#: source/soundWave_lib/synths/ibmeci.py:29
+msgid "Japanese"
+msgstr "Japoński"
+
+#: source/soundWave_lib/synths/ibmeci.py:29
+msgid "Finnish"
+msgstr "Fiński"
+
+#: source/soundWave_lib/synths/ibmeci.py:29
+msgid "Korean"
+msgstr "Koreański"
+
+#: source/soundWave_lib/synths/ibmeci.py:30
+msgid "Cantonese"
+msgstr "Kantoński"
+
+#: source/soundWave_lib/synths/ibmeci.py:30
+msgid "Hong Kong Cantonese"
+msgstr "Kantoński z Hongkongu"
+
+#: source/soundWave_lib/synths/ibmeci.py:31
+msgid "Dutch"
+msgstr "Niderlandzki"
+
+#: source/soundWave_lib/synths/ibmeci.py:31
+msgid "Norwegian"
+msgstr "Norweski"
+
+#: source/soundWave_lib/synths/ibmeci.py:31
+msgid "Swedish"
+msgstr "Szwedzki"
+
+#: source/soundWave_lib/synths/ibmeci.py:32
+msgid "Danish"
+msgstr "Duński"
+
+#: source/soundWave_lib/synths/ibmeci.py:32
+msgid "Thai"
+msgstr "Tajski"
+
+#: source/soundWave_lib/synths/ibmeci.py:33
+msgid "Adult Male 1"
+msgstr "Dorosły mężczyzna 1"
+
+#: source/soundWave_lib/synths/ibmeci.py:33
+msgid "Adult Female 1"
+msgstr "Dorosła kobieta 1"
+
+#: source/soundWave_lib/synths/ibmeci.py:34
+msgid "Child 1"
+msgstr "Dziecko 1"
+
+#: source/soundWave_lib/synths/ibmeci.py:34
+msgid "Adult Male 2"
+msgstr "Dorosły mężczyzna 2"
+
+#: source/soundWave_lib/synths/ibmeci.py:34
+msgid "Adult Male 3"
+msgstr "Dorosły mężczyzna 3"
+
+#: source/soundWave_lib/synths/ibmeci.py:35
+msgid "Adult Female 2"
+msgstr "Dorosła kobieta 2"
+
+#: source/soundWave_lib/synths/ibmeci.py:35
+msgid "Elderly Female 1"
+msgstr "Starsza kobieta 1"
+
+#: source/soundWave_lib/synths/ibmeci.py:36
+msgid "Elderly Male 1"
+msgstr "Starszy mężczyzna 1"
+
+#: source/soundWave_lib/synths/ibmeci.py:67
 #: source/soundWave_lib/synths/nvda_capture.py:1111
 msgid "&Speed:"
 msgstr "&Szybkość:"
 
-#: source/soundWave_lib/synths/ibmeci.py:101
-msgid "(0-250; default ~110)"
-msgstr "(0-250; domyślnie ~110)"
+#: source/soundWave_lib/synths/ibmeci.py:68
+#: source/soundWave_lib/synths/nvda_capture.py:774
+#: source/soundWave_lib/synths/nvda_capture.py:1117
+#: source/soundWave_lib/synths/orpheus.py:47
+#: source/soundWave_lib/synths/sapi5.py:320
+msgid "&Pitch:"
+msgstr "&Wysokość:"
 
-#: source/soundWave_lib/synths/ibmeci.py:170
-msgid "SoundWave could not find the installed Eloquence/IBMTTS speech engine."
-msgstr "SoundWave nie mógł znaleźć zainstalowanego silnika mowy Eloquence/IBMTTS."
+#: source/soundWave_lib/synths/ibmeci.py:69
+msgid "&Inflection:"
+msgstr "&Intonacja:"
 
-#: source/soundWave_lib/synths/ibmeci.py:189
+#: source/soundWave_lib/synths/ibmeci.py:70
+msgid "V&olume:"
+msgstr "Głośn&ość:"
+
+#: source/soundWave_lib/synths/ibmeci.py:71
+msgid "Head si&ze:"
+msgstr "Ro&zmiar głowy:"
+
+#: source/soundWave_lib/synths/ibmeci.py:72
+msgid "&Roughness:"
+msgstr "Szorst&kość:"
+
+#: source/soundWave_lib/synths/ibmeci.py:73
+msgid "&Breathiness:"
+msgstr "O&ddechowość:"
+
+#: source/soundWave_lib/synths/ibmeci.py:110
+msgid "soundWave - IBM ECI options"
+msgstr "soundWave - Opcje IBM ECI"
+
+#: source/soundWave_lib/synths/ibmeci.py:124
+msgid "Loading voice settings..."
+msgstr "Wczytywanie ustawień głosu..."
+
+#: source/soundWave_lib/synths/ibmeci.py:129
+#: source/soundWave_lib/synths/nvda_capture.py:743
+msgid "Varia&nt:"
+msgstr "Waria&nt:"
+
+#: source/soundWave_lib/synths/ibmeci.py:130
+msgid "Sa&mple rate:"
+msgstr "Częstotliwość pró&bkowania:"
+
+#: source/soundWave_lib/synths/ibmeci.py:188
+#, python-brace-format
+msgid "Could not load voice settings: {error}"
+msgstr "Nie można wczytać ustawień głosu: {error}"
+
+#: source/soundWave_lib/synths/ibmeci.py:210
+msgid "Voice settings ready."
+msgstr "Ustawienia głosu są gotowe."
+
+#: source/soundWave_lib/synths/ibmeci.py:306
 #, python-brace-format
 msgid ""
 "Test failed:\n"
@@ -766,58 +919,9 @@ msgstr ""
 "Test nie powiódł się:\n"
 "{error}"
 
-#: source/soundWave_lib/synths/ibmeci.py:299
-msgid "IBMTTS 32-bit proxy is not available; install or update the IBMTTS add-on."
-msgstr ""
-"Proxy IBMTTS 32-bit jest niedostępne; zainstaluj lub zaktualizuj dodatek "
-"IBMTTS."
-
-#: source/soundWave_lib/synths/ibmeci.py:304
-#: source/soundWave_lib/synths/ibmeci.py:459
-msgid "The Eloquence/IBMTTS speech engine could not be found."
-msgstr "Nie można znaleźć silnika mowy Eloquence/IBMTTS."
-
-#: source/soundWave_lib/synths/ibmeci.py:365
-#: source/soundWave_lib/synths/ibmeci.py:588
-msgid "eciNewEx failed (no handle)."
-msgstr "eciNewEx nie powiodło się (brak uchwytu)."
-
-#: source/soundWave_lib/synths/ibmeci.py:389
-msgid "IBMTTS proxy did not expose an audio buffer."
-msgstr "Proxy IBMTTS nie udostępniło bufora audio."
-
-#: source/soundWave_lib/synths/ibmeci.py:411
-msgid "IBM ECI proxy produced no audio."
-msgstr "Proxy IBM ECI nie utworzyło audio."
-
-#: source/soundWave_lib/synths/ibmeci.py:423
-msgid "IBM ECI proxy render timed out."
-msgstr "Renderowanie proxy IBM ECI przekroczyło limit czasu."
-
-#: source/soundWave_lib/synths/ibmeci.py:443
-msgid "IBM ECI proxy render failed: no audio was captured."
-msgstr "Proxy IBM ECI nie utworzyło audio: nie przechwycono audio."
-
-#: source/soundWave_lib/synths/ibmeci.py:633
-msgid "ECI voice switching not supported; using voice 0."
-msgstr "Przełączanie głosów ECI nie jest obsługiwane; używam głosu 0."
-
-#: source/soundWave_lib/synths/ibmeci.py:658
-msgid "eciSetOutputBuffer failed (no callback/buffer accepted)."
-msgstr "eciSetOutputBuffer nie powiodło się (nie zaakceptowano callbacka/bufora)."
-
-#: source/soundWave_lib/synths/ibmeci.py:684
-#: source/soundWave_lib/synths/ibmeci.py:745
-msgid "IBM ECI render timed out."
-msgstr "Renderowanie IBM ECI przekroczyło limit czasu."
-
-#: source/soundWave_lib/synths/ibmeci.py:704
-msgid "IBM ECI produced no audio (no waveform buffers)."
-msgstr "IBM ECI nie utworzył audio (brak buforów waveform)."
-
-#: source/soundWave_lib/synths/ibmeci.py:732
-msgid "IBM ECI produced no audio (no buffers within 2 seconds)."
-msgstr "IBM ECI nie utworzył audio (brak buforów w ciągu 2 sekund)."
+#: source/soundWave_lib/synths/ibmeci.py:317
+msgid "Voice settings are not ready."
+msgstr "Ustawienia głosu nie są jeszcze gotowe."
 
 #: source/soundWave_lib/synths/loquendo.py:59
 msgid "The Loquendo TTS 7 NVDA add-on is not installed correctly."
@@ -958,20 +1062,9 @@ msgstr ""
 msgid "&Language:"
 msgstr "&Język:"
 
-#: source/soundWave_lib/synths/nvda_capture.py:743
-msgid "Varia&nt:"
-msgstr "Waria&nt:"
-
 #: source/soundWave_lib/synths/nvda_capture.py:769
 msgid "Rate &boost:"
 msgstr "Podkręcanie &szybkości:"
-
-#: source/soundWave_lib/synths/nvda_capture.py:774
-#: source/soundWave_lib/synths/nvda_capture.py:1117
-#: source/soundWave_lib/synths/orpheus.py:47
-#: source/soundWave_lib/synths/sapi5.py:320
-msgid "&Pitch:"
-msgstr "&Wysokość:"
 
 #: source/soundWave_lib/synths/nvda_capture.py:778
 #: source/soundWave_lib/synths/nvda_capture.py:1123
@@ -1202,3 +1295,57 @@ msgstr "&Mówca:"
 #: source/soundWave_lib/synths/sonata.py:250
 msgid "&Auto-speak when changing voice, speaker, or speed"
 msgstr "&Automatycznie odtwarzaj mowę przy zmianie głosu, mówcy lub szybkości"
+
+#~ msgid "Default (0)"
+#~ msgstr "Domyślny (0)"
+
+#~ msgid "(0-250; default ~110)"
+#~ msgstr "(0-250; domyślnie ~110)"
+
+#~ msgid "SoundWave could not find the installed Eloquence/IBMTTS speech engine."
+#~ msgstr ""
+#~ "SoundWave nie mógł znaleźć zainstalowanego "
+#~ "silnika mowy Eloquence/IBMTTS."
+
+#~ msgid ""
+#~ "IBMTTS 32-bit proxy is not available;"
+#~ " install or update the IBMTTS add-"
+#~ "on."
+#~ msgstr ""
+#~ "Proxy IBMTTS 32-bit jest niedostępne; "
+#~ "zainstaluj lub zaktualizuj dodatek IBMTTS."
+
+#~ msgid "The Eloquence/IBMTTS speech engine could not be found."
+#~ msgstr "Nie można znaleźć silnika mowy Eloquence/IBMTTS."
+
+#~ msgid "eciNewEx failed (no handle)."
+#~ msgstr "eciNewEx nie powiodło się (brak uchwytu)."
+
+#~ msgid "IBMTTS proxy did not expose an audio buffer."
+#~ msgstr "Proxy IBMTTS nie udostępniło bufora audio."
+
+#~ msgid "IBM ECI proxy produced no audio."
+#~ msgstr "Proxy IBM ECI nie utworzyło audio."
+
+#~ msgid "IBM ECI proxy render timed out."
+#~ msgstr "Renderowanie proxy IBM ECI przekroczyło limit czasu."
+
+#~ msgid "IBM ECI proxy render failed: no audio was captured."
+#~ msgstr "Proxy IBM ECI nie utworzyło audio: nie przechwycono audio."
+
+#~ msgid "ECI voice switching not supported; using voice 0."
+#~ msgstr "Przełączanie głosów ECI nie jest obsługiwane; używam głosu 0."
+
+#~ msgid "eciSetOutputBuffer failed (no callback/buffer accepted)."
+#~ msgstr ""
+#~ "eciSetOutputBuffer nie powiodło się (nie "
+#~ "zaakceptowano callbacka/bufora)."
+
+#~ msgid "IBM ECI render timed out."
+#~ msgstr "Renderowanie IBM ECI przekroczyło limit czasu."
+
+#~ msgid "IBM ECI produced no audio (no waveform buffers)."
+#~ msgstr "IBM ECI nie utworzył audio (brak buforów waveform)."
+
+#~ msgid "IBM ECI produced no audio (no buffers within 2 seconds)."
+#~ msgstr "IBM ECI nie utworzył audio (brak buforów w ciągu 2 sekund)."

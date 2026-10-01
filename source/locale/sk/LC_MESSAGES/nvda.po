@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: soundWave 1.2.11\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-09-30 21:22+0100\n"
+"POT-Creation-Date: 2026-09-30 23:21+0100\n"
 "PO-Revision-Date: 2026-07-27 22:31+0200\n"
 "Last-Translator: Kazimierz Parzych\n"
 "Language: sk\n"
@@ -179,7 +179,7 @@ msgstr "Ruší sa…"
 msgid "Hide &details"
 msgstr "Skryť &podrobnosti"
 
-#: source/soundWave_lib/main.py:1267 source/soundWave_lib/main.py:2784
+#: source/soundWave_lib/main.py:1267 source/soundWave_lib/main.py:2792
 msgid "unknown"
 msgstr "neznáme"
 
@@ -242,30 +242,30 @@ msgstr ""
 msgid "Choose record base folder"
 msgstr "Vyberte základný priečinok nahrávok"
 
-#: source/soundWave_lib/main.py:1757
+#: source/soundWave_lib/main.py:1758
 msgid "ffmpeg not found on PATH."
 msgstr "ffmpeg sa nenašiel v PATH."
 
-#: source/soundWave_lib/main.py:1771
+#: source/soundWave_lib/main.py:1772
 #, python-brace-format
 msgid "ffmpeg failed: {error}"
 msgstr "ffmpeg zlyhal: {error}"
 
-#: source/soundWave_lib/main.py:1771 source/soundWave_lib/main.py:1817
+#: source/soundWave_lib/main.py:1772 source/soundWave_lib/main.py:1818
 #: source/soundWave_lib/synths/sapi5.py:278
 msgid "unknown error"
 msgstr "neznáma chyba"
 
-#: source/soundWave_lib/main.py:1791
+#: source/soundWave_lib/main.py:1792
 msgid "Sonic pitch post-processing requires ffmpeg on PATH."
 msgstr "Dodatočné spracovanie výšky pomocou Sonic vyžaduje ffmpeg dostupný v PATH."
 
-#: source/soundWave_lib/main.py:1817
+#: source/soundWave_lib/main.py:1818
 #, python-brace-format
 msgid "Sonic pitch post-processing failed: {error}"
 msgstr "Dodatočné spracovanie výšky pomocou Sonic zlyhalo: {error}"
 
-#: source/soundWave_lib/main.py:1954
+#: source/soundWave_lib/main.py:1955
 #, python-brace-format
 msgid ""
 "Renderer produced inconsistent WAV format between chunks ({actual!r} vs "
@@ -274,23 +274,23 @@ msgstr ""
 "Renderer vytvoril nekonzistentný formát WAV medzi časťami ({actual!r} vs "
 "{expected!r})."
 
-#: source/soundWave_lib/main.py:1998
+#: source/soundWave_lib/main.py:1999
 msgid "SoundWave is already open."
 msgstr "SoundWave je už otvorený."
 
-#: source/soundWave_lib/main.py:2030
+#: source/soundWave_lib/main.py:2031
 msgid "SoundWave could not open the render workflow."
 msgstr "SoundWave nemohol otvoriť proces renderovania."
 
-#: source/soundWave_lib/main.py:2061
+#: source/soundWave_lib/main.py:2062
 msgid "NVDA synth"
 msgstr "Syntezátor NVDA"
 
-#: source/soundWave_lib/main.py:2121
+#: source/soundWave_lib/main.py:2122
 msgid "soundWave - SAPI5 32-bit options"
 msgstr "soundWave - možnosti SAPI5 32-bit"
 
-#: source/soundWave_lib/main.py:2175 source/soundWave_lib/main.py:2351
+#: source/soundWave_lib/main.py:2176 source/soundWave_lib/main.py:2361
 msgid ""
 "Orpheus offline capture requires Orpheus to be your current NVDA "
 "synthesizer.\n"
@@ -302,16 +302,16 @@ msgstr ""
 "\n"
 "Prepnite NVDA na Orpheus a potom znova otvorte soundWave."
 
-#: source/soundWave_lib/main.py:2240
+#: source/soundWave_lib/main.py:2250
 #, python-brace-format
 msgid "{synth} could not open its options dialog."
 msgstr "{synth} nemohol otvoriť dialóg možností."
 
-#: source/soundWave_lib/main.py:2241
+#: source/soundWave_lib/main.py:2251
 msgid "This synth"
 msgstr "Tento syntezátor"
 
-#: source/soundWave_lib/main.py:2311
+#: source/soundWave_lib/main.py:2321
 #, python-brace-format
 msgid ""
 "SoundWave could not save the typed text, so rendering was not started:\n"
@@ -320,11 +320,11 @@ msgstr ""
 "SoundWave nemohol uložiť zadaný text, preto sa renderovanie nezačalo:\n"
 "{error}"
 
-#: source/soundWave_lib/main.py:2327
+#: source/soundWave_lib/main.py:2337
 msgid "Rendering started."
 msgstr "Vykresľovanie spustené."
 
-#: source/soundWave_lib/main.py:2391
+#: source/soundWave_lib/main.py:2401
 #, python-brace-format
 msgid ""
 "Orpheus rendering requires switching NVDA temporarily to a fallback "
@@ -339,15 +339,15 @@ msgstr ""
 "Uistite sa, že je dostupný aspoň jeden syntezátor NVDA iný než Orpheus, a"
 " potom to skúste znova."
 
-#: source/soundWave_lib/main.py:2422
+#: source/soundWave_lib/main.py:2432
 msgid "Google TTS For NVDA could not be initialized for rendering."
 msgstr "Google TTS For NVDA sa nepodarilo inicializovať na vykresľovanie."
 
-#: source/soundWave_lib/main.py:2463
+#: source/soundWave_lib/main.py:2473
 msgid "Orpheus capture couldn't access the live Orpheus instance."
 msgstr "Zachytávanie Orpheus nemohlo získať prístup k aktívnej inštancii Orpheus."
 
-#: source/soundWave_lib/main.py:2471
+#: source/soundWave_lib/main.py:2481
 msgid ""
 "SoundWave could not find the installed Eloquence/IBMTTS speech engine.\n"
 "\n"
@@ -359,17 +359,12 @@ msgstr ""
 "Nainštalujte alebo aktualizujte doplnok Eloquence alebo IBMTTS pre NVDA, "
 "znovu načítajte NVDA a skúste to znova."
 
-#: source/soundWave_lib/main.py:2597 source/soundWave_lib/main.py:2637
-#: source/soundWave_lib/main.py:2667 source/soundWave_lib/main.py:2770
-#: source/soundWave_lib/main.py:2828 source/soundWave_lib/synths/dectalk.py:395
+#: source/soundWave_lib/main.py:2605 source/soundWave_lib/main.py:2645
+#: source/soundWave_lib/main.py:2675 source/soundWave_lib/main.py:2778
+#: source/soundWave_lib/main.py:2836 source/soundWave_lib/synths/dectalk.py:395
 #: source/soundWave_lib/synths/google_tts.py:176
 #: source/soundWave_lib/synths/google_tts.py:225
 #: source/soundWave_lib/synths/google_tts.py:233
-#: source/soundWave_lib/synths/ibmeci.py:407
-#: source/soundWave_lib/synths/ibmeci.py:421
-#: source/soundWave_lib/synths/ibmeci.py:680
-#: source/soundWave_lib/synths/ibmeci.py:728
-#: source/soundWave_lib/synths/ibmeci.py:743
 #: source/soundWave_lib/synths/loquendo.py:150
 #: source/soundWave_lib/synths/nvda_capture.py:132
 #: source/soundWave_lib/synths/nvda_capture.py:491
@@ -383,21 +378,21 @@ msgstr ""
 msgid "Cancelled."
 msgstr "Zrušené."
 
-#: source/soundWave_lib/main.py:2606
+#: source/soundWave_lib/main.py:2614
 #, python-format
 msgid "Chunk render output was not created: %s"
 msgstr "Výstup vykreslenia časti nebol vytvorený: %s"
 
-#: source/soundWave_lib/main.py:2629
+#: source/soundWave_lib/main.py:2637
 msgid "Render failed: no audio parts were produced."
 msgstr "Vykresľovanie zlyhalo: neboli vytvorené žiadne časti audia."
 
-#: source/soundWave_lib/main.py:2708
+#: source/soundWave_lib/main.py:2716
 #, python-brace-format
 msgid "Your typed text was saved to: {path}"
 msgstr "Zadaný text bol uložený do: {path}"
 
-#: source/soundWave_lib/main.py:2753
+#: source/soundWave_lib/main.py:2761
 msgid ""
 "Render finished, but soundWave couldn't restore Orpheus as your live "
 "synthesizer. You may need to switch it back manually in NVDA's "
@@ -407,143 +402,143 @@ msgstr ""
 "aktívny syntezátor. Možno ho budete musieť prepnúť späť ručne v "
 "nastaveniach syntezátora NVDA."
 
-#: source/soundWave_lib/main.py:2768
+#: source/soundWave_lib/main.py:2776
 msgid "Render timed out."
 msgstr "Vykresľovanie prekročilo časový limit."
 
-#: source/soundWave_lib/main.py:2779
+#: source/soundWave_lib/main.py:2787
 #, python-format
 msgid "%d files, starting with: %s"
 msgstr "%d súborov, začína sa od: %s"
 
-#: source/soundWave_lib/main.py:2781
+#: source/soundWave_lib/main.py:2789
 msgid "Render complete."
 msgstr "Vykreslenie dokončené."
 
-#: source/soundWave_lib/main.py:2782
+#: source/soundWave_lib/main.py:2790
 #, python-brace-format
 msgid "Synth: {synth}"
 msgstr "Syntezátor: {synth}"
 
-#: source/soundWave_lib/main.py:2783
+#: source/soundWave_lib/main.py:2791
 #, python-brace-format
 msgid "Saved to: {path}"
 msgstr "Uložené do: {path}"
 
-#: source/soundWave_lib/main.py:2784
+#: source/soundWave_lib/main.py:2792
 #, python-brace-format
 msgid "Backend: {backend}"
 msgstr "Backend: {backend}"
 
-#: source/soundWave_lib/main.py:2785
+#: source/soundWave_lib/main.py:2793
 #, python-brace-format
 msgid "Time taken: {duration}"
 msgstr "Čas: {duration}"
 
-#: source/soundWave_lib/main.py:2788
+#: source/soundWave_lib/main.py:2796
 #, python-brace-format
 msgid "Text saved to: {path}"
 msgstr "Text bol uložený do: {path}"
 
-#: source/soundWave_lib/main.py:2790
+#: source/soundWave_lib/main.py:2798
 #, python-format
 msgid "Text chunks: %d"
 msgstr "Textové časti: %d"
 
-#: source/soundWave_lib/main.py:2792
+#: source/soundWave_lib/main.py:2800
 #, python-format
 msgid "Audio files: %d"
 msgstr "Zvukové súbory: %d"
 
-#: source/soundWave_lib/main.py:2794
+#: source/soundWave_lib/main.py:2802
 #, python-brace-format
 msgid "Audio length: {duration}"
 msgstr "Dĺžka audia: {duration}"
 
-#: source/soundWave_lib/main.py:2803
+#: source/soundWave_lib/main.py:2811
 #, python-format
 msgid "Speed: %.2fx realtime"
 msgstr "Rýchlosť: %.2fx reálneho času"
 
-#: source/soundWave_lib/main.py:2805
+#: source/soundWave_lib/main.py:2813
 msgid "Speed: (unknown)"
 msgstr "Rýchlosť: (neznáma)"
 
-#: source/soundWave_lib/main.py:2808
+#: source/soundWave_lib/main.py:2816
 msgid "Render failed."
 msgstr "Vykresľovanie zlyhalo."
 
-#: source/soundWave_lib/main.py:2864
+#: source/soundWave_lib/main.py:2872
 msgid "Render stopped after five minutes without progress."
 msgstr "Renderovanie bolo zastavené po piatich minútach bez pokroku."
 
-#: source/soundWave_lib/main.py:2876
+#: source/soundWave_lib/main.py:2884
 msgid "Rendering"
 msgstr "Vykresľovanie"
 
-#: source/soundWave_lib/main.py:2879
+#: source/soundWave_lib/main.py:2887
 #, python-format
 msgid "%s… Elapsed %s"
 msgstr "%s… Uplynulo %s"
 
-#: source/soundWave_lib/main.py:2885
+#: source/soundWave_lib/main.py:2893
 #, python-format
 msgid "Synth: %s"
 msgstr "Syntezátor: %s"
 
-#: source/soundWave_lib/main.py:2886
+#: source/soundWave_lib/main.py:2894
 #, python-format
 msgid "Elapsed time: %s"
 msgstr "Uplynutý čas: %s"
 
-#: source/soundWave_lib/main.py:2900
+#: source/soundWave_lib/main.py:2908
 #, python-format
 msgid "File: %d of %d (%d complete)"
 msgstr "Súbor: %d z %d (%d dokončené)"
 
-#: source/soundWave_lib/main.py:2908
+#: source/soundWave_lib/main.py:2916
 #, python-format
 msgid "Text chunk: %d of %d (%d complete)"
 msgstr "Textová časť: %d z %d (%d dokončené)"
 
-#: source/soundWave_lib/main.py:2926
+#: source/soundWave_lib/main.py:2934
 #, python-format
 msgid "Audio rendered: %s"
 msgstr "Vykreslené audio: %s"
 
-#: source/soundWave_lib/main.py:2928
+#: source/soundWave_lib/main.py:2936
 #, python-format
 msgid "Conversion rate: %.2fx realtime"
 msgstr "Rýchlosť konverzie: %.2fx reálneho času"
 
-#: source/soundWave_lib/main.py:2930
+#: source/soundWave_lib/main.py:2938
 #, python-format
 msgid "Audio written: %s"
 msgstr "Zapísané audio: %s"
 
-#: source/soundWave_lib/main.py:2932
+#: source/soundWave_lib/main.py:2940
 #, python-format
 msgid "Write rate: %s/s"
 msgstr "Rýchlosť zápisu: %s/s"
 
-#: source/soundWave_lib/main.py:2935
+#: source/soundWave_lib/main.py:2943
 msgid "Audio progress: waiting for renderer output"
 msgstr "Priebeh audia: čaká sa na výstup rendereru"
 
-#: source/soundWave_lib/main.py:2941
+#: source/soundWave_lib/main.py:2949
 #, python-format
 msgid "Last audio update: %.1f s ago"
 msgstr "Posledná aktualizácia audia: pred %.1f s"
 
-#: source/soundWave_lib/main.py:2957 source/soundWave_lib/main.py:3082
+#: source/soundWave_lib/main.py:2965 source/soundWave_lib/main.py:3090
 msgid "soundWave"
 msgstr "soundWave"
 
-#: source/soundWave_lib/main.py:2962
+#: source/soundWave_lib/main.py:2970
 msgid "Default save &folder:"
 msgstr "Predvolený priečinok &ukladania:"
 
-#: source/soundWave_lib/main.py:2967
+#: source/soundWave_lib/main.py:2975
 msgid ""
 "Leave blank to use Documents\\SoundWave. SoundWave creates a subfolder "
 "under this folder using your naming templates. You can also change it for"
@@ -553,27 +548,27 @@ msgstr ""
 "vytvorí podpriečinok v tomto priečinku pomocou vašich šablón názvov. "
 "Môžete to zmeniť aj pre jedno vykreslenie na prvej obrazovke SoundWave."
 
-#: source/soundWave_lib/main.py:2972
+#: source/soundWave_lib/main.py:2980
 msgid "&Browse..."
 msgstr "&Prehľadávať..."
 
-#: source/soundWave_lib/main.py:2974
+#: source/soundWave_lib/main.py:2982
 msgid "Single render fol&der pattern:"
 msgstr "Vzor priečinka &jedného vykreslenia:"
 
-#: source/soundWave_lib/main.py:2976
+#: source/soundWave_lib/main.py:2984
 msgid "Single file &name pattern:"
 msgstr "Vzor &názvu jedného súboru:"
 
-#: source/soundWave_lib/main.py:2978
+#: source/soundWave_lib/main.py:2986
 msgid "Batch folde&r pattern:"
 msgstr "Vzor dávkového p&riečinka:"
 
-#: source/soundWave_lib/main.py:2980
+#: source/soundWave_lib/main.py:2988
 msgid "Batch file &pattern:"
 msgstr "Vzor dávkového &súboru:"
 
-#: source/soundWave_lib/main.py:2985
+#: source/soundWave_lib/main.py:2993
 #, no-python-format, python-format
 msgid ""
 "Available tokens: %source%, %engine%, %voice%, and %number%. The number "
@@ -582,7 +577,7 @@ msgstr ""
 "Dostupné značky: %source%, %engine%, %voice% a %number%. Značka čísla je "
 "hlavne pre názvy dávkových súborov."
 
-#: source/soundWave_lib/main.py:2991
+#: source/soundWave_lib/main.py:2999
 #, no-python-format, python-format
 msgid ""
 "Defaults: folders use %engine% - %voice%; single files use %source%; "
@@ -591,11 +586,11 @@ msgstr ""
 "Predvolené: priečinky používajú %engine% - %voice%; jednotlivé súbory "
 "používajú %source%; dávkové súbory používajú %number% - %source%."
 
-#: source/soundWave_lib/main.py:2995
+#: source/soundWave_lib/main.py:3003
 msgid "Default output forma&t:"
 msgstr "Predvolený výstupný formá&t:"
 
-#: source/soundWave_lib/main.py:3003
+#: source/soundWave_lib/main.py:3011
 msgid ""
 "MP3, FLAC, and M4A are available when ffmpeg is installed and available "
 "on PATH."
@@ -603,15 +598,15 @@ msgstr ""
 "MP3, FLAC a M4A sú dostupné, keď je ffmpeg nainštalovaný a dostupný v "
 "PATH."
 
-#: source/soundWave_lib/main.py:3006
+#: source/soundWave_lib/main.py:3014
 msgid "Enable pitch post-processin&g"
 msgstr "Povoliť dodatočné spracovanie výšk&y"
 
-#: source/soundWave_lib/main.py:3009
+#: source/soundWave_lib/main.py:3017
 msgid "Sonic pit&ch:"
 msgstr "Výška v škále Soni&c:"
 
-#: source/soundWave_lib/main.py:3014
+#: source/soundWave_lib/main.py:3022
 msgid ""
 "Optional post-render pitch shift. 50 is unchanged; lower values deepen "
 "the finished audio and higher values raise it. The full range maps to "
@@ -622,31 +617,31 @@ msgstr ""
 "zodpovedá približne -12 až +12 poltónom. Vyžaduje ffmpeg s podporou "
 "rubberband."
 
-#: source/soundWave_lib/main.py:3017
+#: source/soundWave_lib/main.py:3025
 msgid "Skip single-render Save &As dialog"
 msgstr "Preskočiť dialóg Uložiť &ako pri jednom vykreslení"
 
-#: source/soundWave_lib/main.py:3019
+#: source/soundWave_lib/main.py:3027
 msgid "Skip batch output format &choice"
 msgstr "Preskočiť výber výstupného &formátu pre dávku"
 
-#: source/soundWave_lib/main.py:3024
+#: source/soundWave_lib/main.py:3032
 msgid "&Open output folder when the whole render finishes"
 msgstr "&Otvoriť výstupný priečinok po dokončení celého vykreslenia"
 
-#: source/soundWave_lib/main.py:3026
+#: source/soundWave_lib/main.py:3034
 msgid "Automatically pla&y rendered audio when rendering finishes"
 msgstr "Automaticky prehra&ť vykreslené audio po dokončení vykreslenia"
 
-#: source/soundWave_lib/main.py:3028
+#: source/soundWave_lib/main.py:3036
 msgid "Show render &summary when rendering finishes"
 msgstr "Zobraziť &súhrn vykreslenia po dokončení"
 
-#: source/soundWave_lib/main.py:3047
+#: source/soundWave_lib/main.py:3055
 msgid "Choose default soundWave save folder"
 msgstr "Vyberte predvolený priečinok ukladania soundWave"
 
-#: source/soundWave_lib/main.py:3103
+#: source/soundWave_lib/main.py:3111
 msgid "Open the soundWave text-to-audio render dialog."
 msgstr "Otvoriť dialóg soundWave na vykreslenie textu do audia."
 
@@ -655,7 +650,7 @@ msgid "soundWave - DECtalk options"
 msgstr "soundWave - možnosti DECtalk"
 
 #: source/soundWave_lib/synths/dectalk.py:50
-#: source/soundWave_lib/synths/ibmeci.py:91
+#: source/soundWave_lib/synths/ibmeci.py:128
 #: source/soundWave_lib/synths/nvda_capture.py:739
 #: source/soundWave_lib/synths/nvda_capture.py:1105
 #: source/soundWave_lib/synths/orpheus.py:39
@@ -671,7 +666,7 @@ msgid "&Rate:"
 msgstr "&Tempo:"
 
 #: source/soundWave_lib/synths/dectalk.py:76
-#: source/soundWave_lib/synths/ibmeci.py:127
+#: source/soundWave_lib/synths/ibmeci.py:144
 #: source/soundWave_lib/synths/nvda_capture.py:809
 #: source/soundWave_lib/synths/nvda_capture.py:1135
 #: source/soundWave_lib/synths/orpheus.py:65
@@ -732,28 +727,186 @@ msgstr "Vykreslenie Google TTS zlyhalo: %s"
 msgid "Google TTS produced no audio."
 msgstr "Google TTS nevytvoril žiadne audio."
 
-#: source/soundWave_lib/synths/ibmeci.py:44
-msgid "Default (0)"
-msgstr "Predvolené (0)"
+#: source/soundWave_lib/synths/ibmeci.py:23
+msgid "Engine default"
+msgstr "Predvolený hlas enginu"
 
-#: source/soundWave_lib/synths/ibmeci.py:75
-msgid "soundWave - IBM ECI options"
-msgstr "soundWave - možnosti IBM ECI"
+#: source/soundWave_lib/synths/ibmeci.py:24
+msgid "American English"
+msgstr "Americká angličtina"
 
-#: source/soundWave_lib/synths/ibmeci.py:97
+#: source/soundWave_lib/synths/ibmeci.py:24
+msgid "British English"
+msgstr "Britská angličtina"
+
+#: source/soundWave_lib/synths/ibmeci.py:25
+msgid "Castilian Spanish"
+msgstr "Kastílska španielčina"
+
+#: source/soundWave_lib/synths/ibmeci.py:25
+msgid "Latin American Spanish"
+msgstr "Latinskoamerická španielčina"
+
+#: source/soundWave_lib/synths/ibmeci.py:26
+msgid "French"
+msgstr "Francúzština"
+
+#: source/soundWave_lib/synths/ibmeci.py:26
+msgid "French Canadian"
+msgstr "Kanadská francúzština"
+
+#: source/soundWave_lib/synths/ibmeci.py:26
+msgid "German"
+msgstr "Nemčina"
+
+#: source/soundWave_lib/synths/ibmeci.py:27
+msgid "Italian"
+msgstr "Taliančina"
+
+#: source/soundWave_lib/synths/ibmeci.py:27
+msgid "Mandarin Chinese"
+msgstr "Mandarínska čínština"
+
+#: source/soundWave_lib/synths/ibmeci.py:28
+msgid "Taiwanese Mandarin"
+msgstr "Taiwanská mandarínčina"
+
+#: source/soundWave_lib/synths/ibmeci.py:28
+msgid "Brazilian Portuguese"
+msgstr "Brazílska portugalčina"
+
+#: source/soundWave_lib/synths/ibmeci.py:29
+msgid "Japanese"
+msgstr "Japončina"
+
+#: source/soundWave_lib/synths/ibmeci.py:29
+msgid "Finnish"
+msgstr "Fínčina"
+
+#: source/soundWave_lib/synths/ibmeci.py:29
+msgid "Korean"
+msgstr "Kórejčina"
+
+#: source/soundWave_lib/synths/ibmeci.py:30
+msgid "Cantonese"
+msgstr "Kantončina"
+
+#: source/soundWave_lib/synths/ibmeci.py:30
+msgid "Hong Kong Cantonese"
+msgstr "Hongkonská kantončina"
+
+#: source/soundWave_lib/synths/ibmeci.py:31
+msgid "Dutch"
+msgstr "Holandčina"
+
+#: source/soundWave_lib/synths/ibmeci.py:31
+msgid "Norwegian"
+msgstr "Nórčina"
+
+#: source/soundWave_lib/synths/ibmeci.py:31
+msgid "Swedish"
+msgstr "Švédčina"
+
+#: source/soundWave_lib/synths/ibmeci.py:32
+msgid "Danish"
+msgstr "Dánčina"
+
+#: source/soundWave_lib/synths/ibmeci.py:32
+msgid "Thai"
+msgstr "Thajčina"
+
+#: source/soundWave_lib/synths/ibmeci.py:33
+msgid "Adult Male 1"
+msgstr "Dospelý muž 1"
+
+#: source/soundWave_lib/synths/ibmeci.py:33
+msgid "Adult Female 1"
+msgstr "Dospelá žena 1"
+
+#: source/soundWave_lib/synths/ibmeci.py:34
+msgid "Child 1"
+msgstr "Dieťa 1"
+
+#: source/soundWave_lib/synths/ibmeci.py:34
+msgid "Adult Male 2"
+msgstr "Dospelý muž 2"
+
+#: source/soundWave_lib/synths/ibmeci.py:34
+msgid "Adult Male 3"
+msgstr "Dospelý muž 3"
+
+#: source/soundWave_lib/synths/ibmeci.py:35
+msgid "Adult Female 2"
+msgstr "Dospelá žena 2"
+
+#: source/soundWave_lib/synths/ibmeci.py:35
+msgid "Elderly Female 1"
+msgstr "Staršia žena 1"
+
+#: source/soundWave_lib/synths/ibmeci.py:36
+msgid "Elderly Male 1"
+msgstr "Starší muž 1"
+
+#: source/soundWave_lib/synths/ibmeci.py:67
 #: source/soundWave_lib/synths/nvda_capture.py:1111
 msgid "&Speed:"
 msgstr "&Rýchlosť:"
 
-#: source/soundWave_lib/synths/ibmeci.py:101
-msgid "(0-250; default ~110)"
-msgstr "(0-250; predvolené ~110)"
+#: source/soundWave_lib/synths/ibmeci.py:68
+#: source/soundWave_lib/synths/nvda_capture.py:774
+#: source/soundWave_lib/synths/nvda_capture.py:1117
+#: source/soundWave_lib/synths/orpheus.py:47
+#: source/soundWave_lib/synths/sapi5.py:320
+msgid "&Pitch:"
+msgstr "&Výška:"
 
-#: source/soundWave_lib/synths/ibmeci.py:170
-msgid "SoundWave could not find the installed Eloquence/IBMTTS speech engine."
-msgstr "SoundWave nemohol nájsť nainštalovaný rečový engine Eloquence/IBMTTS."
+#: source/soundWave_lib/synths/ibmeci.py:69
+msgid "&Inflection:"
+msgstr "&Intonácia:"
 
-#: source/soundWave_lib/synths/ibmeci.py:189
+#: source/soundWave_lib/synths/ibmeci.py:70
+msgid "V&olume:"
+msgstr "H&lasitosť:"
+
+#: source/soundWave_lib/synths/ibmeci.py:71
+msgid "Head si&ze:"
+msgstr "Veľko&sť hlavy:"
+
+#: source/soundWave_lib/synths/ibmeci.py:72
+msgid "&Roughness:"
+msgstr "&Drsnosť:"
+
+#: source/soundWave_lib/synths/ibmeci.py:73
+msgid "&Breathiness:"
+msgstr "D&yšnosť:"
+
+#: source/soundWave_lib/synths/ibmeci.py:110
+msgid "soundWave - IBM ECI options"
+msgstr "soundWave - možnosti IBM ECI"
+
+#: source/soundWave_lib/synths/ibmeci.py:124
+msgid "Loading voice settings..."
+msgstr "Načítavajú sa nastavenia hlasu..."
+
+#: source/soundWave_lib/synths/ibmeci.py:129
+#: source/soundWave_lib/synths/nvda_capture.py:743
+msgid "Varia&nt:"
+msgstr "Varia&nt:"
+
+#: source/soundWave_lib/synths/ibmeci.py:130
+msgid "Sa&mple rate:"
+msgstr "Vzorkovacia &frekvencia:"
+
+#: source/soundWave_lib/synths/ibmeci.py:188
+#, python-brace-format
+msgid "Could not load voice settings: {error}"
+msgstr "Nepodarilo sa načítať nastavenia hlasu: {error}"
+
+#: source/soundWave_lib/synths/ibmeci.py:210
+msgid "Voice settings ready."
+msgstr "Nastavenia hlasu sú pripravené."
+
+#: source/soundWave_lib/synths/ibmeci.py:306
 #, python-brace-format
 msgid ""
 "Test failed:\n"
@@ -762,58 +915,9 @@ msgstr ""
 "Test zlyhal:\n"
 "{error}"
 
-#: source/soundWave_lib/synths/ibmeci.py:299
-msgid "IBMTTS 32-bit proxy is not available; install or update the IBMTTS add-on."
-msgstr ""
-"32-bitové proxy IBMTTS nie je dostupné; nainštalujte alebo aktualizujte "
-"doplnok IBMTTS."
-
-#: source/soundWave_lib/synths/ibmeci.py:304
-#: source/soundWave_lib/synths/ibmeci.py:459
-msgid "The Eloquence/IBMTTS speech engine could not be found."
-msgstr "Rečový engine Eloquence/IBMTTS sa nenašiel."
-
-#: source/soundWave_lib/synths/ibmeci.py:365
-#: source/soundWave_lib/synths/ibmeci.py:588
-msgid "eciNewEx failed (no handle)."
-msgstr "eciNewEx zlyhalo (žiadny handle)."
-
-#: source/soundWave_lib/synths/ibmeci.py:389
-msgid "IBMTTS proxy did not expose an audio buffer."
-msgstr "Proxy IBMTTS neposkytlo audio buffer."
-
-#: source/soundWave_lib/synths/ibmeci.py:411
-msgid "IBM ECI proxy produced no audio."
-msgstr "Proxy IBM ECI nevytvorilo žiadne audio."
-
-#: source/soundWave_lib/synths/ibmeci.py:423
-msgid "IBM ECI proxy render timed out."
-msgstr "Vykresľovanie proxy IBM ECI prekročilo časový limit."
-
-#: source/soundWave_lib/synths/ibmeci.py:443
-msgid "IBM ECI proxy render failed: no audio was captured."
-msgstr "Proxy IBM ECI zlyhalo: nezachytilo sa žiadne audio."
-
-#: source/soundWave_lib/synths/ibmeci.py:633
-msgid "ECI voice switching not supported; using voice 0."
-msgstr "Prepínanie hlasov ECI nie je podporované; používa sa hlas 0."
-
-#: source/soundWave_lib/synths/ibmeci.py:658
-msgid "eciSetOutputBuffer failed (no callback/buffer accepted)."
-msgstr "eciSetOutputBuffer zlyhalo (callback/buffer nebol prijatý)."
-
-#: source/soundWave_lib/synths/ibmeci.py:684
-#: source/soundWave_lib/synths/ibmeci.py:745
-msgid "IBM ECI render timed out."
-msgstr "Vykresľovanie IBM ECI prekročilo časový limit."
-
-#: source/soundWave_lib/synths/ibmeci.py:704
-msgid "IBM ECI produced no audio (no waveform buffers)."
-msgstr "IBM ECI nevytvoril audio (žiadne waveform buffery)."
-
-#: source/soundWave_lib/synths/ibmeci.py:732
-msgid "IBM ECI produced no audio (no buffers within 2 seconds)."
-msgstr "IBM ECI nevytvoril audio (žiadne buffery do 2 sekúnd)."
+#: source/soundWave_lib/synths/ibmeci.py:317
+msgid "Voice settings are not ready."
+msgstr "Nastavenia hlasu ešte nie sú pripravené."
 
 #: source/soundWave_lib/synths/loquendo.py:59
 msgid "The Loquendo TTS 7 NVDA add-on is not installed correctly."
@@ -949,20 +1053,9 @@ msgstr ""
 msgid "&Language:"
 msgstr "&Jazyk:"
 
-#: source/soundWave_lib/synths/nvda_capture.py:743
-msgid "Varia&nt:"
-msgstr "Varia&nt:"
-
 #: source/soundWave_lib/synths/nvda_capture.py:769
 msgid "Rate &boost:"
 msgstr "Zosilnenie te&mpa:"
-
-#: source/soundWave_lib/synths/nvda_capture.py:774
-#: source/soundWave_lib/synths/nvda_capture.py:1117
-#: source/soundWave_lib/synths/orpheus.py:47
-#: source/soundWave_lib/synths/sapi5.py:320
-msgid "&Pitch:"
-msgstr "&Výška:"
 
 #: source/soundWave_lib/synths/nvda_capture.py:778
 #: source/soundWave_lib/synths/nvda_capture.py:1123
@@ -1183,3 +1276,54 @@ msgstr "&Hovoriaci:"
 #: source/soundWave_lib/synths/sonata.py:250
 msgid "&Auto-speak when changing voice, speaker, or speed"
 msgstr "&Automaticky hovoriť pri zmene hlasu, hovoriaceho alebo rýchlosti"
+
+#~ msgid "Default (0)"
+#~ msgstr "Predvolené (0)"
+
+#~ msgid "(0-250; default ~110)"
+#~ msgstr "(0-250; predvolené ~110)"
+
+#~ msgid "SoundWave could not find the installed Eloquence/IBMTTS speech engine."
+#~ msgstr "SoundWave nemohol nájsť nainštalovaný rečový engine Eloquence/IBMTTS."
+
+#~ msgid ""
+#~ "IBMTTS 32-bit proxy is not available;"
+#~ " install or update the IBMTTS add-"
+#~ "on."
+#~ msgstr ""
+#~ "32-bitové proxy IBMTTS nie je dostupné;"
+#~ " nainštalujte alebo aktualizujte doplnok "
+#~ "IBMTTS."
+
+#~ msgid "The Eloquence/IBMTTS speech engine could not be found."
+#~ msgstr "Rečový engine Eloquence/IBMTTS sa nenašiel."
+
+#~ msgid "eciNewEx failed (no handle)."
+#~ msgstr "eciNewEx zlyhalo (žiadny handle)."
+
+#~ msgid "IBMTTS proxy did not expose an audio buffer."
+#~ msgstr "Proxy IBMTTS neposkytlo audio buffer."
+
+#~ msgid "IBM ECI proxy produced no audio."
+#~ msgstr "Proxy IBM ECI nevytvorilo žiadne audio."
+
+#~ msgid "IBM ECI proxy render timed out."
+#~ msgstr "Vykresľovanie proxy IBM ECI prekročilo časový limit."
+
+#~ msgid "IBM ECI proxy render failed: no audio was captured."
+#~ msgstr "Proxy IBM ECI zlyhalo: nezachytilo sa žiadne audio."
+
+#~ msgid "ECI voice switching not supported; using voice 0."
+#~ msgstr "Prepínanie hlasov ECI nie je podporované; používa sa hlas 0."
+
+#~ msgid "eciSetOutputBuffer failed (no callback/buffer accepted)."
+#~ msgstr "eciSetOutputBuffer zlyhalo (callback/buffer nebol prijatý)."
+
+#~ msgid "IBM ECI render timed out."
+#~ msgstr "Vykresľovanie IBM ECI prekročilo časový limit."
+
+#~ msgid "IBM ECI produced no audio (no waveform buffers)."
+#~ msgstr "IBM ECI nevytvoril audio (žiadne waveform buffery)."
+
+#~ msgid "IBM ECI produced no audio (no buffers within 2 seconds)."
+#~ msgstr "IBM ECI nevytvoril audio (žiadne buffery do 2 sekúnd)."

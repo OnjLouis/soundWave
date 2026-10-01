@@ -232,7 +232,7 @@ Most settings dialogs include:
     </tr>
     <tr>
       <td><strong>Eloquence and IBMTTS</strong></td>
-      <td>Available when the relevant NVDA add-on is installed. soundWave detects the speech engine automatically and exposes voice and speed options before rendering. IBMTTS uses the library location already configured in its NVDA settings, including external installations and portable NVDA.</td>
+      <td>Available when the relevant NVDA add-on is installed. SoundWave uses IBMTTS's configured library location, including external installations and portable NVDA. The engine supplies the available languages, variants and sample rates rather than SoundWave guessing from voice filenames. Test and Render use the same settings without changing NVDA's live speech.</td>
     </tr>
     <tr>
       <td><strong>Orpheus</strong></td>
@@ -257,6 +257,10 @@ Most settings dialogs include:
   </tbody>
 </table>
 
+<h3>Eloquence and IBMTTS Options</h3>
+<p>Choose the language under Voice and a preset under Variant. Sample rate lists the rates supported by the selected engine: 8000 and 11025 Hz, plus 22050 Hz when available. ViaVoice may use a different voice model at 8000 Hz. Changing the language, variant or sample rate loads that preset's pitch and voice characteristics; speed and volume remain at your chosen values.</p>
+<p>Speed uses ECI's 0 to 250 range. Pitch, inflection, volume, head size, roughness and breathiness use 0 to 100. Inflection controls pitch variation; head size changes vocal resonance. Use Page Up and Page Down for changes of ten. Previously chosen settings are remembered; otherwise SoundWave uses the engine's defaults and, when the same IBMTTS engine is already speaking in NVDA, its cached current settings. Test and Auto speak preview the same settings used for the saved audio.</p>
+
 <h2>Render Summary</h2>
 
 <p>
@@ -270,6 +274,13 @@ soundWave uses NVDA's add-on update channel for store-compatible updates.
 </p>
 
 <h2>Changes</h2>
+
+<h3>1.2.12</h3>
+<ul>
+  <li>Added engine-reported languages and variants for Eloquence and IBMTTS, including ViaVoice libraries whose voice filenames contain version numbers. Addresses Issue <a href="https://github.com/OnjLouis/soundWave/issues/14">14</a>.</li>
+  <li>Added sample rate, pitch, inflection, volume, head size, roughness and breathiness controls with matching voice tests and final renders.</li>
+  <li>Voice previews and renders keep NVDA's current speech independent and wait for complete audio before saving.</li>
+</ul>
 
 <h3>1.2.11</h3>
 <ul>

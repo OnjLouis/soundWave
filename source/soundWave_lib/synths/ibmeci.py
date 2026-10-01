@@ -3,208 +3,330 @@ from __future__ import annotations
 
 import glob
 import os
-import re
 import shutil
-import struct
-import subprocess
 import sys
 import tempfile
 import threading
-import time
-import wave
-from typing import List, Optional
+from typing import Optional
 
+import globalVars
 import ui
 import wx
 
 from soundWave_lib import runtime as _runtime
+from soundWave_lib.synths import ibmeci_host as _eci_host
+from soundWave_lib.synths import ibmeci_process as _eci_process
+
 _runtime.bind(globals())
 
-# --- IBM ECI voice metadata (used to present friendly names when .SYN files are available) ---
-# Many ECI/Eloquence drops ship language voices as <CODE>.SYN beside ECI.DLL.
-# IDs below follow common ECI language IDs used by Eloquence/ECI builds.
-_ECI_LANGS = {
-    "esm": (131073, "Latin American Spanish"),
-    "esp": (131072, "Castilian Spanish"),
-    "ptb": (458752, "Brazilian Portuguese"),
-    "frc": (196609, "French Canadian"),
-    "fra": (196608, "French"),
-    "fin": (589824, "Finnish"),
-    "deu": (262144, "German"),
-    "ita": (327680, "Italian"),
-    "enu": (65536, "American English"),
-    "eng": (65537, "British English"),
-    "chs": (393216, "Mandarin Chinese"),
-    "jpn": (524288, "Japanese"),
-    "kor": (655360, "Korean"),
+_ECI_LABELS = {
+    "Engine default": _("Engine default"),
+    "American English": _("American English"), "British English": _("British English"),
+    "Castilian Spanish": _("Castilian Spanish"), "Latin American Spanish": _("Latin American Spanish"),
+    "French": _("French"), "French Canadian": _("French Canadian"), "German": _("German"),
+    "Italian": _("Italian"), "Mandarin Chinese": _("Mandarin Chinese"),
+    "Taiwanese Mandarin": _("Taiwanese Mandarin"), "Brazilian Portuguese": _("Brazilian Portuguese"),
+    "Japanese": _("Japanese"), "Finnish": _("Finnish"), "Korean": _("Korean"),
+    "Cantonese": _("Cantonese"), "Hong Kong Cantonese": _("Hong Kong Cantonese"),
+    "Dutch": _("Dutch"), "Norwegian": _("Norwegian"), "Swedish": _("Swedish"),
+    "Danish": _("Danish"), "Thai": _("Thai"),
+    "Adult Male 1": _("Adult Male 1"), "Adult Female 1": _("Adult Female 1"),
+    "Child 1": _("Child 1"), "Adult Male 2": _("Adult Male 2"), "Adult Male 3": _("Adult Male 3"),
+    "Adult Female 2": _("Adult Female 2"), "Elderly Female 1": _("Elderly Female 1"),
+    "Elderly Male 1": _("Elderly Male 1"),
 }
 
-def _eci_enumerate_voices_from_syn(dll_path):
-    """Return a list of (voiceId:int, label:str). Includes Default (0) first."""
-    items = [(0, _("Default (0)"))]
-    try:
-        base_dir = os.path.dirname(os.path.abspath(dll_path))
-        for fn in os.listdir(base_dir):
-            if not fn.lower().endswith(".syn"):
-                continue
-            code = fn.lower()[:-4]
-            info = _ECI_LANGS.get(code)
-            if not info:
-                continue
-            vid, name = info
-            items.append((int(vid), f"{name} ({vid})"))
-    except Exception:
-        pass
-    # de-dup + stable sort (keep Default first)
-    seen = set()
-    out = []
-    for vid, label in items:
-        if vid in seen:
-            continue
-        seen.add(vid)
-        out.append((vid, label))
-    if len(out) > 1:
-        out = [out[0]] + sorted(out[1:], key=lambda x: x[1].lower())
-    return out
+
+def _eci_label(label):
+    return _ECI_LABELS.get(label, label)
+
+
+def _eci_live_options(dll_path):
+    """Read only the running driver's Python cache, never its shared host."""
+    synth = synthDriverHandler.getSynth()
+    driver = sys.modules.get("synthDrivers._ibmeci")
+    if synth is None or getattr(synth, "name", "") != "ibmeci" or driver is None:
+        return {}
+    path = os.path.join(getattr(driver, "ttsPath", ""), getattr(driver, "dllName", ""))
+    if os.path.normcase(os.path.abspath(path)) != os.path.normcase(os.path.abspath(dll_path)):
+        return {}
+    parameters = dict(getattr(driver, "params", {}))
+    values = dict(getattr(driver, "vparams", {}))
+    result = {name: int(values[parameter]) for name, (parameter, maximum) in _eci_host.VOICE_PARAMETERS.items()
+              if parameter in values and 0 <= int(values[parameter]) <= maximum}
+    if _eci_host.LANGUAGE_PARAMETER in parameters:
+        result["voiceId"] = int(parameters[_eci_host.LANGUAGE_PARAMETER])
+    if _eci_host.SAMPLE_RATE_PARAMETER in parameters:
+        result["sampleRate"] = int(parameters[_eci_host.SAMPLE_RATE_PARAMETER])
+    variant = vars(synth).get("_variant", 0)
+    result["variant"] = int(variant)
+    return result
+
+
+_ECI_CONTROLS = (
+    ("speed", _("&Speed:"), 250),
+    ("pitch", _("&Pitch:"), 100),
+    ("inflection", _("&Inflection:"), 100),
+    ("volume", _("V&olume:"), 100),
+    ("headSize", _("Head si&ze:"), 100),
+    ("roughness", _("&Roughness:"), 100),
+    ("breathiness", _("&Breathiness:"), 100),
+)
+
+
+class _EciControlAccessible(getattr(wx, "Accessible", object)):
+    def __init__(self, window, label):
+        super().__init__(window)
+        self.window = window
+        self.label = label.replace("&", "").rstrip(":")
+        self.shortcut = "Alt+" + label.split("&", 1)[1][0].upper()
+
+    def GetName(self, childId):
+        return (wx.ACC_OK, self.label) if childId == 0 else (wx.ACC_NOT_IMPLEMENTED, "")
+
+    def GetKeyboardShortcut(self, childId):
+        return (wx.ACC_OK, self.shortcut) if childId == 0 else (wx.ACC_NOT_IMPLEMENTED, "")
+
+    def GetValue(self, childId):
+        if childId != 0:
+            return (wx.ACC_NOT_IMPLEMENTED, "")
+        value = self.window.GetStringSelection() if hasattr(self.window, "GetStringSelection") else self.window.GetValue()
+        return (wx.ACC_OK, str(value))
+
+
+def _label_eci_control(control, label):
+    if hasattr(wx, "Accessible"):
+        accessible = _EciControlAccessible(control, label)
+        control.SetAccessible(accessible)
+        control._soundWaveAccessible = accessible
+
 
 class IbmEciOptionsDialog(wx.Dialog):
-    """Eloquence/IBMTTS options: voice and speed."""
-    SAMPLE_TEXT = "This is a voice and speed test."
+    """Query and preview ECI outside NVDA's live synth process."""
+
+    SAMPLE_TEXT = "This is a SoundWave voice test."
 
     def __init__(self, parent, initial=None):
         super().__init__(parent, title=_("soundWave - IBM ECI options"))
-        self.initial = initial or {}
-        if not self.initial.get("dllPath"):
-            found_dll = _find_ibmeci_dll()
-            if found_dll:
-                self.initial["dllPath"] = found_dll
-        self.dllPath = str(self.initial.get("dllPath", "") or "")
+        self.initial = dict(initial or {})
+        self.dllPath = str(self.initial.get("dllPath") or _find_ibmeci_dll())
+        self._closed = False
+        self._loading = True
+        self._busy = False
+        self._pending_test = False
+        self._cancel = threading.Event()
+        self._languages = []
+        self._variants = []
+        self._rates = []
 
-        pnl = wx.Panel(self)
+        panel = wx.Panel(self)
         root = wx.BoxSizer(wx.VERTICAL)
-
-        # Primary controls: Voice + Speed
-        grid = wx.FlexGridSizer(rows=2, cols=2, vgap=8, hgap=8)
+        self.status = wx.StaticText(panel, label=_("Loading voice settings..."))
+        root.Add(self.status, 0, wx.ALL, 12)
+        grid = wx.FlexGridSizer(cols=2, vgap=8, hgap=8)
         grid.AddGrowableCol(1, 1)
-
-        # Voice (friendly list from .SYN when available)
-        grid.Add(wx.StaticText(pnl, label=_("&Voice:")), 0, wx.ALIGN_CENTER_VERTICAL)
-        self._voiceItems = _eci_enumerate_voices_from_syn(self.initial.get("dllPath", "") or "")
-        self.voiceChoice = wx.Choice(pnl, choices=[lbl for (_vid, lbl) in self._voiceItems])
-        grid.Add(self.voiceChoice, 1, wx.EXPAND)
-
-        # Speed
-        grid.Add(wx.StaticText(pnl, label=_("&Speed:")), 0, wx.ALIGN_CENTER_VERTICAL)
-        speedRow = wx.BoxSizer(wx.HORIZONTAL)
-        self.speedSpin = wx.SpinCtrl(pnl, min=0, max=250, initial=int(self.initial.get("speed", 110) or 110))
-        speedRow.Add(self.speedSpin, 0, wx.RIGHT, 8)
-        speedRow.Add(wx.StaticText(pnl, label=_("(0-250; default ~110)")), 0, wx.ALIGN_CENTER_VERTICAL)
-        grid.Add(speedRow, 0, wx.ALIGN_LEFT)
-
-        # Apply initial voice selection (by stored voiceId)
-        try:
-            init_vid = int(self.initial.get("voiceId", 0) or 0)
-        except Exception:
-            init_vid = 0
-        sel = 0
-        for i, (vid, _lbl) in enumerate(self._voiceItems):
-            try:
-                if int(vid) == init_vid:
-                    sel = i
-                    break
-            except Exception:
-                continue
-        try:
-            self.voiceChoice.SetSelection(sel)
-        except Exception:
-            pass
-
-        root.Add(grid, 0, wx.EXPAND | wx.ALL, 12)
-
-        self.autoSpeakCB = _add_autospeak_checkbox(pnl, root, "autoTestOnChangeIbmEci", default=True)
-
-        btnRow = wx.BoxSizer(wx.HORIZONTAL)
-        self.testBtn = wx.Button(pnl, label=_("&Test"))
-        btnRow.Add(self.testBtn, 0, wx.RIGHT, 8)
-        self.helpBtn = _create_help_button(pnl)
-        btnRow.Add(self.helpBtn, 0, wx.RIGHT, 8)
-        btnRow.AddStretchSpacer(1)
-
-        self.okBtn = wx.Button(pnl, wx.ID_OK)
-        self.cancelBtn = wx.Button(pnl, wx.ID_CANCEL)
-        try:
-            self.okBtn.SetDefault()
-        except Exception:
-            pass
-        btnRow.Add(self.okBtn, 0, wx.RIGHT, 8)
-        btnRow.Add(self.cancelBtn, 0)
-        root.Add(btnRow, 0, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.BOTTOM, 12)
-
-        pnl.SetSizer(root)
-        s = wx.BoxSizer(wx.VERTICAL)
-        s.Add(pnl, 1, wx.EXPAND)
-        self.SetSizerAndFit(s)
-
+        self.voiceChoice = self._choice(panel, grid, _("&Voice:"))
+        self.variantChoice = self._choice(panel, grid, _("Varia&nt:"))
+        self.sampleRateChoice = self._choice(panel, grid, _("Sa&mple rate:"))
+        self._spins = {}
+        for name, label, maximum in _ECI_CONTROLS:
+            grid.Add(wx.StaticText(panel, label=label), 0, wx.ALIGN_CENTER_VERTICAL)
+            control = wx.SpinCtrl(panel, min=0, max=maximum, initial=0)
+            _label_eci_control(control, label)
+            control.Enable(False)
+            grid.Add(control, 1, wx.EXPAND)
+            self._spins[name] = control
+            control.Bind(wx.EVT_SPINCTRL, self._changed)
+            _bind_numeric_page_keys(control, 0, maximum, page_step=10, callback=self._changed)
+        root.Add(grid, 0, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.BOTTOM, 12)
+        self.autoSpeakCB = _add_autospeak_checkbox(panel, root, "autoTestOnChangeIbmEci", default=True)
+        buttons = wx.BoxSizer(wx.HORIZONTAL)
+        self.testBtn = wx.Button(panel, label=_("&Test"))
+        self.testBtn.Enable(False)
+        buttons.Add(self.testBtn, 0, wx.RIGHT, 8)
+        buttons.Add(_create_help_button(panel), 0, wx.RIGHT, 8)
+        buttons.AddStretchSpacer(1)
+        self.okBtn = wx.Button(panel, wx.ID_OK)
+        self.okBtn.SetDefault()
+        self.okBtn.Enable(False)
+        buttons.Add(self.okBtn, 0, wx.RIGHT, 8)
+        buttons.Add(wx.Button(panel, wx.ID_CANCEL), 0)
+        root.Add(buttons, 0, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.BOTTOM, 12)
+        panel.SetSizer(root)
+        outer = wx.BoxSizer(wx.VERTICAL)
+        outer.Add(panel, 1, wx.EXPAND)
+        self.SetSizerAndFit(outer)
         self.testBtn.Bind(wx.EVT_BUTTON, self._on_test)
-
-
+        self.voiceChoice.Bind(wx.EVT_CHOICE, self._voice_changed)
+        self.variantChoice.Bind(wx.EVT_CHOICE, self._variant_changed)
+        self.sampleRateChoice.Bind(wx.EVT_CHOICE, self._rate_changed)
+        self.Bind(wx.EVT_WINDOW_DESTROY, self._destroyed)
         self._auto_test = _debounced_call(lambda: self._on_test(None), delay_ms=250)
+        threading.Thread(target=self._load, name="soundWave-ECI-options", daemon=True).start()
 
-        def _maybe_auto(evt):
-            try:
-                if self.autoSpeakCB.GetValue():
-                    self._auto_test()
-            except Exception:
-                pass
-            try:
-                evt.Skip()
-            except Exception:
-                pass
-        self.voiceChoice.Bind(wx.EVT_CHOICE, _maybe_auto)
-        self.speedSpin.Bind(wx.EVT_SPINCTRL, _maybe_auto)
-        _bind_numeric_page_keys(self.speedSpin, 0, 250, page_step=10, callback=_maybe_auto)
+    @staticmethod
+    def _choice(panel, grid, label):
+        grid.Add(wx.StaticText(panel, label=label), 0, wx.ALIGN_CENTER_VERTICAL)
+        control = wx.Choice(panel)
+        _label_eci_control(control, label)
+        control.Enable(False)
+        grid.Add(control, 1, wx.EXPAND)
+        return control
 
-    def _on_test(self, evt):
-        dll_path = (self.dllPath or "").strip()
-        if not dll_path or not os.path.isfile(dll_path):
-            _error(_("SoundWave could not find the installed Eloquence/IBMTTS speech engine."))
-            return
+    def _load(self):
         try:
-            tmp_dir = tempfile.mkdtemp(prefix="soundWave_test_")
-            tmp_wav = os.path.join(tmp_dir, "test.wav")
-            cancel_evt = threading.Event()
-            _render_with_ibmeci_dll(
-                text=self.SAMPLE_TEXT,
-                out_wav=tmp_wav,
-                dll_path=dll_path,
-                voice_id=int(self.get_options().get("voiceId", 0)),
-                sample_rate_param=2,
-                speed=int(self.speedSpin.GetValue()),
-                progress=None,
-                cancel_evt=cancel_evt,
-            )
-            _play_wav(tmp_wav)
-            _defer_delete_dir(tmp_dir, tmp_wav)
-        except Exception as e:
-            _error(_("Test failed:\n{error}").format(error=e))
+            metadata = _eci_process.run_job(self.dllPath, globalVars.appDir,
+                                            timeout=_eci_process.PROBE_TIMEOUT_SECONDS, cancel_evt=self._cancel)
+            wx.CallAfter(self._loaded, metadata, None)
+        except Exception as error:
+            wx.CallAfter(self._loaded, None, str(error))
+
+    def _loaded(self, metadata, error):
+        if self._closed:
+            return
+        if error:
+            self.status.SetLabel(_("Could not load voice settings: {error}").format(error=error))
+            self.status.Wrap(520)
+            self.Fit()
+            ui.message(self.status.GetLabel())
+            return
+        self._languages = sorted(metadata["languages"], key=lambda item: item["label"].casefold())
+        self.voiceChoice.SetItems([_eci_label(entry["label"]) for entry in self._languages])
+        requested = int(self.initial.get("voiceId", 0))
+        selected = next((i for i, entry in enumerate(self._languages) if entry["id"] == requested), 0)
+        self.voiceChoice.SetSelection(selected)
+        self._set_language(int(self.initial.get("variant", 0)), self.initial.get("sampleRate", 1))
+        defaults = self._variants[self.variantChoice.GetSelection()]["defaults"]
+        for name, _label, maximum in _ECI_CONTROLS:
+            if name in self.initial and name in defaults:
+                self._spins[name].SetValue(max(0, min(maximum, int(self.initial[name]))))
+            self._spins[name].Enable(name in defaults)
+        for control in (self.voiceChoice, self.variantChoice, self.sampleRateChoice, self.testBtn, self.okBtn):
+            control.Enable(True)
+        self.autoSpeakCB.SetValue(bool(self.initial.get("autoTest", True)))
+        self._loading = False
+        self.status.SetLabel("")
+        self.Layout()
+        ui.message(_("Voice settings ready."))
+
+    def _set_language(self, variant, rate):
+        language = self._languages[self.voiceChoice.GetSelection()]
+        self._rates = language["sampleRates"]
+        self.sampleRateChoice.SetItems([f"{_eci_host.SAMPLE_RATES[value]} Hz" for value in self._rates])
+        self.sampleRateChoice.SetSelection(self._rates.index(rate) if rate in self._rates else 0)
+        self._set_variants(variant)
+
+    def _set_variants(self, variant):
+        language = self._languages[self.voiceChoice.GetSelection()]
+        rate = self._rates[self.sampleRateChoice.GetSelection()]
+        self._variants = language["profiles"][str(rate)]
+        self.variantChoice.SetItems([_eci_label(entry["label"]) for entry in self._variants])
+        selected = next((i for i, entry in enumerate(self._variants) if entry["id"] == variant), 0)
+        self.variantChoice.SetSelection(selected)
+        self._set_preset_defaults()
+
+    def _set_preset_defaults(self):
+        defaults = self._variants[self.variantChoice.GetSelection()]["defaults"]
+        for name, _label, maximum in _ECI_CONTROLS:
+            self._spins[name].Enable(name in defaults and not self._loading)
+            if name not in defaults:
+                continue
+            if not self._loading and name in ("speed", "volume"):
+                continue
+            self._spins[name].SetValue(max(0, min(maximum, defaults[name])))
+
+    def _voice_changed(self, event):
+        variant = self._variants[self.variantChoice.GetSelection()]["id"]
+        rate = self._rates[self.sampleRateChoice.GetSelection()]
+        self._set_language(variant, rate)
+        self._changed(event)
+
+    def _variant_changed(self, event):
+        self._set_preset_defaults()
+        self._changed(event)
+
+    def _rate_changed(self, event):
+        variant = self._variants[self.variantChoice.GetSelection()]["id"]
+        self._set_variants(variant)
+        self._changed(event)
+
+    def _changed(self, event):
+        if not self._closed and not self._loading and self.autoSpeakCB.GetValue():
+            self._auto_test()
+        if event is not None:
+            event.Skip()
+
+    def _destroyed(self, event):
+        if event.GetEventObject() is self:
+            self._closed = True
+            self._cancel.set()
+        event.Skip()
+
+    def _on_test(self, event):
+        if self._closed or self._loading:
+            return
+        if event is None and not self.autoSpeakCB.GetValue():
+            return
+        if self._busy:
+            self._pending_test = True
+            self._cancel.set()
+            return
+        self._busy = True
+        self._cancel = threading.Event()
+        options = self.get_options()
+        cancel = self._cancel
+        manual = event is not None
+
+        def preview():
+            directory = tempfile.mkdtemp(prefix="soundWave_test_eci_")
+            output = os.path.join(directory, "test.wav")
+            error = None
+            try:
+                _render_with_ibmeci_dll(self.SAMPLE_TEXT, output, options["dllPath"],
+                                      opts=options, cancel_evt=cancel,
+                                      timeout_seconds=_eci_process.PROBE_TIMEOUT_SECONDS)
+            except Exception as exception:
+                error = str(exception)
+            wx.CallAfter(self._preview_done, directory, output, error, cancel, manual)
+
+        threading.Thread(target=preview, name="soundWave-ECI-preview", daemon=True).start()
+
+    def _preview_done(self, directory, output, error, cancel, manual):
+        self._busy = False
+        if self._closed or cancel.is_set() or error:
+            shutil.rmtree(directory)
+        else:
+            try:
+                _play_wav(output)
+            finally:
+                _defer_delete_dir(directory, output)
+        if self._closed:
+            return
+        if error and not cancel.is_set():
+            message = _("Test failed:\n{error}").format(error=error)
+            if manual:
+                _error(message)
+            else:
+                ui.message(message)
+        if self._pending_test:
+            self._pending_test = False
+            self._on_test(None)
 
     def get_options(self):
+        if self._loading:
+            raise RuntimeError(_("Voice settings are not ready."))
+        language = self._languages[self.voiceChoice.GetSelection()]
+        variant = self._variants[self.variantChoice.GetSelection()]
+        label = _eci_label(language["label"])
+        if variant["id"]:
+            label += " - " + _eci_label(variant["label"])
         return {
-            "dllPath": (self.dllPath or "").strip(),
-            "voiceId": int(self._voiceItems[self.voiceChoice.GetSelection()][0]) if self._voiceItems and self.voiceChoice.GetSelection() >= 0 else 0,
-            "voiceLabel": _choice_label(self.voiceChoice),
-            "speed": int(self.speedSpin.GetValue()),
-            "autoTest": bool(self.autoSpeakCB.GetValue()) if hasattr(self, "autoSpeakCB") else True,
+            "dllPath": self.dllPath, "voiceId": language["id"], "voiceLabel": label,
+            "variant": variant["id"], "sampleRate": self._rates[self.sampleRateChoice.GetSelection()],
+            "autoTest": self.autoSpeakCB.GetValue(),
+            **{name: control.GetValue() for name, control in self._spins.items() if control.IsEnabled()},
         }
 
-# ----------------------------
-
-
-# IBM ECI renderer (DLL)
-# ----------------------------
-_ECIMessage_eciWaveformBuffer = 0
-_ECIMessage_eciIndexReply = 2
-_END_STRING_MARK = 0xFFFF
 
 def _configured_ibmeci_path(addon_root: str) -> Optional[str]:
     """Resolve IBMTTS settings without importing or starting its speech driver."""
@@ -271,476 +393,12 @@ def _find_ibmeci_dll(preferred_addon: str = "") -> str:
     return ""
 
 
-def _pe_machine_type(path: str) -> int:
-    try:
-        with open(path, "rb") as f:
-            if f.read(2) != b"MZ":
-                return 0
-            f.seek(0x3C)
-            pe_offset = struct.unpack("<I", f.read(4))[0]
-            f.seek(pe_offset)
-            if f.read(4) != b"PE\x00\x00":
-                return 0
-            return struct.unpack("<H", f.read(2))[0]
-    except Exception:
-        return 0
-
-
-def _is_32bit_dll(path: str) -> bool:
-    return _pe_machine_type(path) == 0x014C
-
-
-def _render_with_ibmeci_proxy32(text: str, out_wav: str, dll_path: str, voice_id: int = 0, sample_rate_param: int = 2, speed: int = 110, progress: Optional[dict] = None, cancel_evt: Optional[threading.Event] = None):
-    """Render IBM ECI through the installed IBMTTS 32-bit host bridge."""
-    from ctypes import string_at
-    try:
-        from synthDrivers._proxyEci import EciDLL
-    except Exception as e:
-        raise RuntimeError(_("IBMTTS 32-bit proxy is not available; install or update the IBMTTS add-on.")) from e
-
-    if not out_wav.lower().endswith(".wav"):
-        out_wav += ".wav"
-    if not dll_path or not os.path.isfile(dll_path):
-        raise RuntimeError(_("The Eloquence/IBMTTS speech engine could not be found."))
-
-    samples = 3300
-    pcm_rate = 11025
-    if progress is not None:
-        try:
-            progress.setdefault("buffers", 0)
-            progress.setdefault("bytes", 0)
-            progress.setdefault("last_audio_ts", None)
-            progress.setdefault("started_ts", time.time())
-            progress.setdefault("pcm_rate", int(pcm_rate))
-            progress.setdefault("channels", 1)
-            progress.setdefault("sampwidth", 2)
-            progress["usingIbmttsProxy32"] = True
-        except Exception:
-            pass
-
-    done_evt = threading.Event()
-    first_audio_evt = threading.Event()
-    err_holder = {"err": None}
-    buffer_ptr = {"ptr": None}
-
-    wf = wave.open(out_wav, "wb")
-    wf.setnchannels(1)
-    wf.setsampwidth(2)
-    wf.setframerate(int(pcm_rate))
-
-    def eci_callback(h, ms, lp, dt):
-        try:
-            if int(ms) in (0, _ECIMessage_eciWaveformBuffer):
-                n = int(lp)
-                ptr = buffer_ptr.get("ptr")
-                if n > 0 and ptr:
-                    data = string_at(ptr, n * 2)
-                    wf.writeframesraw(data)
-                    first_audio_evt.set()
-                    try:
-                        if progress is not None:
-                            progress["buffers"] = int(progress.get("buffers", 0)) + 1
-                            progress["bytes"] = int(progress.get("bytes", 0)) + len(data)
-                            progress["last_audio_ts"] = time.time()
-                    except Exception:
-                        pass
-            elif int(ms) in (2, _ECIMessage_eciIndexReply) and int(lp) == _END_STRING_MARK:
-                done_evt.set()
-        except Exception as e:
-            err_holder["err"] = e
-            done_evt.set()
-        return 1
-
-    dll = None
-    handle = None
-    try:
-        dll = EciDLL(dll_path)
-        try:
-            handle = dll.eciNewEx(int(voice_id))
-        except Exception:
-            handle = 0
-        if not handle:
-            handle = dll.eciNewEx(0)
-        if not handle:
-            raise RuntimeError(_("eciNewEx failed (no handle)."))
-
-        try:
-            req_vid = int(voice_id)
-        except Exception:
-            req_vid = 0
-        if req_vid:
-            try:
-                dll.eciSetVoiceParam(handle, 0, 9, req_vid)
-            except Exception:
-                pass
-        try:
-            sp = max(0, min(250, int(speed)))
-        except Exception:
-            sp = 110
-        try:
-            dll.eciSetVoiceParam(handle, 0, 6, int(sp))
-        except Exception:
-            pass
-
-        dll.eciRegisterCallback(handle, eci_callback, None)
-        dll.eciSetOutputBuffer(handle, samples)
-        buffer_ptr["ptr"] = dll.get_audio_buffer_ptr()
-        if not buffer_ptr["ptr"]:
-            raise RuntimeError(_("IBMTTS proxy did not expose an audio buffer."))
-
-        try: dll.eciSetParam(handle, 0, 1)
-        except Exception: pass
-        try: dll.eciSetParam(handle, 1, 1)
-        except Exception: pass
-
-        dll.eciAddText(handle, (text or "").encode("mbcs", errors="replace"))
-        dll.eciInsertIndex(handle, _END_STRING_MARK)
-        dll.eciSynthesize(handle)
-
-        startup_deadline = time.time() + 5.0
-        while not first_audio_evt.is_set():
-            if err_holder["err"] is not None:
-                raise err_holder["err"]
-            if cancel_evt is not None and cancel_evt.is_set():
-                try: dll.eciStop(handle)
-                except Exception: pass
-                raise RuntimeError(_("Cancelled."))
-            if done_evt.is_set():
-                break
-            if time.time() >= startup_deadline:
-                raise RuntimeError(_("IBM ECI proxy produced no audio."))
-            time.sleep(0.02)
-
-        deadline = time.time() + float(TIMEOUT_SECONDS)
-        while not done_evt.is_set():
-            if err_holder["err"] is not None:
-                raise err_holder["err"]
-            if cancel_evt is not None and cancel_evt.is_set():
-                try: dll.eciStop(handle)
-                except Exception: pass
-                raise RuntimeError(_("Cancelled."))
-            if time.time() >= deadline:
-                raise RuntimeError(_("IBM ECI proxy render timed out."))
-            try:
-                last = progress.get("last_audio_ts") if progress is not None else None
-                if last and time.time() - float(last) > 3.0:
-                    break
-            except Exception:
-                pass
-            time.sleep(0.02)
-    finally:
-        try:
-            wf.close()
-        except Exception:
-            pass
-        try:
-            if dll is not None and handle:
-                dll.eciDelete(handle)
-        except Exception:
-            pass
-
-    if not os.path.isfile(out_wav) or os.path.getsize(out_wav) <= 44:
-        raise RuntimeError(_("IBM ECI proxy render failed: no audio was captured."))
-
-
-def _render_with_ibmeci_dll(text: str, out_wav: str, dll_path: str, voice_id: int = 0, sample_rate_param: int = 2, speed: int = 110, progress: Optional[dict] = None, cancel_evt: Optional[threading.Event] = None):
-    # IBM ECI DLL renderer using a dedicated host thread (mirrors IBMTTS design).
-    # Some ECI builds only start delivering waveform buffers reliably when synthesis runs
-    # in a thread with a Windows message queue.
-    from ctypes import byref, create_string_buffer, c_int, c_void_p, pointer, string_at, windll, wintypes, WINFUNCTYPE
-    import os
-    import time
-    import threading
-    import wave
-
-    if not out_wav.lower().endswith(".wav"):
-        out_wav += ".wav"
-    if not dll_path or not os.path.isfile(dll_path):
-        raise RuntimeError(_("The Eloquence/IBMTTS speech engine could not be found."))
-    if _is_32bit_dll(dll_path) and sys.maxsize > 2**32:
-        return _render_with_ibmeci_proxy32(
-            text=text,
-            out_wav=out_wav,
-            dll_path=dll_path,
-            voice_id=voice_id,
-            sample_rate_param=sample_rate_param,
-            speed=speed,
-            progress=progress,
-            cancel_evt=cancel_evt,
-        )
-
-    samples = 3300
-    buffer = create_string_buffer(samples * 2)
-
-    rate_map = {0: 8000, 1: 11025, 2: 11025}
-    pcm_rate = rate_map.get(int(sample_rate_param), 11025)
-
-    # progress init
-    if progress is not None:
-        try:
-            progress.setdefault("buffers", 0)
-            progress.setdefault("bytes", 0)
-            progress.setdefault("last_audio_ts", None)
-            progress.setdefault("started_ts", time.time())
-            # For progress UI (rendered seconds + realtime factor)
-            progress.setdefault("pcm_rate", int(pcm_rate))
-            progress.setdefault("channels", 1)
-            progress.setdefault("sampwidth", 2)
-        except Exception:
-            pass
-
-    first_audio_evt = threading.Event()
-    done_evt = threading.Event()
-    err_holder = {"err": None}
-
-    def _eci_thread_main():
-        user32 = windll.user32
-        msg = wintypes.MSG()
-        # Create a message queue for this thread
-        try:
-            user32.PeekMessageA(byref(msg), None, 0, 0, 0)
-        except Exception:
-            pass
-
-        dll = windll.LoadLibrary(dll_path)
-
-        # Prototypes (minimum)
-        dll.eciNewEx.argtypes = [c_int]
-        dll.eciNewEx.restype = c_void_p
-        dll.eciDelete.argtypes = [c_void_p]
-        dll.eciDelete.restype = None
-        dll.eciRegisterCallback.argtypes = [c_void_p, c_void_p, c_void_p]
-        dll.eciRegisterCallback.restype = None  # void
-        dll.eciSetOutputBuffer.argtypes = [c_void_p, c_int, c_void_p]
-        dll.eciSetOutputBuffer.restype = c_int  # 1 success, 0 fail
-        dll.eciSetParam.argtypes = [c_void_p, c_int, c_int]
-        dll.eciSetParam.restype = c_int
-        # Optional voice parameter setter (preferred for speed)
-        try:
-            dll.eciSetVoiceParam.argtypes = [c_void_p, c_int, c_int, c_int]
-            dll.eciSetVoiceParam.restype = c_int
-        except Exception:
-            pass
-        # Optional voice selector (lets us init with voice 0 then switch)
-        try:
-            dll.eciSetVoice.argtypes = [c_void_p, c_int]
-            dll.eciSetVoice.restype = c_int
-        except Exception:
-            # Some builds don't export eciSetVoice
-            pass
-
-        dll.eciAddText.argtypes = [c_void_p, c_void_p]
-        dll.eciAddText.restype = c_int
-        dll.eciInsertIndex.argtypes = [c_void_p, c_int]
-        dll.eciInsertIndex.restype = c_int
-        dll.eciSynthesize.argtypes = [c_void_p]
-        dll.eciSynthesize.restype = c_int
-        dll.eciStop.argtypes = [c_void_p]
-        dll.eciStop.restype = c_int
-
-        wf = None
-        handle = None
-        wrote_any = {"v": False}
-
-        @WINFUNCTYPE(c_int, c_int, c_int, c_int, c_int, c_void_p)
-        def eciCallback(h, ms, lp, dt, userData):
-            try:
-                if int(ms) in (0, _ECIMessage_eciWaveformBuffer):
-                    n = int(lp)
-                    if n > 0 and wf is not None:
-                        wf.writeframesraw(string_at(buffer, n * 2))
-                        wrote_any["v"] = True
-                        first_audio_evt.set()
-                        try:
-                            if progress is not None:
-                                progress["buffers"] = int(progress.get("buffers", 0)) + 1
-                                progress["bytes"] = int(progress.get("bytes", 0)) + int(n * 2)
-                                progress["last_audio_ts"] = time.time()
-                        except Exception:
-                            pass
-                elif int(ms) in (2, _ECIMessage_eciIndexReply) and int(lp) == _END_STRING_MARK:
-                    done_evt.set()
-            except Exception as e:
-                try:
-                    err_holder["err"] = e
-                    done_evt.set()
-                except Exception:
-                    pass
-            return 1
-
-        try:
-            wf = wave.open(out_wav, "wb")
-            wf.setnchannels(1)
-            wf.setsampwidth(2)
-            wf.setframerate(int(pcm_rate))
-
-            handle = dll.eciNewEx(int(voice_id))
-            if not handle and int(voice_id) != 0:
-                # Some ECI builds fail to init for non-zero voice IDs.
-                # Retry with voice 0 so we at least render, rather than failing hard.
-                try:
-                    handle = dll.eciNewEx(0)
-                    if progress is not None and handle:
-                        progress["voiceIdInitFallbackTo0"] = True
-                except Exception:
-                    pass
-            if not handle:
-                raise RuntimeError(_("eciNewEx failed (no handle)."))
-
-            # If we had to fall back to voice 0 for initialization, try switching to the requested voice now.
-            # Many ECI builds only initialize reliably with voice 0, but *can* switch voices post-init.
-            voice_switch_ok = False
-            voice_switch_attempted = False
-            try:
-                req_vid = int(voice_id)
-            except Exception:
-                req_vid = 0
-            if req_vid != 0:
-                voice_switch_attempted = True
-                # Try a few known ECI ways to select voice after initialization.
-                # Different ECI/Eloquence drops expose different symbols.
-                try:
-                    if hasattr(dll, "eciSetVoice"):
-                        rv = int(dll.eciSetVoice(handle, req_vid))
-                        voice_switch_ok = (rv != 0)
-                    else:
-                        voice_switch_ok = False
-                except Exception:
-                    voice_switch_ok = False
-
-                if not voice_switch_ok:
-                    # Some builds don't export eciSetVoice, but will accept voice via param 9.
-                    try:
-                        if hasattr(dll, "eciSetVoiceParam"):
-                            rv = int(dll.eciSetVoiceParam(handle, 0, 9, req_vid))
-                            voice_switch_ok = (rv != 0)
-                    except Exception:
-                        pass
-
-                if not voice_switch_ok:
-                    try:
-                        if hasattr(dll, "eciSetParam"):
-                            rv = int(dll.eciSetParam(handle, 9, req_vid))
-                            voice_switch_ok = (rv != 0)
-                    except Exception:
-                        pass
-                if progress is not None:
-                    progress["eciVoiceSwitchAttempted"] = True
-                    progress["eciVoiceSwitchOk"] = bool(voice_switch_ok)
-                # If switching isn't possible, keep going but make it explicit (test/render will sound like voice 0).
-                if not voice_switch_ok:
-                    try:
-                        ui.message(_("ECI voice switching not supported; using voice 0."))
-                    except Exception:
-                        pass
-
-            # Voice speed (ECI voice parameter: eciSpeed = 6). Range: 0-250.
-            try:
-                sp = int(speed)
-            except Exception:
-                sp = 110
-            if sp < 0:
-                sp = 0
-            if sp > 250:
-                sp = 250
-            try:
-                # voiceNumber=0 refers to the current voice.
-                if hasattr(dll, 'eciSetVoiceParam'):
-                    dll.eciSetVoiceParam(handle, 0, 6, int(sp))
-            except Exception:
-                pass
-
-            _cb_ref = eciCallback  # keep alive
-            dll.eciRegisterCallback(handle, eciCallback, None)
-
-            ok = int(dll.eciSetOutputBuffer(handle, int(samples), pointer(buffer)))
-            if not ok:
-                raise RuntimeError(_("eciSetOutputBuffer failed (no callback/buffer accepted)."))
-
-            # Critical params (IBMTTS)
-            try: dll.eciSetParam(handle, 0, 1)  # eciSynthMode
-            except Exception: pass
-            try: dll.eciSetParam(handle, 1, 1)  # eciInputType
-            except Exception: pass
-            # try: dll.eciSetParam(handle, 5, int(sample_rate_param))  # eciSampleRate  # disabled: DLL appears to output fixed rate
-            except Exception: pass
-
-            b = (text or "").encode("mbcs", errors="replace")
-            dll.eciAddText(handle, b)
-            dll.eciInsertIndex(handle, _END_STRING_MARK)
-            dll.eciSynthesize(handle)
-
-            start_time = time.time()
-
-            # Message pump + cancel loop until done
-            while not done_evt.is_set():
-                if cancel_evt is not None and cancel_evt.is_set():
-                    try: dll.eciStop(handle)
-                    except Exception: pass
-                    raise RuntimeError(_("Cancelled."))
-                # hard timeout safeguard
-                if (time.time() - start_time) > TIMEOUT_SECONDS:
-                    done_evt.set()
-                    raise RuntimeError(_("IBM ECI render timed out."))
-                # pump any pending messages (keeps some ECI builds happy)
-                try:
-                    while user32.PeekMessageA(byref(msg), None, 0, 0, 1):
-                        user32.TranslateMessage(byref(msg))
-                        user32.DispatchMessageA(byref(msg))
-                except Exception:
-                    pass
-                
-                # Watchdog: if we've produced audio but haven't received any callbacks recently,
-                # assume synthesis has finished even if the index reply wasn't delivered.
-                try:
-                    if progress is not None and progress.get("last_audio_ts") and first_audio_evt.is_set():
-                        if (time.time() - float(progress.get("last_audio_ts"))) > 3.0:
-                            done_evt.set()
-                except Exception:
-                    pass
-                time.sleep(0.01)
-
-            if not wrote_any["v"]:
-                raise RuntimeError(_("IBM ECI produced no audio (no waveform buffers)."))
-        except Exception as e:
-            err_holder["err"] = e
-        finally:
-            try:
-                if wf is not None:
-                    wf.close()
-            except Exception:
-                pass
-            try:
-                if handle:
-                    dll.eciDelete(handle)
-            except Exception:
-                pass
-
-    t = threading.Thread(target=_eci_thread_main, name="soundWave-ECI", daemon=True)
-    t.start()
-
-    # Fail fast if we never receive any waveform buffers
-    startup_deadline = time.time() + 2.0
-    while True:
-        if err_holder["err"] is not None:
-            raise err_holder["err"]
-        if cancel_evt is not None and cancel_evt.is_set():
-            raise RuntimeError(_("Cancelled."))
-        if first_audio_evt.is_set():
-            break
-        if time.time() >= startup_deadline:
-            raise RuntimeError(_("IBM ECI produced no audio (no buffers within 2 seconds)."))
-        time.sleep(0.02)
-
-    # Wait for completion or error (TIMEOUT_SECONDS)
-    deadline = time.time() + float(TIMEOUT_SECONDS)
-    while True:
-        if err_holder["err"] is not None:
-            raise err_holder["err"]
-        if done_evt.is_set():
-            break
-        if cancel_evt is not None and cancel_evt.is_set():
-            raise RuntimeError(_("Cancelled."))
-        if time.time() >= deadline:
-            raise RuntimeError(_("IBM ECI render timed out."))
-        time.sleep(0.05)
+def _render_with_ibmeci_dll(text, out_wav, dll_path, voice_id=0, sample_rate_param=1,
+                          speed=110, progress=None, cancel_evt=None, *, opts=None,
+                          timeout_seconds=_eci_process.RENDER_TIMEOUT_SECONDS):
+    options = dict(opts) if opts is not None else {
+        "voiceId": voice_id, "sampleRate": sample_rate_param, "speed": speed,
+    }
+    return _eci_process.run_job(dll_path, globalVars.appDir, options=options, text=text,
+                               out_wav=out_wav, timeout=timeout_seconds,
+                               progress=progress, cancel_evt=cancel_evt)

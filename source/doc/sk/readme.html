@@ -232,7 +232,7 @@ Väčšina dialógov nastavení obsahuje:
     </tr>
     <tr>
       <td><strong>Eloquence a IBMTTS</strong></td>
-      <td>Dostupné, keď je nainštalovaný príslušný doplnok NVDA. soundWave automaticky zistí rečový engine a pred renderovaním ponúkne možnosti hlasu a rýchlosti. Pri IBMTTS používa umiestnenie knižnice nastavené v jeho nastaveniach NVDA vrátane externých inštalácií a prenosného NVDA.</td>
+      <td>Dostupné, keď je nainštalovaný príslušný doplnok NVDA. SoundWave používa umiestnenie knižnice nastavené v IBMTTS vrátane externých inštalácií a prenosného NVDA. Dostupné jazyky, varianty a vzorkovacie frekvencie poskytuje engine, nie odhad podľa názvov súborov hlasov. Test a renderovanie používajú rovnaké nastavenia bez zmeny aktuálnej reči NVDA.</td>
     </tr>
     <tr>
       <td><strong>Orpheus</strong></td>
@@ -257,6 +257,10 @@ Väčšina dialógov nastavení obsahuje:
   </tbody>
 </table>
 
+<h3>Možnosti Eloquence a IBMTTS</h3>
+<p>Vyberte jazyk v poli Hlas a predvoľbu v poli Variant. Vzorkovacia frekvencia ponúka hodnoty podporované enginom: 8000 a 11025 Hz, prípadne 22050 Hz. ViaVoice môže pri 8000 Hz používať iný model hlasu. Zmena jazyka, variantu alebo frekvencie načíta výšku a vlastnosti vybraného hlasu; rýchlosť a hlasitosť zostanú nezmenené.</p>
+<p>Rýchlosť používa rozsah ECI od 0 do 250. Výška, intonácia, hlasitosť, veľkosť hlavy, drsnosť a dyšnosť používajú rozsah od 0 do 100. Intonácia ovláda zmeny výšky hlasu a veľkosť hlavy mení rezonanciu. Page Up a Page Down menia hodnotu o desať. Predchádzajúce nastavenia sa zapamätajú; inak SoundWave použije predvolené hodnoty enginu a aktuálne nastavenia uložené v pamäti, ak rovnaký engine IBMTTS práve hovorí v NVDA. Test a automatické prehrávanie používajú rovnaké nastavenia ako uložené audio.</p>
+
 <h2>Súhrn renderovania</h2>
 
 <p>
@@ -270,6 +274,13 @@ soundWave používa aktualizačný kanál doplnkov NVDA kompatibilný s distrib�
 </p>
 
 <h2>Zmeny</h2>
+
+<h3>1.2.12</h3>
+<ul>
+  <li>Pridané zisťovanie jazykov a variantov priamo z enginu Eloquence a IBMTTS vrátane knižníc ViaVoice s číslami verzií v názvoch súborov hlasov. Týka sa hlásenia <a href="https://github.com/OnjLouis/soundWave/issues/14">14</a>.</li>
+  <li>Pridané ovládanie vzorkovacej frekvencie, výšky a modulácie hlasu, hlasitosti, veľkosti hlavy, drsnosti a dyšnosti. Test hlasu a výsledné renderovanie používajú rovnaké nastavenia.</li>
+  <li>Ukážky hlasu a renderovanie zostávajú nezávislé od aktuálnej reči NVDA a pred uložením čakajú na úplný zvuk.</li>
+</ul>
 
 <h3>1.2.11</h3>
 <ul>

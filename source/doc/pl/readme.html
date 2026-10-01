@@ -232,7 +232,7 @@ Większość okien ustawień zawiera:
     </tr>
     <tr>
       <td><strong>Eloquence i IBMTTS</strong></td>
-      <td>Dostępne, gdy zainstalowany jest odpowiedni dodatek NVDA. soundWave automatycznie wykrywa silnik mowy i udostępnia opcje głosu oraz szybkości przed renderowaniem. W przypadku IBMTTS używa lokalizacji biblioteki skonfigurowanej w ustawieniach NVDA tego dodatku, także dla instalacji zewnętrznych i przenośnego NVDA.</td>
+      <td>Dostępne, gdy zainstalowany jest odpowiedni dodatek NVDA. SoundWave używa lokalizacji biblioteki skonfigurowanej w IBMTTS, także dla instalacji zewnętrznych i przenośnego NVDA. Dostępne języki, warianty i częstotliwości próbkowania są odczytywane z silnika, a nie odgadywane z nazw plików głosów. Test i renderowanie korzystają z tych samych ustawień bez zmiany bieżącej mowy NVDA.</td>
     </tr>
     <tr>
       <td><strong>Orpheus</strong></td>
@@ -257,6 +257,10 @@ Większość okien ustawień zawiera:
   </tbody>
 </table>
 
+<h3>Opcje Eloquence i IBMTTS</h3>
+<p>Wybierz język w polu Głos i ustawienie w polu Wariant. Częstotliwość próbkowania zawiera wartości obsługiwane przez wybrany silnik: 8000 i 11025 Hz oraz 22050 Hz, jeśli jest dostępne. ViaVoice może używać innego modelu głosu przy 8000 Hz. Zmiana języka, wariantu lub częstotliwości wczytuje wysokość i cechy wybranego głosu; szybkość i głośność pozostają bez zmian.</p>
+<p>Szybkość używa zakresu ECI od 0 do 250. Wysokość, intonacja, głośność, rozmiar głowy, szorstkość i oddechowość mają zakres od 0 do 100. Intonacja steruje zmianami wysokości głosu, a rozmiar głowy zmienia rezonans. Page Up i Page Down zmieniają wartość o dziesięć. Poprzednie ustawienia są zapamiętywane; w przeciwnym razie SoundWave używa wartości domyślnych silnika i zapisanych w pamięci bieżących ustawień, jeśli ten sam silnik IBMTTS mówi w NVDA. Test i automatyczne odtwarzanie używają tych samych ustawień co zapisany plik audio.</p>
+
 <h2>Podsumowanie renderowania</h2>
 
 <p>
@@ -270,6 +274,13 @@ soundWave używa kanału aktualizacji dodatków NVDA zgodnego z dystrybucją prz
 </p>
 
 <h2>Zmiany</h2>
+
+<h3>1.2.12</h3>
+<ul>
+  <li>Dodano odczytywanie języków i wariantów z silnika Eloquence i IBMTTS, także dla bibliotek ViaVoice z numerami wersji w nazwach plików głosów. Dotyczy zgłoszenia <a href="https://github.com/OnjLouis/soundWave/issues/14">14</a>.</li>
+  <li>Dodano częstotliwość próbkowania, wysokość i modulację głosu, głośność, rozmiar głowy, szorstkość i oddechowość. Test głosu i końcowe renderowanie używają tych samych ustawień.</li>
+  <li>Podgląd głosu i renderowanie pozostają niezależne od bieżącej mowy NVDA i czekają na kompletny dźwięk przed zapisaniem.</li>
+</ul>
 
 <h3>1.2.11</h3>
 <ul>
