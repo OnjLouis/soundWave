@@ -179,16 +179,20 @@ class IbmEciOptionsDialog(wx.Dialog):
                                             timeout=_eci_process.PROBE_TIMEOUT_SECONDS, cancel_evt=self._cancel)
             wx.CallAfter(self._loaded, metadata, None)
         except Exception as error:
+            if self._cancel.is_set():
+                return
+            log.error("SoundWave IBM ECI voice settings probe failed for %s", self.dllPath, exc_info=True)
             wx.CallAfter(self._loaded, None, str(error))
 
     def _loaded(self, metadata, error):
         if self._closed:
             return
         if error:
-            self.status.SetLabel(_("Could not load voice settings: {error}").format(error=error))
+            message = _("Could not load voice settings: {error}").format(error=error)
+            self.status.SetLabel(message)
             self.status.Wrap(520)
             self.Fit()
-            ui.message(self.status.GetLabel())
+            _error(message)
             return
         self._languages = sorted(metadata["languages"], key=lambda item: item["label"].casefold())
         self.voiceChoice.SetItems([_eci_label(entry["label"]) for entry in self._languages])

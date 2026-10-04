@@ -38,8 +38,8 @@ class ProcessTests(unittest.TestCase):
         path.write_bytes(content)
         return path
 
-    def runtime(self, directory, machine=0x14C):
-        self.pe(directory / "python313.dll", machine)
+    def runtime(self, directory, machine=0x14C, dll="python313.dll"):
+        self.pe(directory / dll, machine)
         (directory / "library.zip").write_bytes(b"fixture")
 
     def job(self, **kwargs):
@@ -48,6 +48,17 @@ class ProcessTests(unittest.TestCase):
 
     def test_old_32bit_nvda_runtime_is_supported(self):
         self.assertEqual(self.app, self.worker.python_runtime(self.app))
+
+    def test_single_digit_python_runtime_is_supported(self):
+        (self.app / "python313.dll").unlink()
+        self.runtime(self.app, dll="python37.dll")
+        self.assertEqual(self.app, self.worker.python_runtime(self.app))
+
+    def test_stable_abi_python3_dll_is_not_a_runtime(self):
+        (self.app / "python313.dll").unlink()
+        self.runtime(self.app, dll="python3.dll")
+        with self.assertRaisesRegex(RuntimeError, "32-bit speech runtime"):
+            self.worker.python_runtime(self.app)
 
     def test_newest_runtime_is_chosen_numerically_not_lexically(self):
         self.runtime(self.app, machine=0x8664)
@@ -82,6 +93,7 @@ class ProcessTests(unittest.TestCase):
             Path(job["resultPath"]).write_text(json.dumps({"ok": False, "error": "expected failure"}), encoding="utf-8")
             self.assertEqual(self.worker.subprocess.CREATE_NO_WINDOW, kwargs["creationflags"])
             self.assertEqual("1", kwargs["env"]["PYTHONDONTWRITEBYTECODE"])
+            self.assertEqual("-S", arguments[2])
             return process
         with mock.patch.object(self.worker.subprocess, "Popen", side_effect=launch):
             with self.assertRaisesRegex(RuntimeError, "expected failure"):

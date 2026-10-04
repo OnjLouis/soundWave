@@ -5,9 +5,9 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: soundWave 1.2.11\n"
+"Project-Id-Version: soundWave 1.2.13\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-09-30 23:21+0100\n"
+"POT-Creation-Date: 2026-10-04 10:31+0100\n"
 "PO-Revision-Date: 2026-07-27 22:31+0200\n"
 "Last-Translator: Kazimierz Parzych\n"
 "Language: sk\n"
@@ -897,16 +897,16 @@ msgstr "Varia&nt:"
 msgid "Sa&mple rate:"
 msgstr "Vzorkovacia &frekvencia:"
 
-#: source/soundWave_lib/synths/ibmeci.py:188
+#: source/soundWave_lib/synths/ibmeci.py:191
 #, python-brace-format
 msgid "Could not load voice settings: {error}"
 msgstr "Nepodarilo sa načítať nastavenia hlasu: {error}"
 
-#: source/soundWave_lib/synths/ibmeci.py:210
+#: source/soundWave_lib/synths/ibmeci.py:214
 msgid "Voice settings ready."
 msgstr "Nastavenia hlasu sú pripravené."
 
-#: source/soundWave_lib/synths/ibmeci.py:306
+#: source/soundWave_lib/synths/ibmeci.py:310
 #, python-brace-format
 msgid ""
 "Test failed:\n"
@@ -915,7 +915,7 @@ msgstr ""
 "Test zlyhal:\n"
 "{error}"
 
-#: source/soundWave_lib/synths/ibmeci.py:317
+#: source/soundWave_lib/synths/ibmeci.py:321
 msgid "Voice settings are not ready."
 msgstr "Nastavenia hlasu ešte nie sú pripravené."
 

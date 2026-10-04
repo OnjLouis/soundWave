@@ -155,13 +155,20 @@ class DialogContractTests(unittest.TestCase):
         spec.loader.exec_module(host)
         namespace = {"wx": types.SimpleNamespace(Dialog=object, Accessible=Accessible, ACC_OK=0, ACC_NOT_IMPLEMENTED=1),
                      "_": lambda value: value,
-                     "_eci_label": lambda value: value, "_eci_host": host}
+                     "_eci_label": lambda value: value, "_eci_host": host,
+                     "log": mock.Mock(), "_error": mock.Mock(), "ui": mock.Mock(),
+                     "_eci_process": mock.Mock(), "globalVars": types.SimpleNamespace(appDir="nvda")}
+        namespace["wx"].CallAfter = mock.Mock()
+        self.namespace = namespace
         exec(compile(ast.Module(body=[controls] + nodes, type_ignores=[]), str(self.source), "exec"), namespace)
         dialog_class = namespace["IbmEciOptionsDialog"]
         self.dialog = dialog_class.__new__(dialog_class)
         self.accessible_class = namespace["_EciControlAccessible"]
         self.controls = namespace["_ECI_CONTROLS"]
         self.dialog._loading = True
+        self.dialog._closed = False
+        self.dialog._cancel = mock.Mock()
+        self.dialog._cancel.is_set.return_value = False
         self.dialog.dllPath = "fixture"
         self.dialog._spins = {name: Control() for name, label, maximum in self.controls}
         self.dialog.voiceChoice = Control()
@@ -173,6 +180,36 @@ class DialogContractTests(unittest.TestCase):
                    {"id": 2, "label": "Shelley", "defaults": {**defaults, "pitch": 81}}]
         self.dialog._languages = [{"id": 65537, "label": "British English", "sampleRates": [0, 1],
                                    "profiles": {"0": profile[:1], "1": profile}}]
+
+    def test_probe_failure_is_logged_with_traceback_and_forwarded_to_dialog(self):
+        self.namespace["_eci_process"].run_job.side_effect = RuntimeError("probe failed")
+        self.dialog._load()
+        self.namespace["log"].error.assert_called_once_with(
+            "SoundWave IBM ECI voice settings probe failed for %s", "fixture", exc_info=True)
+        self.namespace["wx"].CallAfter.assert_called_once_with(self.dialog._loaded, None, "probe failed")
+
+    def test_cancelled_probe_is_not_reported_as_failure(self):
+        self.dialog._cancel.is_set.return_value = True
+        self.namespace["_eci_process"].run_job.side_effect = RuntimeError("cancelled")
+        self.dialog._load()
+        self.namespace["log"].error.assert_not_called()
+        self.namespace["wx"].CallAfter.assert_not_called()
+
+    def test_probe_failure_opens_accessible_error_without_enabling_render(self):
+        self.dialog.status = mock.Mock()
+        self.dialog.Fit = mock.Mock()
+        self.dialog._loaded(None, "probe failed")
+        message = "Could not load voice settings: probe failed"
+        self.dialog.status.SetLabel.assert_called_once_with(message)
+        self.namespace["_error"].assert_called_once_with(message)
+        self.assertTrue(self.dialog._loading)
+        with self.assertRaisesRegex(RuntimeError, "not ready"):
+            self.dialog.get_options()
+
+    def test_closed_dialog_does_not_show_delayed_probe_error(self):
+        self.dialog._closed = True
+        self.dialog._loaded(None, "probe failed")
+        self.namespace["_error"].assert_not_called()
 
     def test_current_settings_are_read_without_querying_the_live_host(self):
         tree = ast.parse(self.source.read_text(encoding="utf-8"))

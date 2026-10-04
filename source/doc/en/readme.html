@@ -275,6 +275,13 @@ soundWave uses NVDA's add-on update channel for store-compatible updates.
 
 <h2>Changes</h2>
 
+<h3>1.2.13</h3>
+<ul>
+  <li>Fixed IBMTTS/Eloquence runtime detection and voice-test/render startup, including compatible cleanup on older Python runtimes. Thanks to Aksel Christoffersen for <a href="https://github.com/OnjLouis/soundWave/pull/15">PR 15</a>. Closes Issue <a href="https://github.com/OnjLouis/soundWave/issues/14">14</a>.</li>
+  <li>Voice-settings failures now open an accessible error dialog and include details in the NVDA log. Closing or cancelling the dialog does not produce a false error.</li>
+  <li>The minimum supported NVDA version remains 2025.1. These compatibility fixes do not establish full support for older NVDA versions.</li>
+</ul>
+
 <h3>1.2.12</h3>
 <ul>
   <li>Added engine-reported languages and variants for Eloquence and IBMTTS, including ViaVoice libraries whose voice filenames contain version numbers. Addresses Issue <a href="https://github.com/OnjLouis/soundWave/issues/14">14</a>.</li>
