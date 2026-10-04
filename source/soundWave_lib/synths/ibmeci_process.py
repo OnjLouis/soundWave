@@ -34,9 +34,9 @@ def python_runtime(app_dir):
     candidates = sorted(app_dir.glob("lib/*/x86/synthDriverHost-runtime"),
                         key=lambda path: tuple(int(part) for part in path.parents[1].name.split(".") if part.isdigit()),
                         reverse=True)
-    candidates.append(app_dir)  # NVDA 2025.1/2026.1 already use a 32-bit runtime.
+    candidates.append(app_dir)  # 32-bit NVDA is itself a 32-bit runtime.
     for candidate in candidates:
-        if (candidate / "library.zip").is_file() and any(machine_type(dll) == PE_MACHINE_I386 for dll in candidate.glob("python3??.dll")):
+        if (candidate / "library.zip").is_file() and any(machine_type(dll) == PE_MACHINE_I386 for dll in candidate.glob("python3*.dll") if dll.stem[7:].isdigit()):
             return candidate
     raise RuntimeError("NVDA's 32-bit speech runtime could not be found")
 
@@ -74,7 +74,8 @@ def run_job(dll_path, app_dir, *, options=None, text=None, out_wav=None,
         job_path.write_text(json.dumps(job, ensure_ascii=False), encoding="utf-8")
         environment = os.environ.copy()
         environment.update(PYTHONHOME=str(runtime), PYTHONPATH=str(runtime / "library.zip"), PYTHONDONTWRITEBYTECODE="1")
-        process = subprocess.Popen([str(launcher), str(runtime), str(module_dir / "ibmeci_host.py"), str(job_path)],
+        # NVDA's frozen runtime has no site module, so Python must start with -S.
+        process = subprocess.Popen([str(launcher), str(runtime), "-S", str(module_dir / "ibmeci_host.py"), str(job_path)],
             cwd=runtime, env=environment, stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL, creationflags=subprocess.CREATE_NO_WINDOW)
         deadline = time.monotonic() + timeout
@@ -104,5 +105,8 @@ def run_job(dll_path, app_dir, *, options=None, text=None, out_wav=None,
         if process is not None:
             stop_process(process)
         if not succeeded and out_wav:
-            Path(out_wav).unlink(missing_ok=True)
+            try:
+                Path(out_wav).unlink()
+            except FileNotFoundError:
+                pass
         shutil.rmtree(work_dir)
