@@ -275,6 +275,12 @@ soundWave uses NVDA's add-on update channel for store-compatible updates.
 
 <h2>Changes</h2>
 
+<h3>1.2.14</h3>
+<ul>
+  <li>Fixed voice, rate, pitch and other synthesizer-ring controls becoming ineffective after a voice preview or render.</li>
+  <li>Temporary synthesizers now leave NVDA's controls and voice dictionary attached to the active speaking synthesizer. Existing voice settings are preserved.</li>
+</ul>
+
 <h3>1.2.13</h3>
 <ul>
   <li>Fixed IBMTTS/Eloquence runtime detection and voice-test/render startup, including compatible cleanup on older Python runtimes. Thanks to Aksel Christoffersen for <a href="https://github.com/OnjLouis/soundWave/pull/15">PR 15</a>. Closes Issue <a href="https://github.com/OnjLouis/soundWave/issues/14">14</a>.</li>

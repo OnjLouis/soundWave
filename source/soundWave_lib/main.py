@@ -176,6 +176,41 @@ def _resolve_synth_id(requested: str):
 
 
 def _get_synth_instance(name: str):
+    try:
+        return _create_synth_instance(name)
+    finally:
+        _restore_active_synth_context()
+
+
+def _restore_active_synth_context():
+    # NVDA's instance factory also retargets its global ring and voice dictionary.
+    # Temporary render/preview drivers must not take ownership of live speech controls.
+    def restore():
+        try:
+            import globalVars
+            import speechDictHandler
+            active = synthDriverHandler.getSynth()
+            ring = globalVars.settingsRing
+            if active is None or ring is None:
+                return
+            settings = getattr(ring, 'settings', ()) or ()
+            if settings and all(setting.synth is active for setting in settings):
+                return
+            ring.updateSupportedSettings(active)
+            speechDictHandler.loadVoiceDict(active)
+            log.debug('soundWave: restored active speech controls after temporary synth initialization.')
+        except Exception:
+            log.warning('soundWave: could not restore active speech controls.', exc_info=True)
+    try:
+        if wx.IsMainThread():
+            restore()
+        else:
+            wx.CallAfter(restore)
+    except Exception:
+        log.warning('soundWave: could not schedule active speech control restoration.', exc_info=True)
+
+
+def _create_synth_instance(name: str):
     """Best-effort creation of an NVDA synth driver instance across NVDA versions.
 
     Strategy:
