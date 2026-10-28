@@ -295,16 +295,14 @@ def _make_capture_wave_player_factory(players: List[_GenericCaptureWavePlayer], 
 
 def _snapshot_synth_settings(synth) -> Dict[str, Any]:
     snapshot: Dict[str, Any] = {}
-    for attr in ("voice", "variant", "language", "rate", "pitch", "volume"):
+    model_id, _models = _discover_model_setting(synth)
+    language_id, _languages = _discover_language_setting(synth)
+    for attr in (model_id, language_id, "voice", "variant", "language", "rate", "pitch", "volume"):
+        if not attr or attr in snapshot:
+            continue
         try:
             if hasattr(synth, attr):
                 snapshot[attr] = getattr(synth, attr)
-        except Exception:
-            pass
-    language_id, _languages = _discover_language_setting(synth)
-    if language_id and language_id not in snapshot:
-        try:
-            snapshot[language_id] = getattr(synth, language_id)
         except Exception:
             pass
     return snapshot
@@ -343,14 +341,14 @@ def _discover_language_setting(synth):
     try:
         for setting in getattr(synth, "supportedSettings", ()) or ():
             setting_id = str(getattr(setting, "id", "") or "")
-            if setting_id and (setting_id.lower() == "language" or setting_id.lower().endswith("language")):
+            if setting_id and (setting_id.lower() in ("language", "locale") or setting_id.lower().endswith("language")):
                 candidates.append(setting_id)
     except Exception:
         pass
     if "language" not in candidates:
         candidates.append("language")
     for setting_id in candidates:
-        available_name = "available" + setting_id.capitalize() + "s"
+        available_name = "available" + setting_id[0].upper() + setting_id[1:] + "s"
         try:
             values = voice_utils.normalise_voice_infos(getattr(synth, available_name))
         except Exception:
@@ -358,6 +356,32 @@ def _discover_language_setting(synth):
         if values:
             return setting_id, values
     return "", []
+
+
+def _discover_model_setting(synth):
+    """Only expose a model selector explicitly advertised by the driver."""
+    if "model" not in (_supported_setting_ids(synth) or set()):
+        return "", []
+    values = voice_utils.normalise_voice_infos(_safe_getattr(synth, "availableModels", None))
+    return ("model", values) if values else ("", [])
+
+
+def _apply_selector_options(synth, opts):
+    model = str(opts.get("model", "") or "")
+    if model:
+        model_id, values = _discover_model_setting(synth)
+        ids = {voice_utils.voice_info_text(info, "id", "ID", "identifier", "name") for info in values}
+        if model_id != opts.get("modelSettingId") or model not in ids:
+            raise RuntimeError(_("The selected speech model is no longer available. Reopen the voice options."))
+        setattr(synth, model_id, model)
+    language_id = str(opts.get("languageSettingId", "") or "")
+    # Model changes can replace both the language and voice catalogues.
+    for attr, value in ((language_id, opts.get("language")), ("voice", opts.get("voice")), ("variant", opts.get("variant"))):
+        if attr and value and hasattr(synth, attr):
+            try:
+                setattr(synth, attr, str(value))
+            except Exception:
+                pass
 
 
 def _restore_synth_settings(synth, snapshot: Dict[str, Any]) -> None:
@@ -435,25 +459,7 @@ def _render_with_nvda_generic_capture(
         if is_pocket_tts:
             return pocket_tts.render_to_wav(text, out_wav, synth, opts=opts, progress=progress, cancel_evt=cancel_evt)
         if opts:
-            try:
-                language_setting = str(opts.get("languageSettingId", "") or "")
-                language = str(opts.get("language", "") or "")
-                if language_setting and language and hasattr(synth, language_setting):
-                    setattr(synth, language_setting, language)
-            except Exception:
-                pass
-            try:
-                voice = str(opts.get("voice", "") or "")
-                if voice and hasattr(synth, "voice"):
-                    synth.voice = voice
-            except Exception:
-                pass
-            try:
-                variant = str(opts.get("variant", "") or "")
-                if variant and hasattr(synth, "variant"):
-                    synth.variant = variant
-            except Exception:
-                pass
+            _apply_selector_options(synth, opts)
             try:
                 if "rate" in opts and hasattr(synth, "rate"):
                     synth.rate = int(opts.get("rate", 50) or 50)
@@ -718,6 +724,8 @@ class GenericNvdaOptionsDialog(wx.Dialog):
         self.variants: List[object] = []
         self.languages: List[object] = []
         self.languageSettingId = ""
+        self.models: List[object] = []
+        self.modelSettingId = ""
         self._populating = False
 
         self.synth = loquendo.create_options_facade() if self.is_loquendo else _get_synth_instance(self.synth_id)
@@ -736,27 +744,33 @@ class GenericNvdaOptionsDialog(wx.Dialog):
         grid = wx.FlexGridSizer(rows=0, cols=2, vgap=8, hgap=8)
         grid.AddGrowableCol(1, 1)
 
-        self.voiceLabel = wx.StaticText(panel, label=_("&Voice:"))
-        self.voiceChoice = wx.Choice(panel)
+        self.modelLabel = wx.StaticText(panel, label=_("&Model:"))
+        self.modelChoice = wx.Choice(panel)
+        self.modelSettingId, self.models = _discover_model_setting(self.synth)
+        if self.models:
+            grid.Add(self.modelLabel, 0, wx.ALIGN_CENTER_VERTICAL)
+            grid.Add(self.modelChoice, 1, wx.EXPAND)
+        else:
+            self.modelLabel.Hide()
+            self.modelChoice.Hide()
         self.languageLabel = wx.StaticText(panel, label=_("&Language:"))
         self.languageChoice = wx.Choice(panel)
+        self.voiceLabel = wx.StaticText(panel, label=_("&Voice:"))
+        self.voiceChoice = wx.Choice(panel)
         self.variantLabel = wx.StaticText(panel, label=_("Varia&nt:"))
         self.variantChoice = wx.Choice(panel)
         if self.is_prose2000:
+            self.languageLabel.Hide()
+            self.languageChoice.Hide()
             self.voiceLabel.Hide()
             self.voiceChoice.Hide()
             self.variantLabel.Hide()
             self.variantChoice.Hide()
         else:
+            grid.Add(self.languageLabel, 0, wx.ALIGN_CENTER_VERTICAL)
+            grid.Add(self.languageChoice, 1, wx.EXPAND)
             grid.Add(self.voiceLabel, 0, wx.ALIGN_CENTER_VERTICAL)
             grid.Add(self.voiceChoice, 1, wx.EXPAND)
-            self.languageSettingId, self.languages = _discover_language_setting(self.synth)
-            if self.languages:
-                grid.Add(self.languageLabel, 0, wx.ALIGN_CENTER_VERTICAL)
-                grid.Add(self.languageChoice, 1, wx.EXPAND)
-            else:
-                self.languageLabel.Hide()
-                self.languageChoice.Hide()
             grid.Add(self.variantLabel, 0, wx.ALIGN_CENTER_VERTICAL)
             grid.Add(self.variantChoice, 1, wx.EXPAND)
 
@@ -817,16 +831,18 @@ class GenericNvdaOptionsDialog(wx.Dialog):
         buttons.Realize()
         root.Add(buttons, 0, wx.ALL | wx.ALIGN_RIGHT, 10)
 
+        self._populate_models()
+        self._populate_languages()
+        self._populate_voices()
+        self._populate_variants()
+
         panel.SetSizer(root)
         outer = wx.BoxSizer(wx.VERTICAL)
         outer.Add(panel, 1, wx.EXPAND)
         self.SetSizerAndFit(outer)
         self.SetMinSize((460, self.GetSize().height))
 
-        self._populate_languages()
-        self._populate_voices()
-        self._populate_variants()
-
+        self.modelChoice.Bind(wx.EVT_CHOICE, self._on_model_changed)
         self.languageChoice.Bind(wx.EVT_CHOICE, self._on_language_changed)
         self.voiceChoice.Bind(wx.EVT_CHOICE, self._on_voice_changed)
         self.variantChoice.Bind(wx.EVT_CHOICE, self._maybe_auto_test)
@@ -871,7 +887,21 @@ class GenericNvdaOptionsDialog(wx.Dialog):
         except Exception:
             return ""
 
-    def _populate_voices(self):
+    def _populate_models(self):
+        self.modelChoice.Clear()
+        self.modelSettingId, self.models = _discover_model_setting(self.synth)
+        if not self.models:
+            return
+        current = str(_safe_getattr(self.synth, self.modelSettingId, "") or "")
+        saved = str(_cfg_get(self.cfg_prefix + "_model", current) or current)
+        ids = [voice_utils.voice_info_text(info, "id", "ID", "identifier", "name") for info in self.models]
+        selected = ids.index(saved) if saved in ids else (ids.index(current) if current in ids else 0)
+        for info, value in zip(self.models, ids):
+            self._append_choice(self.modelChoice, voice_utils.voice_choice_label(info, fallback=value), value)
+        self.modelChoice.SetSelection(selected)
+        setattr(self.synth, self.modelSettingId, self._choice_value(self.modelChoice))
+
+    def _populate_voices(self, use_saved=True):
         self._populating = True
         try:
             self.voiceChoice.Clear()
@@ -882,7 +912,8 @@ class GenericNvdaOptionsDialog(wx.Dialog):
                     vi for vi in self.voices
                     if (voice_utils.voice_info_text(vi, "id", "ID", "identifier", "name") or "") in installed
                 ]
-            saved = str(_cfg_get(self.cfg_prefix + "_voice", _safe_getattr(self.synth, "voice", "") or "") or "")
+            current = _safe_getattr(self.synth, "voice", "") or ""
+            saved = str((_cfg_get(self.cfg_prefix + "_voice", current) if use_saved else current) or "")
             selected = 0
             if not self.voices:
                 label = _("No installed Google TTS voices found") if self.is_google_tts else _("Default")
@@ -897,19 +928,17 @@ class GenericNvdaOptionsDialog(wx.Dialog):
         finally:
             self._populating = False
 
-    def _populate_languages(self):
+    def _populate_languages(self, use_saved=True):
         self._populating = True
         try:
             self.languageChoice.Clear()
+            self.languageSettingId, self.languages = _discover_language_setting(self.synth)
+            self.languageLabel.Show(bool(self.languages))
+            self.languageChoice.Show(bool(self.languages))
             if not self.languages or not self.languageSettingId:
                 return
-            saved = str(
-                _cfg_get(
-                    self.cfg_prefix + "_language",
-                    _safe_getattr(self.synth, self.languageSettingId, "") or "",
-                )
-                or ""
-            )
+            current = _safe_getattr(self.synth, self.languageSettingId, "") or ""
+            saved = str((_cfg_get(self.cfg_prefix + "_language", current) if use_saved else current) or "")
             selected = 0
             for i, info in enumerate(self.languages):
                 value = voice_utils.voice_info_text(info, "id", "ID", "identifier", "name") or str(i)
@@ -956,6 +985,17 @@ class GenericNvdaOptionsDialog(wx.Dialog):
         self._populate_variants()
         self._maybe_auto_test(evt)
 
+    def _on_model_changed(self, evt=None):
+        model = self._choice_value(self.modelChoice)
+        if not model or not self.modelSettingId:
+            return
+        setattr(self.synth, self.modelSettingId, model)
+        self._populate_languages(use_saved=False)
+        self._populate_voices(use_saved=False)
+        self._populate_variants()
+        self.Layout()
+        self._maybe_auto_test(evt)
+
     def _on_language_changed(self, evt=None):
         language = self._choice_value(self.languageChoice)
         if language and self.languageSettingId:
@@ -963,7 +1003,7 @@ class GenericNvdaOptionsDialog(wx.Dialog):
                 setattr(self.synth, self.languageSettingId, language)
             except Exception:
                 pass
-        self._populate_voices()
+        self._populate_voices(use_saved=False)
         self._populate_variants()
         self._maybe_auto_test(evt)
 
@@ -1035,6 +1075,9 @@ class GenericNvdaOptionsDialog(wx.Dialog):
 
     def get_options(self, persist: bool = True) -> Dict[str, Any]:
         opts = {
+            "modelSettingId": self.modelSettingId,
+            "model": self._choice_value(self.modelChoice),
+            "modelLabel": _choice_label(self.modelChoice),
             "voice": self._choice_value(self.voiceChoice),
             "voiceLabel": _choice_label(self.voiceChoice),
             "languageSettingId": self.languageSettingId,
@@ -1054,6 +1097,7 @@ class GenericNvdaOptionsDialog(wx.Dialog):
         if self.rateBoostChk is not None:
             opts["rateBoost"] = bool(self.rateBoostChk.GetValue())
         if persist:
+            _cfg_set(self.cfg_prefix + "_model", opts["model"])
             _cfg_set(self.cfg_prefix + "_voice", opts["voice"])
             _cfg_set(self.cfg_prefix + "_languageSettingId", opts["languageSettingId"])
             _cfg_set(self.cfg_prefix + "_language", opts["language"])

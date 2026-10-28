@@ -252,7 +252,7 @@ Większość okien ustawień zawiera:
     </tr>
     <tr>
       <td><strong>Inne syntezatory NVDA</strong></td>
-      <td>soundWave może renderować wiele innych zainstalowanych syntezatorów NVDA, jeśli używają normalnej ścieżki wyjścia audio NVDA. Ogólne okno opcji stosuje język, głos, wariant, tempo, wysokość i głośność tam, gdzie wybrany syntezator udostępnia te ustawienia. Syntezatory, w których język jest całkowicie określony przez wybrany głos, nie pokazują zbędnego wyboru języka.</td>
+      <td>soundWave może renderować wiele innych zainstalowanych syntezatorów NVDA, jeśli używają normalnej ścieżki wyjścia audio NVDA. Ogólne okno opcji udostępnia model, język, głos, wariant, tempo, wysokość i głośność zgodnie z możliwościami syntezatora. Najpierw wybierz model, a następnie język i głos. Zmiana modelu odświeża zależne listy. SoundWave zapamiętuje model i używa tego samego wyboru podczas testu i renderowania. Syntezatory, w których język jest określony przez głos, nie pokazują zbędnego wyboru języka. Filtr języka zawęża listę głosów, ale nie tłumaczy tekstu.</td>
     </tr>
   </tbody>
 </table>
@@ -274,6 +274,13 @@ soundWave używa kanału aktualizacji dodatków NVDA zgodnego z dystrybucją prz
 </p>
 
 <h2>Zmiany</h2>
+
+<h3>1.2.15</h3>
+<ul>
+  <li>Dodano wybór modelu dla syntezatorów udostępniających tę opcję, w tym Ollama Speech. Zmiana modelu odświeża listy języków i głosów.</li>
+  <li>Test i renderowanie stosują kolejno model, język i głos. Wybrany model jest zapamiętywany, a usunięty model powoduje czytelny błąd zamiast użycia innego modelu.</li>
+  <li>Poprawiono wykrywanie niestandardowych list języków i filtrów regionalnych.</li>
+</ul>
 
 <h3>1.2.14</h3>
 <ul>

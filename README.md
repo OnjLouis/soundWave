@@ -16,7 +16,7 @@ soundWave is an NVDA add-on that renders text to an audio file using installed s
 - Export WAV files, with MP3, FLAC, and M4A export available when ffmpeg is installed.
 - Render large inputs in chunks.
 - Use synthesizer-specific settings where available.
-- Adjust rate, pitch, volume, voice, language, or variant where the selected synthesizer exposes those controls.
+- Adjust model, language, voice, variant, rate, pitch or volume where the selected synthesizer exposes those controls.
 - Optionally apply post-render Sonic-style pitch processing to the finished audio.
 - Configure separate naming templates for single-render folders, single-render files, batch folders, and batch files.
 - Optional post-render actions can open the output folder, play the rendered audio, or hide the summary.
@@ -28,6 +28,7 @@ soundWave is an NVDA add-on that renders text to an audio file using installed s
 
 ## Changes
 
+- 1.2.15: Added Model selection for NVDA synthesizers that expose it, including Ollama Speech. Model changes refresh dependent Language and Voice choices. Voice tests and renders apply Model, Language and Voice in order and remember the selected model. Custom language selectors, including locale filters, are now recognised correctly.
 - 1.2.14: Fixed the NVDA synthesizer settings ring controlling a discarded preview/render instance after using SoundWave. Temporary synthesizers now leave the active speech controls and voice dictionary attached to the speaking synthesizer, without changing its settings or requiring a restart.
 - 1.2.13: Fixed IBMTTS/Eloquence runtime detection and worker startup, with compatible cleanup on older Python runtimes. Thanks to Aksel Christoffersen for [PR 15](https://github.com/OnjLouis/soundWave/pull/15). Voice-settings failures now appear in an accessible error dialog and the NVDA log. Closes Issue [14](https://github.com/OnjLouis/soundWave/issues/14). The minimum supported NVDA version remains 2025.1; these fixes do not establish full support for older NVDA versions.
 - 1.2.12: Added engine-reported IBMTTS/Eloquence languages, variants, sample rate, pitch, inflection, volume, head size, roughness and breathiness. Voice tests and rendering use the same settings, keeping NVDA's current speech independent and waiting for complete audio before saving. Addresses Issue [14](https://github.com/OnjLouis/soundWave/issues/14).

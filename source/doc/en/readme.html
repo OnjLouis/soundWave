@@ -252,7 +252,7 @@ Most settings dialogs include:
     </tr>
     <tr>
       <td><strong>Other NVDA synthesizers</strong></td>
-      <td>soundWave can render many other installed NVDA synthesizers when they use NVDA's normal audio output path. The generic dialog applies language, voice, variant, rate, pitch, and volume where the selected synthesizer exposes those settings. Synthesizers that encode language entirely in their voice choice do not show a redundant language selector.</td>
+      <td>soundWave can render many other installed NVDA synthesizers when they use NVDA's normal audio output path. The generic dialog offers Model, Language, Voice, Variant, Rate, Pitch and Volume where the synthesizer exposes those settings. Choose Model first, then Language and Voice; changing Model refreshes the dependent lists. SoundWave remembers the model and uses the same selection for Test and the saved render. Synthesizers that encode language entirely in their voice choice do not show a redundant language selector. A language filter narrows the voice list; it does not translate your text.</td>
     </tr>
   </tbody>
 </table>
@@ -274,6 +274,13 @@ soundWave uses NVDA's add-on update channel for store-compatible updates.
 </p>
 
 <h2>Changes</h2>
+
+<h3>1.2.15</h3>
+<ul>
+  <li>Added Model selection for synthesizers that expose it, including Ollama Speech. Language and Voice choices refresh when the model changes.</li>
+  <li>Tests and renders apply Model, Language and Voice in order, remember the chosen model and report a removed model instead of silently rendering with another one.</li>
+  <li>Fixed discovery of custom language selectors and locale filters.</li>
+</ul>
 
 <h3>1.2.14</h3>
 <ul>

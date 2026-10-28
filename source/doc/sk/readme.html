@@ -252,7 +252,7 @@ Väčšina dialógov nastavení obsahuje:
     </tr>
     <tr>
       <td><strong>Iné syntetizátory NVDA</strong></td>
-      <td>soundWave dokáže renderovať mnoho ďalších nainštalovaných syntetizátorov NVDA, keď používajú bežnú zvukovú výstupnú cestu NVDA. Všeobecný dialóg použije jazyk, hlas, variant, tempo, výšku a hlasitosť tam, kde ich vybraný syntetizér sprístupňuje. Syntetizátory, v ktorých je jazyk úplne určený výberom hlasu, nezobrazujú nadbytočný výber jazyka.</td>
+      <td>soundWave dokáže renderovať mnoho ďalších nainštalovaných syntetizátorov NVDA, keď používajú bežnú zvukovú výstupnú cestu NVDA. Všeobecný dialóg ponúka model, jazyk, hlas, variant, tempo, výšku a hlasitosť podľa možností syntetizátora. Najprv vyberte model, potom jazyk a hlas. Zmena modelu obnoví závislé zoznamy. SoundWave si model zapamätá a použije rovnaký výber pri teste aj renderovaní. Syntetizátory, v ktorých je jazyk určený hlasom, nezobrazujú nadbytočný výber jazyka. Jazykový filter zúži zoznam hlasov, ale neprekladá text.</td>
     </tr>
   </tbody>
 </table>
@@ -274,6 +274,13 @@ soundWave používa aktualizačný kanál doplnkov NVDA kompatibilný s distrib�
 </p>
 
 <h2>Zmeny</h2>
+
+<h3>1.2.15</h3>
+<ul>
+  <li>Pridaný výber modelu pre syntetizátory, ktoré ho sprístupňujú, vrátane Ollama Speech. Zmena modelu obnoví zoznamy jazykov a hlasov.</li>
+  <li>Test a renderovanie použijú postupne model, jazyk a hlas. Vybraný model sa zapamätá a odstránený model vyvolá zrozumiteľnú chybu namiesto použitia iného modelu.</li>
+  <li>Opravené zisťovanie vlastných výberov jazyka a regionálnych filtrov.</li>
+</ul>
 
 <h3>1.2.14</h3>
 <ul>
