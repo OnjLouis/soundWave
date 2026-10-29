@@ -72,6 +72,8 @@ Renderowanie jest anulowane tylko po aktywowaniu przycisku <strong>Anuluj</stron
 Jeśli inne okno soundWave jest już otwarte, to samo polecenie przeniesie je na pierwszy plan zamiast otwierać kolejny proces renderowania.
 </p>
 
+<p>Podczas ogólnego przechwytywania dźwięku NVDA bieżąca mowa i dźwięki powiadomień pozostają niezależne od renderowania. Można zmienić aktywny syntezator NVDA bez zmiany syntezatora wybranego dla pliku wyjściowego.</p>
+
 <h2>Ustawienia</h2>
 
 <p>
@@ -274,6 +276,14 @@ soundWave używa kanału aktualizacji dodatków NVDA zgodnego z dystrybucją prz
 </p>
 
 <h2>Zmiany</h2>
+
+<h3>1.2.16</h3>
+<ul>
+  <li>Naprawiono brak mowy i nieudane przełączanie syntezatora podczas renderowania przez ogólne przechwytywanie NVDA, także z dodatkiem Phonon.</li>
+  <li>Zachowano bieżącą mowę NVDA i dźwięki powiadomień bez dodawania ich do zapisywanego audio.</li>
+  <li>Ulepszono przechwytywanie, gdy syntezator renderujący tworzy lub zastępuje odtwarzacz dźwięku już po rozpoczęciu pracy.</li>
+  <li>Zaktualizowano wszystkie instrukcje i katalogi tłumaczeń interfejsu. Przetestowano z NVDA 2026.3.</li>
+</ul>
 
 <h3>1.2.15</h3>
 <ul>

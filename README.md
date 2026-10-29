@@ -15,6 +15,7 @@ soundWave is an NVDA add-on that renders text to an audio file using installed s
 - Render clipboard text, text files, folders of text files, or typed text.
 - Export WAV files, with MP3, FLAC, and M4A export available when ffmpeg is installed.
 - Render large inputs in chunks.
+- Keep live NVDA speech and notification sounds independent while using generic audio capture, including when switching synthesizers during a render.
 - Use synthesizer-specific settings where available.
 - Adjust model, language, voice, variant, rate, pitch or volume where the selected synthesizer exposes those controls.
 - Optionally apply post-render Sonic-style pitch processing to the finished audio.
@@ -28,6 +29,7 @@ soundWave is an NVDA add-on that renders text to an audio file using installed s
 
 ## Changes
 
+- 1.2.16: Fixed silence or failed synthesizer switching during generic NVDA rendering, including Phonon. Live speech and NVDA notification sounds remain separate from the rendered audio. Improved capture of players created later by the rendering synthesizer. Tested with NVDA 2026.3.
 - 1.2.15: Added Model selection for NVDA synthesizers that expose it, including Ollama Speech. Model changes refresh dependent Language and Voice choices. Voice tests and renders apply Model, Language and Voice in order and remember the selected model. Custom language selectors, including locale filters, are now recognised correctly.
 - 1.2.14: Fixed the NVDA synthesizer settings ring controlling a discarded preview/render instance after using SoundWave. Temporary synthesizers now leave the active speech controls and voice dictionary attached to the speaking synthesizer, without changing its settings or requiring a restart.
 - 1.2.13: Fixed IBMTTS/Eloquence runtime detection and worker startup, with compatible cleanup on older Python runtimes. Thanks to Aksel Christoffersen for [PR 15](https://github.com/OnjLouis/soundWave/pull/15). Voice-settings failures now appear in an accessible error dialog and the NVDA log. Closes Issue [14](https://github.com/OnjLouis/soundWave/issues/14). The minimum supported NVDA version remains 2025.1; these fixes do not establish full support for older NVDA versions.

@@ -4,6 +4,7 @@ from __future__ import annotations
 import ctypes
 import os
 import shutil
+import sys
 import tempfile
 import threading
 import time
@@ -272,8 +273,36 @@ class _GenericCaptureWavePlayer:
         self.done_evt.set()
 
 
-def _make_capture_wave_player_factory(players: List[_GenericCaptureWavePlayer], original_wave_player=None):
+def _make_capture_wave_player_factory(
+    players: List[_GenericCaptureWavePlayer], original_wave_player=None, capture_synth_holder=None,
+):
+    construction_thread = threading.get_ident()
+
+    def owns_player_call():
+        if capture_synth_holder is None:
+            return threading.get_ident() == construction_thread
+        if capture_synth_holder.get("initializing") and threading.get_ident() == construction_thread:
+            return True
+        owner = capture_synth_holder.get("synth")
+        if owner is None:
+            return False
+        # Lazy/replacement players can be created on the render driver's worker.
+        # Match the exact instance, not its class: live NVDA may use the same synth.
+        frame = sys._getframe(1)
+        try:
+            while frame is not None:
+                if frame.f_locals.get("self") is owner:
+                    return True
+                frame = frame.f_back
+            return False
+        finally:
+            del frame
+
     def _factory(*args, **kwargs):
+        if not owns_player_call():
+            if original_wave_player is None:
+                raise RuntimeError(_("NVDA audio module is not available; generic capture cannot run."))
+            return original_wave_player(*args, **kwargs)
         channels = kwargs.pop("channels", args[0] if len(args) > 0 else 1)
         samplesPerSec = kwargs.pop("samplesPerSec", args[1] if len(args) > 1 else 22050)
         bitsPerSample = kwargs.pop("bitsPerSample", args[2] if len(args) > 2 else 16)
@@ -285,12 +314,26 @@ def _make_capture_wave_player_factory(players: List[_GenericCaptureWavePlayer], 
         )
         players.append(player)
         return player
-    # Existing real players can finish on native callback threads while the
-    # factory is installed. NVDA's callback resolves this module-level class
-    # registry dynamically, so preserve it on the temporary replacement.
-    if original_wave_player is not None and hasattr(original_wave_player, "_instances"):
-        _factory._instances = original_wave_player._instances
-    return _factory
+    # NVDA resolves callbacks and reads/writes shared state through the global
+    # WavePlayer class even inside real player methods. Forward that class
+    # interface, not a snapshot of selected attributes, while routing creation.
+    class _WavePlayerFactory(type):
+        def __call__(cls, *args, **kwargs):
+            return _factory(*args, **kwargs)
+
+        def __getattr__(cls, name):
+            return getattr(original_wave_player, name)
+
+        def __setattr__(cls, name, value):
+            setattr(original_wave_player, name, value)
+
+        def __instancecheck__(cls, instance):
+            return isinstance(instance, original_wave_player)
+
+        def __subclasscheck__(cls, subclass):
+            return issubclass(subclass, original_wave_player)
+
+    return _WavePlayerFactory("WavePlayer", (), {})
 
 
 def _snapshot_synth_settings(synth) -> Dict[str, Any]:
@@ -423,7 +466,7 @@ def _render_with_nvda_generic_capture(
     is_google_tts = google_tts.is_google_tts_synth(synth_name)
     is_pocket_tts = pocket_tts.is_pocket_tts_synth(synth_name)
     original_settings: Dict[str, Any] = {}
-    target_players: List[_GenericCaptureWavePlayer] = []
+    capture_factory = None
 
     def _on_synth_done(synth=None, **kwargs):
         nonlocal saw_done_notification
@@ -433,17 +476,16 @@ def _render_with_nvda_generic_capture(
             saw_done_notification = True
             done_evt.set()
 
-    current_synth_holder = {"synth": None}
+    current_synth_holder = {"synth": None, "initializing": True}
     try:
-        capture_factory = _make_capture_wave_player_factory(players, old_wave_player)
+        capture_factory = _make_capture_wave_player_factory(players, old_wave_player, current_synth_holder)
         if not is_google_tts and not is_pocket_tts:
             nvwave.WavePlayer = capture_factory
-        synth = _get_synth_instance(synth_name)
-        # Most NVDA drivers create their player during construction. Keep
-        # that exact set so unrelated NVDA speech or add-on sounds created
-        # during a long render cannot contaminate the captured format.
-        target_players = list(players)
-        current_synth_holder["synth"] = synth
+        try:
+            synth = _get_synth_instance(synth_name)
+            current_synth_holder["synth"] = synth
+        finally:
+            current_synth_holder["initializing"] = False
         if synth is None or not hasattr(synth, "speak"):
             raise RuntimeError(_("Couldn't create NVDA synth instance for %s.") % synth_name)
         original_settings = _snapshot_synth_settings(synth)
@@ -495,7 +537,7 @@ def _render_with_nvda_generic_capture(
                 except Exception:
                     pass
                 raise RuntimeError(_("Cancelled."))
-            capture_players = target_players or players
+            capture_players = players
             total_bytes = sum(len(p.pcm) for p in capture_players)
             last_audio = max([p.last_audio_ts or 0 for p in capture_players] or [0])
             if progress is not None:
@@ -523,7 +565,7 @@ def _render_with_nvda_generic_capture(
         except Exception:
             pass
         try:
-            if old_wave_player is not None:
+            if capture_factory is not None and getattr(nvwave, "WavePlayer", None) is capture_factory:
                 nvwave.WavePlayer = old_wave_player
         except Exception:
             pass
@@ -537,8 +579,9 @@ def _render_with_nvda_generic_capture(
                 synth.terminate()
             except Exception:
                 pass
+        current_synth_holder["synth"] = None
 
-    active = [p for p in (target_players or players) if p.pcm]
+    active = [p for p in players if p.pcm]
     if not active:
         raise RuntimeError(
             _("Generic NVDA capture produced no audio. This synth may not use NVDA's WavePlayer path.")

@@ -72,6 +72,8 @@ Renderovanie sa zruší iba aktivovaním tlačidla <strong>Zrušiť</strong>.
 Ak je už otvorený iný dialóg soundWave, rovnaký príkaz ho prenesie do popredia namiesto otvorenia ďalšieho procesu renderovania.
 </p>
 
+<p>Pri všeobecnom zachytávaní zvuku NVDA zostávajú živá reč NVDA a zvuky oznámení nezávislé od renderovania. Aktívny syntetizér NVDA môžete zmeniť bez zmeny syntetizéra vybraného pre výstupný súbor.</p>
+
 <h2>Nastavenia</h2>
 
 <p>
@@ -274,6 +276,14 @@ soundWave používa aktualizačný kanál doplnkov NVDA kompatibilný s distrib�
 </p>
 
 <h2>Zmeny</h2>
+
+<h3>1.2.16</h3>
+<ul>
+  <li>Opravené ticho a neúspešné prepínanie syntetizéra počas renderovania cez všeobecné zachytávanie NVDA vrátane doplnku Phonon.</li>
+  <li>Zachovaná živá reč NVDA a zvuky oznámení bez ich pridávania do uloženého zvuku.</li>
+  <li>Vylepšené zachytávanie, keď renderujúci syntetizér vytvorí alebo nahradí prehrávač zvuku až po spustení.</li>
+  <li>Aktualizované všetky príručky a katalógy prekladov rozhrania. Testované s NVDA 2026.3.</li>
+</ul>
 
 <h3>1.2.15</h3>
 <ul>

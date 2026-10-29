@@ -5,9 +5,9 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: soundWave 1.2.15\n"
+"Project-Id-Version: soundWave 1.2.16\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-28 14:07+0000\n"
+"POT-Creation-Date: 2026-10-29 17:26+0000\n"
 "PO-Revision-Date: 2026-07-27 22:31+0200\n"
 "Last-Translator: Kazimierz Parzych\n"
 "Language: sk\n"
@@ -366,9 +366,9 @@ msgstr ""
 #: source/soundWave_lib/synths/google_tts.py:225
 #: source/soundWave_lib/synths/google_tts.py:233
 #: source/soundWave_lib/synths/loquendo.py:150
-#: source/soundWave_lib/synths/nvda_capture.py:132
-#: source/soundWave_lib/synths/nvda_capture.py:497
-#: source/soundWave_lib/synths/nvda_capture.py:680
+#: source/soundWave_lib/synths/nvda_capture.py:133
+#: source/soundWave_lib/synths/nvda_capture.py:539
+#: source/soundWave_lib/synths/nvda_capture.py:723
 #: source/soundWave_lib/synths/orpheus_classic.py:143
 #: source/soundWave_lib/synths/pocket_tts.py:105
 #: source/soundWave_lib/synths/pocket_tts.py:176
@@ -651,8 +651,8 @@ msgstr "soundWave - možnosti DECtalk"
 
 #: source/soundWave_lib/synths/dectalk.py:50
 #: source/soundWave_lib/synths/ibmeci.py:128
-#: source/soundWave_lib/synths/nvda_capture.py:758
-#: source/soundWave_lib/synths/nvda_capture.py:1149
+#: source/soundWave_lib/synths/nvda_capture.py:801
+#: source/soundWave_lib/synths/nvda_capture.py:1192
 #: source/soundWave_lib/synths/orpheus.py:39
 #: source/soundWave_lib/synths/sapi5.py:308
 #: source/soundWave_lib/synths/sonata.py:230
@@ -660,15 +660,15 @@ msgid "&Voice:"
 msgstr "&Hlas:"
 
 #: source/soundWave_lib/synths/dectalk.py:63
-#: source/soundWave_lib/synths/nvda_capture.py:777
+#: source/soundWave_lib/synths/nvda_capture.py:820
 #: source/soundWave_lib/synths/sapi5.py:314
 msgid "&Rate:"
 msgstr "&Tempo:"
 
 #: source/soundWave_lib/synths/dectalk.py:76
 #: source/soundWave_lib/synths/ibmeci.py:144
-#: source/soundWave_lib/synths/nvda_capture.py:823
-#: source/soundWave_lib/synths/nvda_capture.py:1179
+#: source/soundWave_lib/synths/nvda_capture.py:866
+#: source/soundWave_lib/synths/nvda_capture.py:1222
 #: source/soundWave_lib/synths/orpheus.py:65
 #: source/soundWave_lib/synths/sapi5.py:336
 #: source/soundWave_lib/synths/sonata.py:256
@@ -848,13 +848,13 @@ msgid "Elderly Male 1"
 msgstr "Starší muž 1"
 
 #: source/soundWave_lib/synths/ibmeci.py:67
-#: source/soundWave_lib/synths/nvda_capture.py:1155
+#: source/soundWave_lib/synths/nvda_capture.py:1198
 msgid "&Speed:"
 msgstr "&Rýchlosť:"
 
 #: source/soundWave_lib/synths/ibmeci.py:68
-#: source/soundWave_lib/synths/nvda_capture.py:788
-#: source/soundWave_lib/synths/nvda_capture.py:1161
+#: source/soundWave_lib/synths/nvda_capture.py:831
+#: source/soundWave_lib/synths/nvda_capture.py:1204
 #: source/soundWave_lib/synths/orpheus.py:47
 #: source/soundWave_lib/synths/sapi5.py:320
 msgid "&Pitch:"
@@ -889,7 +889,7 @@ msgid "Loading voice settings..."
 msgstr "Načítavajú sa nastavenia hlasu..."
 
 #: source/soundWave_lib/synths/ibmeci.py:129
-#: source/soundWave_lib/synths/nvda_capture.py:760
+#: source/soundWave_lib/synths/nvda_capture.py:803
 msgid "Varia&nt:"
 msgstr "Varia&nt:"
 
@@ -948,7 +948,7 @@ msgstr "Pomocný program zachytávania Loquendo skončil s návratovým kódom {
 msgid "Loquendo capture failed."
 msgstr "Zachytávanie Loquendo zlyhalo."
 
-#: source/soundWave_lib/synths/nvda_capture.py:66
+#: source/soundWave_lib/synths/nvda_capture.py:67
 msgid ""
 "SoundWave cannot safely capture this synthesizer because NVDA runs it in "
 "a separate 32-bit speech host. Choose another synthesizer."
@@ -956,34 +956,35 @@ msgstr ""
 "SoundWave nemôže bezpečne zachytiť tento syntetizér, pretože ho NVDA "
 "spúšťa v samostatnom 32-bitovom hostiteľovi reči. Vyberte iný syntetizér."
 
-#: source/soundWave_lib/synths/nvda_capture.py:124
-#: source/soundWave_lib/synths/nvda_capture.py:919
-#: source/soundWave_lib/synths/nvda_capture.py:973
+#: source/soundWave_lib/synths/nvda_capture.py:125
+#: source/soundWave_lib/synths/nvda_capture.py:962
+#: source/soundWave_lib/synths/nvda_capture.py:1016
 #: source/soundWave_lib/synths/orpheus.py:163
 #: source/soundWave_lib/synths/orpheus.py:218
 msgid "Default"
 msgstr "Predvolené"
 
-#: source/soundWave_lib/synths/nvda_capture.py:134
+#: source/soundWave_lib/synths/nvda_capture.py:135
 msgid "BestSpeech did not finish changing language."
 msgstr "BestSpeech nedokončil zmenu jazyka."
 
-#: source/soundWave_lib/synths/nvda_capture.py:375
+#: source/soundWave_lib/synths/nvda_capture.py:304
+#: source/soundWave_lib/synths/nvda_capture.py:454
+msgid "NVDA audio module is not available; generic capture cannot run."
+msgstr "Audio modul NVDA nie je dostupný; všeobecné zachytávanie nemôže bežať."
+
+#: source/soundWave_lib/synths/nvda_capture.py:418
 msgid ""
 "The selected speech model is no longer available. Reopen the voice "
 "options."
 msgstr "Vybraný model reči už nie je dostupný. Znova otvorte možnosti hlasu."
 
-#: source/soundWave_lib/synths/nvda_capture.py:411
-msgid "NVDA audio module is not available; generic capture cannot run."
-msgstr "Audio modul NVDA nie je dostupný; všeobecné zachytávanie nemôže bežať."
-
-#: source/soundWave_lib/synths/nvda_capture.py:448
+#: source/soundWave_lib/synths/nvda_capture.py:490
 #, python-format
 msgid "Couldn't create NVDA synth instance for %s."
 msgstr "Nepodarilo sa vytvoriť inštanciu syntezátora NVDA pre %s."
 
-#: source/soundWave_lib/synths/nvda_capture.py:453
+#: source/soundWave_lib/synths/nvda_capture.py:495
 msgid ""
 "WorldVoice did not initialize its voice manager. Its workspace engines "
 "appear to be missing or failing to load; see the NVDA log for the missing"
@@ -993,11 +994,11 @@ msgstr ""
 "enginy chýbajú alebo sa nenačítavajú; chýbajúce DLL WorldVoice-workspace "
 "nájdete v logu NVDA."
 
-#: source/soundWave_lib/synths/nvda_capture.py:519
+#: source/soundWave_lib/synths/nvda_capture.py:561
 msgid "Generic NVDA capture timed out."
 msgstr "Všeobecné zachytávanie NVDA prekročilo časový limit."
 
-#: source/soundWave_lib/synths/nvda_capture.py:544
+#: source/soundWave_lib/synths/nvda_capture.py:587
 msgid ""
 "Generic NVDA capture produced no audio. This synth may not use NVDA's "
 "WavePlayer path."
@@ -1005,45 +1006,45 @@ msgstr ""
 "Všeobecné zachytávanie NVDA nevytvorilo žiadne audio. Tento syntezátor "
 "možno nepoužíva cestu WavePlayer NVDA."
 
-#: source/soundWave_lib/synths/nvda_capture.py:551
+#: source/soundWave_lib/synths/nvda_capture.py:594
 msgid "Generic NVDA capture saw mixed audio formats between player instances."
 msgstr ""
 "Všeobecné zachytávanie NVDA zistilo zmiešané audio formáty medzi "
 "inštanciami prehrávača."
 
-#: source/soundWave_lib/synths/nvda_capture.py:581
+#: source/soundWave_lib/synths/nvda_capture.py:624
 msgid "ctypes not available; cannot render BestSpeech."
 msgstr "ctypes nie je dostupné; nemožno renderovať BestSpeech."
 
-#: source/soundWave_lib/synths/nvda_capture.py:586
+#: source/soundWave_lib/synths/nvda_capture.py:629
 msgid "BestSpeech addon not installed (synthDrivers.bestspeech not found)."
 msgstr ""
 "Doplnok BestSpeech nie je nainštalovaný (synthDrivers.bestspeech sa "
 "nenašiel)."
 
-#: source/soundWave_lib/synths/nvda_capture.py:655
+#: source/soundWave_lib/synths/nvda_capture.py:698
 msgid "BestSpeech did not initialize its capture player."
 msgstr "BestSpeech neinicializoval prehrávač zachytávania."
 
-#: source/soundWave_lib/synths/nvda_capture.py:686
+#: source/soundWave_lib/synths/nvda_capture.py:729
 msgid "BestSpeech render timed out."
 msgstr "Vykresľovanie BestSpeech prekročilo časový limit."
 
-#: source/soundWave_lib/synths/nvda_capture.py:691
+#: source/soundWave_lib/synths/nvda_capture.py:734
 msgid "BestSpeech produced no audio (no callback data)."
 msgstr "BestSpeech nevytvoril audio (žiadne dáta callbacku)."
 
-#: source/soundWave_lib/synths/nvda_capture.py:713
+#: source/soundWave_lib/synths/nvda_capture.py:756
 #, python-brace-format
 msgid "soundWave - {synth} options"
 msgstr "soundWave - možnosti {synth}"
 
-#: source/soundWave_lib/synths/nvda_capture.py:733
+#: source/soundWave_lib/synths/nvda_capture.py:776
 #, python-brace-format
 msgid "{synth} could not be initialized."
 msgstr "{synth} sa nepodarilo inicializovať."
 
-#: source/soundWave_lib/synths/nvda_capture.py:737
+#: source/soundWave_lib/synths/nvda_capture.py:780
 msgid ""
 "WorldVoice did not initialize its voice manager. The NVDA log shows "
 "missing WorldVoice-workspace engine DLLs, so SoundWave cannot render it "
@@ -1053,58 +1054,58 @@ msgstr ""
 " enginov WorldVoice-workspace, takže SoundWave ho nemôže renderovať, kým "
 "sa WorldVoice sám nenačíta správne."
 
-#: source/soundWave_lib/synths/nvda_capture.py:747
+#: source/soundWave_lib/synths/nvda_capture.py:790
 msgid "&Model:"
 msgstr "Mode&l:"
 
-#: source/soundWave_lib/synths/nvda_capture.py:756
-#: source/soundWave_lib/synths/nvda_capture.py:1143
+#: source/soundWave_lib/synths/nvda_capture.py:799
+#: source/soundWave_lib/synths/nvda_capture.py:1186
 #: source/soundWave_lib/synths/orpheus.py:35
 msgid "&Language:"
 msgstr "&Jazyk:"
 
-#: source/soundWave_lib/synths/nvda_capture.py:783
+#: source/soundWave_lib/synths/nvda_capture.py:826
 msgid "Rate &boost:"
 msgstr "Zosilnenie te&mpa:"
 
-#: source/soundWave_lib/synths/nvda_capture.py:792
-#: source/soundWave_lib/synths/nvda_capture.py:1167
+#: source/soundWave_lib/synths/nvda_capture.py:835
+#: source/soundWave_lib/synths/nvda_capture.py:1210
 #: source/soundWave_lib/synths/orpheus.py:51
 #: source/soundWave_lib/synths/sapi5.py:326
 msgid "Vol&ume:"
 msgstr "Hlasit&osť:"
 
-#: source/soundWave_lib/synths/nvda_capture.py:798
+#: source/soundWave_lib/synths/nvda_capture.py:841
 msgid "&EOS sensitivity:"
 msgstr "Citlivosť &EOS:"
 
-#: source/soundWave_lib/synths/nvda_capture.py:809
+#: source/soundWave_lib/synths/nvda_capture.py:852
 msgid "&Flow steps:"
 msgstr "&Kroky toku:"
 
-#: source/soundWave_lib/synths/nvda_capture.py:919
+#: source/soundWave_lib/synths/nvda_capture.py:962
 msgid "No installed Google TTS voices found"
 msgstr "Nenašli sa žiadne nainštalované hlasy Google TTS"
 
-#: source/soundWave_lib/synths/nvda_capture.py:1039
+#: source/soundWave_lib/synths/nvda_capture.py:1082
 msgid "Test is not available for this synthesizer."
 msgstr "Test nie je dostupný pre tento syntezátor."
 
-#: source/soundWave_lib/synths/nvda_capture.py:1121
+#: source/soundWave_lib/synths/nvda_capture.py:1164
 msgid "soundWave - Keynote Gold options"
 msgstr "soundWave - možnosti Keynote Gold"
 
-#: source/soundWave_lib/synths/nvda_capture.py:1150
+#: source/soundWave_lib/synths/nvda_capture.py:1193
 #: source/soundWave_lib/synths/sapi5.py:309
 #: source/soundWave_lib/synths/sonata.py:231
 msgid "(no voices found)"
 msgstr "(nenašli sa žiadne hlasy)"
 
-#: source/soundWave_lib/synths/nvda_capture.py:1172
+#: source/soundWave_lib/synths/nvda_capture.py:1215
 msgid "Rate &boost (faster)"
 msgstr "Zosilnenie tempa (rýchlejšie)"
 
-#: source/soundWave_lib/synths/nvda_capture.py:1269
+#: source/soundWave_lib/synths/nvda_capture.py:1312
 #, python-brace-format
 msgid ""
 "Keynote Gold test failed:\n"
