@@ -74,6 +74,8 @@ Jeśli inne okno soundWave jest już otwarte, to samo polecenie przeniesie je na
 
 <p>Podczas ogólnego przechwytywania dźwięku NVDA bieżąca mowa i dźwięki powiadomień pozostają niezależne od renderowania. Można zmienić aktywny syntezator NVDA bez zmiany syntezatora wybranego dla pliku wyjściowego.</p>
 
+<p>eSpeak NG używa oddzielnego procesu do wykrywania głosów, testów i renderowania, nawet gdy NVDA korzysta z eSpeak do bieżącej mowy. SoundWave używa silnika i głosów dołączonych do NVDA i nie zmienia wybranego syntezatora bieżącej mowy.</p>
+
 <h2>Ustawienia</h2>
 
 <p>
@@ -276,6 +278,14 @@ soundWave używa kanału aktualizacji dodatków NVDA zgodnego z dystrybucją prz
 </p>
 
 <h2>Zmiany</h2>
+
+<h3>1.2.17</h3>
+<ul>
+  <li>Naprawiono utratę bieżącej mowy podczas wybierania, testowania lub renderowania za pomocą eSpeak NG, również gdy NVDA korzysta z eSpeak.</li>
+  <li>Wykrywanie głosów, testy i renderowanie korzystają z oddzielnego procesu oraz silnika i danych głosowych zainstalowanych z NVDA. Nie trzeba pobierać dodatkowego silnika.</li>
+  <li>Bieżąca mowa pozostaje niezależna podczas anulowania i przełączania syntezatora. Obsługiwane są 32-bitowe i 64-bitowe wersje NVDA.</li>
+  <li>Naprawia <a href="https://github.com/OnjLouis/soundWave/issues/16">zgłoszenie 16</a>. Zaktualizowano wszystkie instrukcje i katalogi tłumaczeń interfejsu.</li>
+</ul>
 
 <h3>1.2.16</h3>
 <ul>

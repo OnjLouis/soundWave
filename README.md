@@ -29,6 +29,7 @@ soundWave is an NVDA add-on that renders text to an audio file using installed s
 
 ## Changes
 
+- 1.2.17: Fixed live speech becoming silent when eSpeak NG is selected, previewed or used for rendering, including when NVDA also uses eSpeak. Voice discovery and rendering now use an isolated worker with NVDA's installed engine and voice data. Cancellation and synth switching leave live speech independent. Fixes [Issue 16](https://github.com/OnjLouis/soundWave/issues/16).
 - 1.2.16: Fixed silence or failed synthesizer switching during generic NVDA rendering, including Phonon. Live speech and NVDA notification sounds remain separate from the rendered audio. Improved capture of players created later by the rendering synthesizer. Tested with NVDA 2026.3.
 - 1.2.15: Added Model selection for NVDA synthesizers that expose it, including Ollama Speech. Model changes refresh dependent Language and Voice choices. Voice tests and renders apply Model, Language and Voice in order and remember the selected model. Custom language selectors, including locale filters, are now recognised correctly.
 - 1.2.14: Fixed the NVDA synthesizer settings ring controlling a discarded preview/render instance after using SoundWave. Temporary synthesizers now leave the active speech controls and voice dictionary attached to the speaking synthesizer, without changing its settings or requiring a restart.

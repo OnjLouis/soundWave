@@ -115,6 +115,7 @@ class CaptureRoutingTests(unittest.TestCase):
             _prepare_generic_capture_text=lambda text, name: text,
             google_tts=types.SimpleNamespace(is_google_tts_synth=lambda name: False),
             pocket_tts=types.SimpleNamespace(is_pocket_tts_synth=lambda name: False),
+            espeak_capture=types.SimpleNamespace(is_espeak_synth=lambda name: False),
         )
         names = {'_GenericCaptureWavePlayer', '_make_capture_wave_player_factory',
                  '_render_with_nvda_generic_capture'}
@@ -163,6 +164,18 @@ class CaptureRoutingTests(unittest.TestCase):
         self.assertEqual(live.played, b'live speech')
         self.assertFalse(live.closed)
         self.assertIs(self.wave.WavePlayer, PlaybackPlayer)
+
+    def test_espeak_uses_a_worker_before_any_live_audio_hook(self):
+        calls = []
+        self.namespace['espeak_capture'] = types.SimpleNamespace(
+            is_espeak_synth=lambda name: name == 'espeak',
+            render_to_wav=lambda *args, **kwargs: calls.append((args, kwargs)) or 'isolated')
+        self.namespace['_get_synth_instance'] = lambda name: self.fail('Live engine initialized')
+        result = self.namespace['_render_with_nvda_generic_capture'](
+            'Test', self.output, 'espeak', cancel_evt=self.cancel, opts={'rate': 75})
+        self.assertEqual(result, 'isolated')
+        self.assertIs(self.wave.WavePlayer, PlaybackPlayer)
+        self.assertEqual(calls[0][1]['opts'], {'rate': 75})
 
     def test_switching_to_the_same_driver_class_is_not_capture(self):
         self.start_render()

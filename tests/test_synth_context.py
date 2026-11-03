@@ -27,6 +27,7 @@ class SynthContextTests(unittest.TestCase):
         self.modules.start()
         self.addCleanup(self.modules.stop)
         self.namespace = dict(synthDriverHandler=self.handler, wx=self.wx,
+                              espeak_capture=types.SimpleNamespace(is_espeak_synth=lambda name: False),
                               importlib=types.SimpleNamespace(import_module=Mock(side_effect=ImportError)),
                               _resolve_synth_id=lambda name: name, log=Mock())
         names = {'_get_synth_instance', '_create_synth_instance', '_restore_active_synth_context'}
@@ -53,6 +54,17 @@ class SynthContextTests(unittest.TestCase):
         self.assertIs(self.get(), self.temporary)
         self.assert_active_controls()
         self.dictionaries.loadVoiceDict.assert_called_once_with(self.active)
+
+    def test_espeak_metadata_never_initializes_an_nvda_driver(self):
+        facade = object()
+        self.namespace['espeak_capture'] = types.SimpleNamespace(
+            is_espeak_synth=lambda name: name == 'espeak',
+            create_options_facade=Mock(return_value=facade))
+        self.handler.getSynthInstance = Mock(side_effect=AssertionError('Live engine touched'))
+        self.assertIs(self.namespace['_get_synth_instance']('espeak'), facade)
+        self.handler.getSynthInstance.assert_not_called()
+        self.namespace['importlib'].import_module.assert_not_called()
+        self.assert_active_controls()
 
     def test_failed_factory_restores_context_even_when_all_fallbacks_fail(self):
         def failed(name):

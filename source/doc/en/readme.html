@@ -74,6 +74,8 @@ If any other soundWave dialog is already open, the same command brings that dial
 
 <p>When using generic NVDA audio capture, live NVDA speech and notification sounds remain independent of the render. You can switch NVDA's active synthesizer without changing the synthesizer selected for the output file.</p>
 
+<p>eSpeak NG uses a separate worker for voice discovery, previews and rendering, even when NVDA uses eSpeak for live speech. SoundWave uses the engine and voices already included with your NVDA installation; it does not change your selected live synthesizer.</p>
+
 <h2>Settings</h2>
 
 <p>
@@ -276,6 +278,14 @@ soundWave uses NVDA's add-on update channel for store-compatible updates.
 </p>
 
 <h2>Changes</h2>
+
+<h3>1.2.17</h3>
+<ul>
+  <li>Fixed live speech becoming silent when selecting, previewing or rendering with eSpeak NG, including when NVDA also uses eSpeak.</li>
+  <li>Voice discovery, previews and rendering use an isolated worker with NVDA's installed engine and voice data. No additional engine download is required.</li>
+  <li>Preserved independent live speech during cancellation and synthesizer switching. Supports both 32-bit and 64-bit NVDA.</li>
+  <li>Fixes <a href="https://github.com/OnjLouis/soundWave/issues/16">Issue 16</a>. Updated all manuals and interface catalogues.</li>
+</ul>
 
 <h3>1.2.16</h3>
 <ul>

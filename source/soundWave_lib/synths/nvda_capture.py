@@ -25,6 +25,7 @@ _runtime.bind(globals())
 
 from soundWave_lib import voice_utils
 from soundWave_lib.synths import google_tts
+from soundWave_lib.synths import espeak as espeak_capture
 from soundWave_lib.synths import loquendo
 from soundWave_lib.synths import pocket_tts
 from soundWave_lib.synths import prose2000
@@ -450,6 +451,8 @@ def _render_with_nvda_generic_capture(
     instantiated or while speech is generated. It is intentionally a fallback
     path: synth-specific renderers can still be faster or more exact.
     """
+    if espeak_capture.is_espeak_synth(synth_name):
+        return espeak_capture.render_to_wav(text, out_wav, opts=opts, cancel_evt=cancel_evt, progress=progress)
     if nvwave is None:
         raise RuntimeError(_("NVDA audio module is not available; generic capture cannot run."))
     _reject_separate_nvda_synth_host(synth_name)

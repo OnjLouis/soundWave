@@ -3,6 +3,7 @@
 
 typedef int (__cdecl *PyMainFunction)(int, wchar_t **);
 
+/* Build for x86 or x64 to match the selected NVDA Python runtime. */
 int wmain(int argc, wchar_t **argv) {
     wchar_t pythonDll[MAX_PATH];
     wchar_t pythonPattern[MAX_PATH];

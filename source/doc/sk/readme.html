@@ -74,6 +74,8 @@ Ak je už otvorený iný dialóg soundWave, rovnaký príkaz ho prenesie do popr
 
 <p>Pri všeobecnom zachytávaní zvuku NVDA zostávajú živá reč NVDA a zvuky oznámení nezávislé od renderovania. Aktívny syntetizér NVDA môžete zmeniť bez zmeny syntetizéra vybraného pre výstupný súbor.</p>
 
+<p>eSpeak NG používa samostatný proces na zisťovanie hlasov, ukážky a renderovanie, aj keď NVDA používa eSpeak na živú reč. SoundWave používa jadro a hlasy dodávané s NVDA a nemení vybraný syntetizér živej reči.</p>
+
 <h2>Nastavenia</h2>
 
 <p>
@@ -276,6 +278,14 @@ soundWave používa aktualizačný kanál doplnkov NVDA kompatibilný s distrib�
 </p>
 
 <h2>Zmeny</h2>
+
+<h3>1.2.17</h3>
+<ul>
+  <li>Opravená strata živej reči pri výbere, testovaní alebo renderovaní pomocou eSpeak NG, aj keď NVDA používa eSpeak.</li>
+  <li>Zisťovanie hlasov, ukážky a renderovanie používajú samostatný proces so zvukovým jadrom a hlasovými dátami nainštalovanými s NVDA. Ďalšie jadro netreba sťahovať.</li>
+  <li>Živá reč zostáva nezávislá pri zrušení renderovania a prepínaní syntetizéra. Podporované sú 32-bitové aj 64-bitové verzie NVDA.</li>
+  <li>Opravuje <a href="https://github.com/OnjLouis/soundWave/issues/16">hlásenie 16</a>. Aktualizované sú všetky príručky a katalógy prekladov rozhrania.</li>
+</ul>
 
 <h3>1.2.16</h3>
 <ul>

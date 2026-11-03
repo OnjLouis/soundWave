@@ -28,6 +28,7 @@ from typing import Optional, Tuple, List, Dict
 import wx
 
 from soundWave_lib import runtime as _runtime
+from soundWave_lib.synths import espeak as espeak_capture
 
 
 def _ensure_dir(path: str) -> None:
@@ -219,6 +220,8 @@ def _create_synth_instance(name: str):
       3) Fall back to synthDriverHandler internals if present.
     """
     sid = _resolve_synth_id(name)
+    if espeak_capture.is_espeak_synth(sid):
+        return espeak_capture.create_options_facade()
 
     # 1) Public helper (present in some NVDA versions)
     try:
